@@ -15,23 +15,16 @@
 # AUTHOR
 # Marko Luther, 2023
 
-from typing import Optional, List, Tuple, TYPE_CHECKING
+from typing import override, cast, Literal, TYPE_CHECKING
 
 from artisanlib.util import stringfromseconds, stringtoseconds
 from artisanlib.dialogs import ArtisanDialog
 
-try:
-    from PyQt6.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtWidgets import (QApplication, QLabel, # @UnusedImport @Reimport  @UnresolvedImport
-        QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QDialogButtonBox, QGridLayout, # @UnusedImport @Reimport  @UnresolvedImport
-        QGroupBox, QLineEdit, QMessageBox, QLayout) # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtGui import QIntValidator, QRegularExpressionValidator # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtWidgets import (QApplication, QLabel, # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-        QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QDialogButtonBox, QGridLayout, # @UnusedImport @Reimport  @UnresolvedImport
-        QGroupBox, QLineEdit, QMessageBox, QLayout) # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings
+from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
+from PyQt6.QtWidgets import (QApplication, QLabel,
+        QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QDialogButtonBox, QGridLayout,
+        QGroupBox, QLineEdit, QMessageBox, QLayout)
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
@@ -51,15 +44,15 @@ class designerconfigDlg(ArtisanDialog):
         charge = QLabel(QApplication.translate('Label', 'CHARGE'))
         charge.setAlignment(Qt.AlignmentFlag.AlignRight)
         charge.setStyleSheet('background-color: #f07800')
-        self.dryend = QCheckBox(QApplication.translate('CheckBox','DRY END'))
+        self.dryend = QCheckBox(QApplication.translate('Label','DRY END'))
         self.dryend.setStyleSheet('background-color: orange')
-        self.fcs = QCheckBox(QApplication.translate('CheckBox','FC START'))
+        self.fcs = QCheckBox(QApplication.translate('Label','FC START'))
         self.fcs.setStyleSheet('background-color: orange')
-        self.fce = QCheckBox(QApplication.translate('CheckBox','FC END'))
+        self.fce = QCheckBox(QApplication.translate('Label','FC END'))
         self.fce.setStyleSheet('background-color: orange')
-        self.scs = QCheckBox(QApplication.translate('CheckBox','SC START'))
+        self.scs = QCheckBox(QApplication.translate('Label','SC START'))
         self.scs.setStyleSheet('background-color: orange')
-        self.sce = QCheckBox(QApplication.translate('CheckBox','SC END'))
+        self.sce = QCheckBox(QApplication.translate('Label','SC END'))
         self.sce.setStyleSheet('background-color: orange')
         drop = QLabel(QApplication.translate('Label', 'DROP'))
         drop.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -198,8 +191,7 @@ class designerconfigDlg(ArtisanDialog):
         self.Edit4etcopy = self.Edit4et.text()
         self.Edit5etcopy = self.Edit5et.text()
         self.Edit6etcopy = self.Edit6et.text()
-#        regextime = QRegularExpression(r'^-?[0-9]?[0-9]?[0-9]:[0-5][0-9]$')
-        regextime = QRegularExpression(r'^[0-9]?[0-9]:[0-5][0-9]$')
+        regextime = QRegularExpression(r'^-?[0-9]?[0-9]?[0-9][:,h][0-5][0-9]$')
         self.Edit0.setValidator(QRegularExpressionValidator(regextime,self))
         self.Edit1.setValidator(QRegularExpressionValidator(regextime,self))
         self.Edit2.setValidator(QRegularExpressionValidator(regextime,self))
@@ -240,9 +232,9 @@ class designerconfigDlg(ArtisanDialog):
         self.dialogbuttons.removeButton(self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok))
         self.dialogbuttons.removeButton(self.dialogbuttons.button(QDialogButtonBox.StandardButton.Cancel))
 
-        close_button: Optional[QPushButton] = self.dialogbuttons.addButton(QDialogButtonBox.StandardButton.Close)
-        apply_button: Optional[QPushButton] = self.dialogbuttons.addButton(QDialogButtonBox.StandardButton.Apply)
-        defaults_button: Optional[QPushButton] = self.dialogbuttons.addButton(QDialogButtonBox.StandardButton.RestoreDefaults)
+        close_button: QPushButton|None = self.dialogbuttons.addButton(QDialogButtonBox.StandardButton.Close)
+        apply_button: QPushButton|None = self.dialogbuttons.addButton(QDialogButtonBox.StandardButton.Apply)
+        defaults_button: QPushButton|None = self.dialogbuttons.addButton(QDialogButtonBox.StandardButton.RestoreDefaults)
         if close_button is not None:
             self.setButtonTranslations(close_button,'Close',QApplication.translate('Button','Close'))
         if apply_button is not None:
@@ -328,16 +320,16 @@ class designerconfigDlg(ArtisanDialog):
             BTcurviness = self.aw.qmc.BTsplinedegree
         timepoints = len(self.aw.qmc.timex)
         if (timepoints - ETcurviness) >= 1:
-            self.aw.qmc.ETsplinedegree = ETcurviness
+            self.aw.qmc.ETsplinedegree = cast(Literal[1,2,3,4,5], min(5, max(1, ETcurviness)))
         else:
-            self.aw.qmc.ETsplinedegree = len(self.aw.qmc.timex)-1
+            self.aw.qmc.ETsplinedegree =  cast(Literal[1,2,3,4,5], min(5, max(1, len(self.aw.qmc.timex)-1)))
             self.ETsplineComboBox.setCurrentIndex(self.aw.qmc.ETsplinedegree-1)
             ms = QApplication.translate('Message','Not enough time points for an ET curviness of {0}. Set curviness to {1}').format(ETcurviness,self.aw.qmc.ETsplinedegree)
             QMessageBox.information(self,QApplication.translate('Message','Designer Config'),ms)
         if (timepoints - BTcurviness) >= 1:
-            self.aw.qmc.BTsplinedegree = BTcurviness
+            self.aw.qmc.BTsplinedegree = cast(Literal[1,2,3,4,5], min(5, max(1, BTcurviness)))
         else:
-            self.aw.qmc.BTsplinedegree = len(self.aw.qmc.timex)-1
+            self.aw.qmc.BTsplinedegree = cast(Literal[1,2,3,4,5], min(5, max(1, len(self.aw.qmc.timex)-1)))
             self.BTsplineComboBox.setCurrentIndex(self.aw.qmc.BTsplinedegree-1)
             ms = QApplication.translate('Message','Not enough time points for an BT curviness of {0}. Set curviness to {1}').format(BTcurviness,self.aw.qmc.BTsplinedegree)
             QMessageBox.information(self,QApplication.translate('Message','Designer Config'),ms)
@@ -346,13 +338,13 @@ class designerconfigDlg(ArtisanDialog):
     @pyqtSlot(bool)
     def settimes(self, _:bool = False) -> None:
         #check input
-        strings = [QApplication.translate('Message','CHARGE'),
-                   QApplication.translate('Message','DRY END'),
-                   QApplication.translate('Message','FC START'),
-                   QApplication.translate('Message','FC END'),
-                   QApplication.translate('Message','SC START'),
-                   QApplication.translate('Message','SC END'),
-                   QApplication.translate('Message','DROP')]
+        strings = [QApplication.translate('Label','CHARGE'),
+                   QApplication.translate('Label','DRY END'),
+                   QApplication.translate('Label','FC START'),
+                   QApplication.translate('Label','FC END'),
+                   QApplication.translate('Label','SC START'),
+                   QApplication.translate('Label','SC END'),
+                   QApplication.translate('Label','DROP')]
         timecheck = self.validatetime()
         if timecheck != 1000:
             st = QApplication.translate('Message','Incorrect time format. Please recheck {0} time').format(strings[timecheck])
@@ -376,7 +368,7 @@ class designerconfigDlg(ArtisanDialog):
             except Exception: # pylint: disable=broad-except
                 self.Edit0et.setText(self.Edit0etcopy)
         if self.dryend.isChecked():
-            if self.Edit1.text() != self.Edit1copy and stringtoseconds(str(self.Edit1.text())):
+            if self.Edit1.text() != self.Edit1copy:
                 try:
                     timez = stringtoseconds(str(self.Edit1.text()))+ self.aw.qmc.timex[self.aw.qmc.timeindex[0]]
                     self.aw.qmc.timex[self.aw.qmc.timeindex[1]] = timez
@@ -396,7 +388,7 @@ class designerconfigDlg(ArtisanDialog):
                 except Exception: # pylint: disable=broad-except
                     self.Edit1et.setText(self.Edit1etcopy)
         if self.fcs.isChecked():
-            if self.Edit2.text() != self.Edit2copy and stringtoseconds(str(self.Edit2.text())):
+            if self.Edit2.text() != self.Edit2copy:
                 try:
                     timez = stringtoseconds(str(self.Edit2.text()))+ self.aw.qmc.timex[self.aw.qmc.timeindex[0]]
                     self.aw.qmc.timex[self.aw.qmc.timeindex[2]] = timez
@@ -416,7 +408,7 @@ class designerconfigDlg(ArtisanDialog):
                 except Exception: # pylint: disable=broad-except
                     self.Edit2et.setText(self.Edit2etcopy)
         if self.fce.isChecked():
-            if self.Edit3.text() != self.Edit3copy and stringtoseconds(str(self.Edit3.text())):
+            if self.Edit3.text() != self.Edit3copy:
                 try:
                     timez = stringtoseconds(str(self.Edit3.text()))+ self.aw.qmc.timex[self.aw.qmc.timeindex[0]]
                     self.aw.qmc.timex[self.aw.qmc.timeindex[3]] = timez
@@ -436,7 +428,7 @@ class designerconfigDlg(ArtisanDialog):
                 except Exception: # pylint: disable=broad-except
                     self.Edit3et.setText(self.Edit3etcopy)
         if self.scs.isChecked():
-            if self.Edit4.text() != self.Edit4copy and stringtoseconds(str(self.Edit4.text())):
+            if self.Edit4.text() != self.Edit4copy:
                 try:
                     timez = stringtoseconds(str(self.Edit4.text()))+ self.aw.qmc.timex[self.aw.qmc.timeindex[0]]
                     self.aw.qmc.timex[self.aw.qmc.timeindex[4]] = timez
@@ -456,7 +448,7 @@ class designerconfigDlg(ArtisanDialog):
                 except Exception: # pylint: disable=broad-except
                     self.Edit4et.setText(self.Edit4etcopy)
         if self.sce.isChecked():
-            if self.Edit5.text() != self.Edit5copy and stringtoseconds(str(self.Edit5.text())):
+            if self.Edit5.text() != self.Edit5copy:
                 try:
                     timez = stringtoseconds(str(self.Edit5.text()))+ self.aw.qmc.timex[self.aw.qmc.timeindex[0]]
                     self.aw.qmc.timex[self.aw.qmc.timeindex[5]] = timez
@@ -475,7 +467,7 @@ class designerconfigDlg(ArtisanDialog):
                     self.Edit5etcopy = self.Edit5et.text()
                 except Exception: # pylint: disable=broad-except
                     self.Edit5et.setText(self.Edit5etcopy)
-        if self.Edit6.text() != self.Edit6copy and stringtoseconds(str(self.Edit6.text())):
+        if self.Edit6.text() != self.Edit6copy:
             try:
                 timez = stringtoseconds(str(self.Edit6.text()))+ self.aw.qmc.timex[self.aw.qmc.timeindex[0]]
                 self.aw.qmc.timex[self.aw.qmc.timeindex[6]] = timez
@@ -501,22 +493,25 @@ class designerconfigDlg(ArtisanDialog):
 
     #supporting function for settimes()
     def validatetimeorder(self) -> int:
-        time = []
-        checks = self.readchecks()
-        time.append(stringtoseconds(str(self.Edit0.text())))
-        time.append(stringtoseconds(str(self.Edit1.text())))
-        time.append(stringtoseconds(str(self.Edit2.text())))
-        time.append(stringtoseconds(str(self.Edit3.text())))
-        time.append(stringtoseconds(str(self.Edit4.text())))
-        time.append(stringtoseconds(str(self.Edit5.text())))
-        time.append(stringtoseconds(str(self.Edit6.text())))
-        for i in range(len(time)-1):
-            if time[i+1] <= time[i] and checks[i+1] != 0:
-                return i
+        try:
+            time:list[int] = []
+            checks = self.readchecks()
+            time.append(stringtoseconds(str(self.Edit0.text())))
+            time.append(stringtoseconds(str(self.Edit1.text())))
+            time.append(stringtoseconds(str(self.Edit2.text())))
+            time.append(stringtoseconds(str(self.Edit3.text())))
+            time.append(stringtoseconds(str(self.Edit4.text())))
+            time.append(stringtoseconds(str(self.Edit5.text())))
+            time.append(stringtoseconds(str(self.Edit6.text())))
+            for i in range(len(time)-1):
+                if time[i+1] <= time[i] and checks[i+1] != 0:
+                    return i
+        except Exception: # pylint: disable=broad-except
+            pass
         return 1000
 
     def validatetime(self) -> int:
-        strings:List[Tuple[int, str]] = []
+        strings:list[tuple[int, str]] = []
 #        strings.append(self.Edit0.text()) # CHARGE cannot be edited
         if self.dryend.isChecked():
             strings.append((1, self.Edit1.text()))
@@ -535,7 +530,7 @@ class designerconfigDlg(ArtisanDialog):
         return 1000
 
     #supporting function for settimes()
-    def readchecks(self) -> List[int]:
+    def readchecks(self) -> list[int]:
         checks = [0,0,0,0,0,0,1]
         if self.dryend.isChecked():
             checks[1] = 1
@@ -554,6 +549,7 @@ class designerconfigDlg(ArtisanDialog):
 #        self.aw.qmc.convert_designer()
 
     @pyqtSlot()
+    @override
     def accept(self) -> None:
         #save window position (only; not size!)
         settings = QSettings()
@@ -629,13 +625,13 @@ class designerconfigDlg(ArtisanDialog):
             elif idi == 5 and self.sce.isChecked():
                 self.sce.setChecked(False)
             #ERROR time from edit boxes is not in ascending order
-            strings = [QApplication.translate('Message','CHARGE'),
-                       QApplication.translate('Message','DRY END'),
-                       QApplication.translate('Message','FC START'),
-                       QApplication.translate('Message','FC END'),
-                       QApplication.translate('Message','SC START'),
-                       QApplication.translate('Message','SC END'),
-                       QApplication.translate('Message','DROP')]
+            strings = [QApplication.translate('Label','CHARGE'),
+                       QApplication.translate('Label','DRY END'),
+                       QApplication.translate('Label','FC START'),
+                       QApplication.translate('Label','FC END'),
+                       QApplication.translate('Label','SC START'),
+                       QApplication.translate('Label','SC END'),
+                       QApplication.translate('Label','DROP')]
             st = QApplication.translate('Message','Times need to be in ascending order. Please recheck {0} time').format(strings[idi])
             QMessageBox.information(self,QApplication.translate('Message','Designer Config'),st)
             return
@@ -647,9 +643,9 @@ class designerconfigDlg(ArtisanDialog):
             self.aw.qmc.removepoint()
         else:
             #ADD mark point
-            timez:Optional[float] = None
-            bt:Optional[float] = None
-            et:Optional[float] = None
+            timez:float|None = None
+            bt:float|None = None
+            et:float|None = None
             if idi == 1:
                 try:
                     timez = stringtoseconds(self.Edit1.text()) + self.aw.qmc.timex[self.aw.qmc.timeindex[0]]
@@ -708,7 +704,7 @@ class designerconfigDlg(ArtisanDialog):
 
 
 class pointDlg(ArtisanDialog):
-    def __init__(self, parent:'QWidget', aw:'ApplicationWindow', values:Optional[List[float]] = None) -> None:
+    def __init__(self, parent:'QWidget', aw:'ApplicationWindow', values:list[float]|None = None) -> None:
         super().__init__(parent, aw)
         if values is None:
             values = [0,0]
@@ -743,7 +739,7 @@ class pointDlg(ArtisanDialog):
         mainLayout.addStretch()
         mainLayout.addLayout(buttonLayout)
         self.setLayout(mainLayout)
-        ok_button: Optional[QPushButton] = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
+        ok_button: QPushButton|None = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
         if ok_button is not None:
             ok_button.setFocus()
 

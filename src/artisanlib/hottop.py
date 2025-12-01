@@ -19,11 +19,10 @@ import time
 import logging
 import asyncio
 
-from typing import Final, Optional, Tuple, Callable, TYPE_CHECKING
+from collections.abc import Callable
+from typing import override, Final
 
-if TYPE_CHECKING:
-    from artisanlib.atypes import SerialSettings # pylint: disable=unused-import
-
+from artisanlib.atypes import SerialSettings
 from artisanlib.async_comm import AsyncComm
 
 
@@ -43,9 +42,9 @@ class Hottop(AsyncComm):
                     '_set_heater', '_set_fan', '_set_main_fan', '_set_solenoid', '_set_drum_motor', '_set_cooling_motor', '_last_write' ]
 
 
-    def __init__(self, host:str = '127.0.0.1', port:int = 8080, serial:Optional['SerialSettings'] = None,
-                connected_handler:Optional[Callable[[], None]] = None,
-                disconnected_handler:Optional[Callable[[], None]] = None) -> None:
+    def __init__(self, host:str = '127.0.0.1', port:int = 8080, serial:'SerialSettings|None' = None,
+                connected_handler:Callable[[], None]|None = None,
+                disconnected_handler:Callable[[], None]|None = None) -> None:
 
         super().__init__(host, port, serial, connected_handler, disconnected_handler)
 
@@ -75,13 +74,14 @@ class Hottop(AsyncComm):
 
     def valid_message(self, message:bytearray) -> bool:
         return (len(message) == 36 and
-            self.HEADER[0:2] == message[0:2] and
+            self.HEADER[0:2] == bytes(message[0:2]) and
             (not self._verify_crc or int(message[35]) == sum(int(c) for c in message[:35]) & 0xFF))
 
 
     # asyncio read implementation
 
     # https://www.oreilly.com/library/view/using-asyncio-in/9781492075325/ch04.html
+    @override
     async def read_msg(self, stream: asyncio.StreamReader) -> None:
         # look for the first header byte
         message = bytearray()
@@ -120,6 +120,7 @@ class Hottop(AsyncComm):
         elif self._logging:
             _log.info('invalid message received: %s', message)
 
+    @override
     def reset_readings(self) -> None:
         self._bt = -1
         self._et = -1
@@ -178,15 +179,15 @@ class Hottop(AsyncComm):
     def hasHottopControl(self) -> bool:
         return self._control_active
 
-    def getState(self) -> Tuple[float, float, int, int]:
+    def getState(self) -> tuple[float, float, int, int]:
         return self._bt, self._et, self._heater, self._main_fan
 
     # heater : int(0-100)
     # fan, main_fan : int(0-100) (will be converted to the internal int(0-10))
     # solenoid, drum_motor, cooling_motor : bool (will be converted to the internal 0 or 1)
     # all parameters are optional and default to None (meanging: don't change value)
-    def setHottop(self, heater:Optional[int]=None, fan:Optional[int]=None, main_fan:Optional[int]=None,
-            solenoid:Optional[bool]=None, drum_motor:Optional[bool]=None, cooling_motor:Optional[bool]=None) -> None:
+    def setHottop(self, heater:int|None = None, fan:int|None = None, main_fan:int|None = None,
+            solenoid:bool|None = None, drum_motor:bool|None = None, cooling_motor:bool|None = None) -> None:
         _log.debug('setHottop(heater: %s, fan: %s, main_fan: %s, solenoid: %s, drum_motor: %s, cooling_motor: %s)', heater, fan, main_fan, solenoid, drum_motor, cooling_motor)
         if self._control_active:
             if heater is not None:
@@ -203,13 +204,13 @@ class Hottop(AsyncComm):
                 self._set_cooling_motor = (1 if cooling_motor else 0)
 
 def main() -> None:
-    hottop_serial:SerialSettings = {
-        'port': '/dev/slave',
-        'baudrate': 9600, # 115200
-        'bytesize': 8,
-        'stopbits': 1,
-        'parity': 'N',
-        'timeout': 0.3}
+    hottop_serial = SerialSettings(
+        port = '/dev/port',
+        baudrate = 9600,
+        bytesize = 8,
+        stopbits = 1,
+        parity = 'N',
+        timeout = 0.3)
     hottop = Hottop(serial=hottop_serial)
     hottop.start()
     for _ in range(4):

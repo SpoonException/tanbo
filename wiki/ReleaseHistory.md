@@ -2,6 +2,135 @@ Detailed Release History
 ========================
 
 ----
+v3.4.1
+------------------
+
+* ADDITIONS
+  - adds support of the Lebrew RoastSee NEXT real-time Agtron and crack analyzer
+  - adds possibility to overwrite the event button value on alarm action `Event Button`
+  - adds support for [Acaia Pyxis Black (2025)](https://eu.acaia.co/products/pyxis-black)
+  - adds visual clue to curve LCDs indicating hidden curves
+  - adds Designer spline fitting ([PR #2050](../../../pull/2050) contributed by [Thomas](https://github.com/phreeza))
+
+* CHANGES
+  - removed the term `slave` from the project but for 2 lines (to be removed in later versions) to keep compatibility with older settings
+
+----
+v3.4.0 (Oct 31, 2025)
+------------------
+
+Last version featuring legacy builds supporting macOS 10.13+, Window 8 and Windows 9.
+
+* ADDITIONS
+  - adds tooltip to phases widget in Comparator displaying 2nd and 3rd phase bean temperatures (or RoR if ALT/Option key is pressed) limits ([Issue #1906](../../../issues/1906))
+  - adds support for [Kraffe](https://artisan-scope.org/machines/kraffe/) shop roasters
+  - adds support for [Berto Essential and Autonics](https://artisan-scope.org/machines/berto/) models
+  - adds support for [Nordic](https://artisan-scope.org/machines/nordic/) PLC models supporting burner, airflow, and drum speed control
+  - adds support for [Prisma](https://artisan-scope.org/machines/prisma/) USB and PLC models supporting burner, airflow, and drum speed control
+  - adds support for [Cogen roasting machines](https://artisan-scope.org/machines/cogen/) with Siemens PLC (v2)
+  - adds support for [Easyster Smart](https://artisan-scope.org/machines/easyster/), legacy [Proaster](https://artisan-scope.org/machines/proaster/) THCR-01A as well as Easyster/Proaster machines with air pressure sensor
+  - adds support for [Toper roasting machines](https://artisan-scope.org/machines/toper/) with PLC and touch screen produced after 2025 supporting burner, airflow, and drum speed control
+  - extended setups for [Sweet Coffee Italia Gemma_2IND and Gemma_6-8IND machines](https://artisan-scope.org/machines/sci/)
+  - extended setup for [Joper](https://joper-roasters.com/) PLC-based machines adding buttons to control the burner, cooler and stirrer states (ON/OFF)
+  - adds support for the 4 channel K/J type TC meter [Tasi TA612C](https://artisan-scope.org/devices/meters/) ([Discussion #1997](../../../discussions/1997))
+  - adds support for [Shelly energy meters](https://artisan-scope.org/devices/shelly/)
+  - adds batch conversion from Cropster XLS, Giesen CSV, IKAWA CSV, Loring CSV, Petroncini CSV, ROEST CSV, Rubase CSV, and Stronghold XLSX profiles to Artisan `.alog` profiles
+  - adds drag-and-drop import of a Artisan JSON, Cropster XLS, Giesen CSV and Stronghold XLSX profiles
+  - adds HiBean importer/converter
+  - adds Artisan Command `slider(<int>, <bool>)` to hide/show sliders
+  - adds Czech localization
+  - adds multi-modal state transitions to Batch Manager
+  - adds remaining total roast time estimate to scheduler and lists roast templates in scheduled items
+  - adds support for longer recordings as applied in coffee fermentation ([Discussion #1969](../../../discussions/1969))
+  - adds support for whole/ground color readings with one decimal ([Issue #1986](../../../issues/1986))
+  - adds flag to stop PID on DROP
+  - adds lookahead to ramping event replay
+  - adds CM ET/BT device reporting the current Comparison Metrics, CM, (square root of the average sum of squared differences), also known as Casino Mocca values, on how close the ET/BT curves are w.r.t. the loaded background after the DRY END as specified in the phases dialog
+
+* CHANGES
+  - BREAKING VISUAL CHANGE, but only when consecutive hidden buttons with Type or Action defined are first at the top of the Events Buttons table: The visual button layout may change as hidden buttons with Type or Action defined at the top of the Events Buttons table are no longer counted in the first row's button count, which is limited by the Max Buttons per Row setting.  All other hidden buttons continue to be counted in each row's button count.
+  - updates Spanish localization (thanks to Juan Carlos Bonilla)
+  - updates Chinese localization (thanks to [Terracotta-6](https://github.com/Terracotta-6))
+  - updates Korean localization (thanks to [HarioSwitch](https://github.com/hakulog))
+  - unlimited number of buttons can be created while display is limited to maximum 10 rows with maximum 50 buttons each
+  - palette load uses and updates the user selected profile path
+  - increases the maximum number of recent roast entries from 25 to 40
+  - makes synchronization of main events with Kaleido and Santoker roasting machines configurable (disabled by default)
+  - updates internal PID by adding Advanced Integral Windup Prevention, derivative on measurement calculation (DoM), measurement discontinuity detection, derivative limiting and enhanced setpoint change detection to prevent the derivative kicks and spikes
+  - updates libs (scipy, bleak, lxml, pillow)
+  - expands automatic test coverage
+  - graph updates immediately when smoothing value changes
+  - eliminates the term 'slave' from the whole project, but for a small compatibility layer to be remove in one of the next versions
+  - updates MPL default font selection for Asian and Arabic languages under Windows
+  - the batch counter and autosave mechanisms are now active by default after first installation or a factory reset
+  - the configuration for taking ambient temperature from a data curve moved from the Roast Properties dialog to the Devices configuration dialog and configurations for taking ambient humidity and ambient pressure from curve data have been added ([Issue #586](../../../issues/586) and [PR #1882](../../../pull/1882))
+  - ensures that the default file suffixes on file save are applied ([PR #1965](../../../pull/1965)). Thanks [Scott](https://github.com/scottjames)!
+  - activates large PID LCDs for internal software PID and external TC4/MODBUS/S7 PIDs
+  - the scheduler indicates now significant changes to the current schedule as received from [artisan.aplus](https://artisan.aplus), which have to be acknowledged by the user
+  - changes `COOL` in alarms to `COOL END` for consistency ([PR #1976](../../../pull/1976))
+  - remember loaded settings filename as default on save ([PR #1975](../../../pull/1975))
+  - BatchManager resets on tare triggered by button press on the Acaia scale
+  - automatic timeline extension now relative to sampling interval
+  - Linux builds require now glibc >=2.35
+
+* FIXES
+  - fixes regression which broke the designer such that points could not be moved ([Discussion #1905](../../../discussions/1905) and [Issue #1916](../../../issues/1916))
+  - fixes regression which broke the import of roast profiles exported from Cropster, Giesen, IKAWA, Loring, Petroncini, RoastLog, RoastPath, ROEST, Rubasse, and Stronghold ([Issue #1958](../../../issues/1958))
+  - fixes support for second scale
+  - fixes rendering of special characters like quotes in task displays of the Batch Manager
+  - fixes event buttons bottom row not rendered properly in all cases
+  - fixes number of rendered event buttons rows
+  - fixes graph bounce and jitter when moving the cursor in the designer
+  - fixes redraw issue with active crosslines in Comparator
+  - fixes minor quirk in PiOS deb postinstall and perm scripts ([Issue #1922](../../../issues/1922))
+  - fixes the OFF on DROP option for the WebSocket connection ([Issue #1943](../../../issues/1943))
+  - fixes a regression which broke the MODBUS communication with certain devices in Windows Legacy builds ([Issue #1931](../../../issues/1931))
+  - don't try to connect to the Hottop while still being connected to the Hottop ([Issue #1950](../../../issues/1950))
+  - fixes dynamic assignment of Yoctopuce PT100 modules
+  - adds note to the symbolic assignment help page that symbolic variables are case-sensitive ([Issue #1514](../../../issues/1514))
+  - fixes date/batch widgets color scheme ([Issue #1962](../../../issues/1962))
+  - fixes an issue where the selected default store could reset the selected coffee or blend
+  - fixes typo that caused plus blend ingredient names to not being loaded from alog profiles
+  - adds missing unit translations for Chinese and revert to English on missing locale support
+  - adds additional margin to cupping spider graph to prevent clipping in full screen mode
+  - fixes a build issue on Linux ([Issue #2003](../../../issues/2003))
+
+
+----
+v3.2.0 (June 23, 2025)
+------------------
+
+Last version supporting macOS 12, Ubuntu 22.04 and RedHat 8.4.
+
+* ADDITIONS
+  - adds [batch manager](https://doc.artisan.plus/docs/batch-manager)
+  - adds support for Acaia relay scales like the [Umbra](https://acaia.co/products/umbra-lunar) and the [Cosmo](https://buy.artisan.plus/Acaia-Cosmo-Scale)
+  - adds custom local scale names
+  - adds button to manual synchronize the roast schedule with [artisan.plus](https://artisan.plus)
+  - adds URL open handler for Linux/RPi
+  - adds possibility to dock sliders to the right side of the main window ([Discussion #1880](../../../discussions/1880))
+
+* CHANGES
+  - improves WebSocket performance communicating with slow servers
+  - improves full redraw performance
+  - increases maximum frequency of schedule updates
+  - updates Spanish translations (thanks to Juan!)
+  - updates Turkish translations by Kemal of [Shady Coffee Roastery](https://shady.com.tr) as their gift to the Turkish professional and home user coffee roasting community
+  - upgrade libusb-package on Windows
+  - limits maximum number of major axis ticks and draws minor axis ticks only if productive
+  - deactivates AutoDROP in Hottop 2k+ machine setup ([Issue #1862](../../../issues/1862))
+
+* FIXES
+  - fixes an unhandled exception on loading settings related to scales configurations ([Issue #1847](../../../issues/1847))
+  - fixes regression which broke show-events-on-BT in v3.1.2 and v3.1.4
+  - fixes delayed closing of the Roast Properties dialog on some configurations ([Issue #1852](../../../issues/1852))
+  - hardens event name substitution on background load ([Issue #1863](../../../issues/1863))
+  - prevents smoothing extra device curves using rate of rise symbolic variables
+  - deactivates processing of event state flag returned from Kaleido machines to trigger Artisan events like CHARGE and DROP ([Issue #1851](../../../issues/1851))
+
+
+
+----
 v3.1.4 (May 1, 2025)
 ------------------
 * FIXES
@@ -346,6 +475,7 @@ v2.10.0 (November 28, 2023)
 v2.8.4 (June 21, 2023)
 ------------------
 
+Last version supporting macOS 11, but newer legacy builds still support macOS 10.13 and newer.
 
 * ADDITIONS
   - adds official support for [Kaleido]([https://www.kaleido-roaster.com/](https://artisan-scope.org/machines/kaleido/)) Network, Serial and Legacy protocols
@@ -421,6 +551,8 @@ v2.8.4 (June 21, 2023)
 ----
 v2.8.2 (December 21, 2022)
 ------------------
+
+Last version supporting macOS 10.15, but legacy builds of v2.8 still supports macOS 10.13+.
 
 * NEW FEATURES
   - adds [Sivetz fluid bed roasting machines](https://artisan-scope.org/machines/sivetz/) support
@@ -635,6 +767,8 @@ v2.6.0 (March 11, 2022)
 v2.4.6 (July 30, 2021)
 ------------------
 
+Last version supporting Windows 8, but legacy build of v2.6.0 supports Windows 8.
+
 * NEW FEATURES
   - adds [energy and CO2 calculator](https://artisan-roasterscope.blogspot.com/2021/07/tracking-energy-consumption-co2.html)
   - adds a flag "Show Full" to the Curve and Background dialog to control of foreground and background curves before CHARGE and after DROP (keyboard shortcuts `i` and `o`)
@@ -714,6 +848,8 @@ v2.4.6 (July 30, 2021)
 v2.4.4 (December 14, 2020)
 ------------------
 
+Last version supporting Raspbian Stretch.
+
 * NEW FEATURES
   - adds machine setups for the PLC equipped machines from [Nordic](https://artisan-scope.org/machines/nordic/), [Fabrica Roasters](https://artisan-scope.org/machines/fabrica/) and [MCR Series in C](https://artisan-scope.org/machines/mcr/)
   - adds support for [Phidget HUM1001](https://www.phidgets.com/?tier=3&catid=14&pcid=12&prodid=1179)
@@ -768,12 +904,12 @@ Richard Rodrigues](https://github.com/rich1n))
   - applies Delta BT auto axis computation also to Web Ranking reports
 
 
-**Note**
-_This is the last version supporting Raspbian Stretch_
 
 ----
 v2.4.2 (October 2, 2020)
 ------------------
+
+Last version supporting macOS 10.13 and 10.14; note that legacy builds of v2.6.0 and v2.8.0 again supports those systems-
 
 * NEW FEATURES
   - extended machine support
@@ -835,9 +971,6 @@ v2.4.2 (October 2, 2020)
   - prevents saving NaN annotation and flag coordinates in profiles ([Issue #505](../../../issues/505))
   - fixes Transposer crash ([Issue #506](../../../issues/506))
   - fixes palette loading from .apal files
-
-**Note**
-_This is the last version supporting macOS 10.13 and 10.14_
 
 
 ----

@@ -6,7 +6,7 @@
 # This program or module is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
 # by the Free Software Foundation, either version 2 of the License, or
-# version 3 of the License, or (at your option) any later versison. It is
+# version 3 of the License, or (at your option) any later version. It is
 # provided for educational purposes and is distributed in the hope that
 # it will be useful, but WITHOUT ANY WARRANTY; without even the implied
 # warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
@@ -15,13 +15,15 @@
 # AUTHOR
 # Marko Luther, 2023
 
+import time
 import logging
 import asyncio
 
 from contextlib import suppress
 from threading import Thread
 from pymodbus.transport.serialtransport import create_serial_connection # patched pyserial-asyncio
-from typing import Final, Optional, Union, Tuple, Callable, AsyncIterator, TYPE_CHECKING
+from collections.abc import Callable, AsyncIterator
+from typing import Final, TYPE_CHECKING
 
 
 if TYPE_CHECKING:
@@ -59,9 +61,10 @@ class AsyncLoopThread:
         self.__thread.start()
 
     def __del__(self) -> None:
-        self.__loop.call_soon_threadsafe(self.__loop.stop)
+        if not self.__loop.is_closed():
+            self.__loop.call_soon_threadsafe(self.__loop.stop) # pyrefly: ignore[bad-argument-type] # __loop.stop() might raise exception if __loop is closed
 #        self.__thread.join()
-# WARNING: we don't join and expect the clients running on this thread to stop themself
+# WARNING: we don't join and expect the clients running on this thread to stop them
 # (using self._running) to finally get rid of this thread to prevent hangs
 
     @property
@@ -99,7 +102,7 @@ class IteratorReader:
 
         while True:
             try:
-                content += await self._chunks.__anext__()
+                content += await anext(self._chunks)
             except StopAsyncIteration:
                 break
 
@@ -113,7 +116,7 @@ class IteratorReader:
         while bytes_read < size:
 
             try:
-                chunk = await self._chunks.__anext__()
+                chunk = await anext(self._chunks)
             except StopAsyncIteration:
                 break
 
@@ -130,36 +133,38 @@ class IteratorReader:
             return await self._read_until_end()
         return b''
 
+    # returns only the data incl. the final separator
     async def readuntil(self, separator:bytes = b'\n') -> bytes:
+        res = b''
         if len(separator) != 0:
             while True:
                 next_char = await self.readexactly(len(separator))
+                res += next_char
                 if next_char == separator:
                     break
-        return separator
-
+        return res
 
 class AsyncComm:
 
     __slots__ = [ '_asyncLoopThread', '_write_queue', '_running', '_host', '_port', '_serial', '_connected_handler', '_disconnected_handler',
                     '_verify_crc', '_logging' ]
 
-    def __init__(self, host:str = '127.0.0.1', port:int = 8080, serial:Optional['SerialSettings'] = None,
-                connected_handler:Optional[Callable[[], None]] = None,
-                disconnected_handler:Optional[Callable[[], None]] = None) -> None:
+    def __init__(self, host:str = '127.0.0.1', port:int = 8080, serial:'SerialSettings|None' = None,
+                connected_handler:Callable[[], None]|None = None,
+                disconnected_handler:Callable[[], None]|None = None) -> None:
         # internals
-        self._asyncLoopThread: Optional[AsyncLoopThread]       = None # the asyncio AsyncLoopThread object
-        self._write_queue: 'Optional[asyncio.Queue[bytes]]'    = None # noqa: UP037 # quotes for Python3.8 # the write queue
-        self._running:bool                                     = False              # while True we keep running the thread
+        self._asyncLoopThread: AsyncLoopThread|None       = None # the asyncio AsyncLoopThread object
+        self._write_queue:  asyncio.Queue[bytes]|None     = None # noqa: UP037 # quotes for Python3.8 # the write_queue
+        self._running:bool                                = False              # while true we keep running the thread
 
         # connection
         self._host:str = host
         self._port:int = port
-        self._serial:Optional[SerialSettings] = serial
+        self._serial:SerialSettings|None = serial
 
         # handlers
-        self._connected_handler:Optional[Callable[[], None]] = connected_handler
-        self._disconnected_handler:Optional[Callable[[], None]] = disconnected_handler
+        self._connected_handler:Callable[[], None]|None = connected_handler
+        self._disconnected_handler:Callable[[], None]|None = disconnected_handler
 
         # configuration
         self._verify_crc:bool = True  # if True the CRC of incoming messages is verified
@@ -175,15 +180,15 @@ class AsyncComm:
         self._logging = b
 
     @property
-    def async_loop_thread(self) -> Optional[AsyncLoopThread]:
+    def async_loop_thread(self) -> AsyncLoopThread|None:
         return self._asyncLoopThread
 
 
     # asyncio loop
 
     @staticmethod
-    async def open_serial_connection(*, loop:Optional[asyncio.AbstractEventLoop] = None,
-            limit:Optional[int] = None, **kwargs:Union[int,float,str]) -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+    async def open_serial_connection(url:str, *, loop:asyncio.AbstractEventLoop|None = None,
+            limit:int|None = None, **kwargs:int|float|str) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
         """A wrapper for create_serial_connection() returning a (reader,
         writer) pair.
 
@@ -204,7 +209,7 @@ class AsyncComm:
         reader = asyncio.StreamReader(limit=limit, loop=loop)
         protocol = asyncio.StreamReaderProtocol(reader, loop=loop)
         transport, _ = await create_serial_connection(
-            loop=loop, protocol_factory=lambda: protocol, **kwargs
+            loop, lambda: protocol, url, **kwargs
         )
         writer = asyncio.StreamWriter(transport, protocol, reader, loop)
         return reader, writer
@@ -250,15 +255,17 @@ class AsyncComm:
                 while message != b'':
                     await self.write(writer, message)
                     message = await queue.get()
+                # on empty messages we close the connection
+                writer.close()
         except Exception as e: # pylint: disable=broad-except
             _log.error(e)
         finally:
             with suppress(asyncio.CancelledError, ConnectionResetError):
                 await writer.drain()
 
-    # if serial settings are given, host/port are ignore and communication is handled by the given serial port
+    # if serial settings are given, the host/port settings are ignored and communication is handled by the given serial port
     async def connect(self, connect_timeout:float=5) -> None:
-        writer = None
+        writer:asyncio.StreamWriter|None = None
         while self._running:
             try:
                 if self._serial is not None:
@@ -275,7 +282,7 @@ class AsyncComm:
                     connect = asyncio.open_connection(self._host, self._port)
                 # Wait for 2 seconds, then raise TimeoutError
                 reader, writer = await asyncio.wait_for(connect, timeout=connect_timeout)
-                if reader is not None and writer is not None:
+                if writer is not None: # pyright:ignore[reportUnnecessaryComparison] # reader is of type asyncio.streams.StreamReader and thus never None
                     _log.debug('connected')
                     if self._connected_handler is not None:
                         try:
@@ -295,7 +302,7 @@ class AsyncComm:
                         if isinstance(exception, Exception):
                             raise exception
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 _log.debug('connection timeout')
             except Exception as e: # pylint: disable=broad-except
                 _log.error(e)
@@ -337,6 +344,8 @@ class AsyncComm:
     def stop(self) -> None:
         _log.debug('stop sampling')
         self._running = False
+        self.send(b'') # we write an empty byte to stop the writer and disconnect
+        time.sleep(0.3) # wait a moment to allow the loop to disconnect
         self._asyncLoopThread = None
         self._write_queue = None
         self.reset_readings()

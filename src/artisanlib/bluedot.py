@@ -17,7 +17,8 @@
 # Marko Luther, 2025
 
 import logging
-from typing import Optional, Final, Callable, TYPE_CHECKING
+from collections.abc import Callable
+from typing import override, Final, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from bleak.backends.characteristic import BleakGATTCharacteristic  # pylint: disable=unused-import
@@ -38,13 +39,13 @@ class BlueDOT(ClientBLE):
 
 
     def __init__(self,
-                    connected_handler:Optional[Callable[[], None]] = None,
-                    disconnected_handler:Optional[Callable[[], None]] = None) -> None:
+                    connected_handler:Callable[[], None]|None = None,
+                    disconnected_handler:Callable[[], None]|None = None) -> None:
         super().__init__()
 
         # handlers
-        self.connected_handler:Optional[Callable[[], None]] = connected_handler
-        self.disconnected_handler:Optional[Callable[[], None]] = disconnected_handler
+        self.connected_handler:Callable[[], None]|None = connected_handler
+        self.disconnected_handler:Callable[[], None]|None = disconnected_handler
 
         # configuration
         self._logging = False         # if True device communication is logged
@@ -55,10 +56,11 @@ class BlueDOT(ClientBLE):
 
         # register BlueDOT UUIDs
         self.add_device_description(
-            #self.BlueDOT_SERVICE_UUID,
+            None, #self.BlueDOT_SERVICE_UUID,
             self.BlueDOT_NAME)
         self.add_notify(self.BlueDOT_NOTIFY_UUID, self.notify_callback)
 
+    @override
     def setLogging(self, b:bool) -> None:
         self._logging = b
 
@@ -67,10 +69,12 @@ class BlueDOT(ClientBLE):
         self._ET = -1
 
 
+    @override
     def on_connect(self) -> None:
         if self.connected_handler is not None:
             self.connected_handler()
 
+    @override
     def on_disconnect(self) -> None:
         self.reset_readings()
         if self.disconnected_handler is not None:

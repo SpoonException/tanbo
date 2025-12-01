@@ -23,12 +23,7 @@
 
 """This module connects to the artisan.plus inventory management service."""
 
-try:
-    #pylint: disable = E, W, R, C
-    from PyQt6.QtCore import QSemaphore # @UnusedImport @Reimport  @UnresolvedImport
-except Exception: # pylint: disable=broad-except
-    #pylint: disable = E, W, R, C
-    from PyQt5.QtCore import QSemaphore # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import QSemaphore
 
 from pathlib import Path
 from artisanlib.util import getDirectory
@@ -36,7 +31,7 @@ from plus import config
 
 import os
 import logging
-from typing import Final, Optional, IO
+from typing import Final, IO
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -55,7 +50,7 @@ account_cache_lock_path:str = getDirectory(
 )
 
 
-def setAccountShelve(account_id: str, fh:IO[str]) -> Optional[int]:
+def setAccountShelve(account_id: str, fh:IO[str]) -> int|None:
     _log.debug('setAccountShelve(%s,_fh_)', account_id)
     import dbm
     import shelve
@@ -111,18 +106,21 @@ def setAccountShelve(account_id: str, fh:IO[str]) -> Optional[int]:
             return None
     finally:
         fh.flush()
-        os.fsync(fh.fileno())
+        try:
+            os.fsync(fh.fileno())
+        except Exception:  # pylint: disable=broad-except
+            pass
 
 
 # register the given account_id and assign it a fresh number if not yet
 # registered returns the number associated to account_id or None on error
-def setAccount(account_id: str) -> Optional[int]:
+def setAccount(account_id: str) -> int|None:
     import portalocker
     try:
         fh:IO[str]
         account_cache_semaphore.acquire(1)
         _log.debug('setAccount(%s)', account_id)
-        with portalocker.Lock(account_cache_lock_path, timeout=0.5) as fh:
+        with portalocker.Lock(account_cache_lock_path, timeout=0.5) as fh: # pyrefly: ignore
             return setAccountShelve(account_id, fh)
     except portalocker.exceptions.LockException as e:
         _log.exception(e)
@@ -135,7 +133,7 @@ def setAccount(account_id: str) -> Optional[int]:
         _log.debug(
             'retry setAccount(%s)', account_id
         )
-        with portalocker.Lock(account_cache_lock_path, timeout=0.3) as fh:
+        with portalocker.Lock(account_cache_lock_path, timeout=0.3) as fh: # pyrefly: ignore
             return setAccountShelve(account_id, fh)
     except Exception as e:  # pylint: disable=broad-except
         _log.exception(e)

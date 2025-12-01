@@ -15,21 +15,15 @@
 # AUTHOR
 # Marko Luther, 2023
 
-from typing import Optional, TYPE_CHECKING
+from typing import override, TYPE_CHECKING
 
 from artisanlib.util import fromCtoF, fromFtoC, stringfromseconds, stringtoseconds, comma2dot, weight_units, convertWeight, convertVolume
 from artisanlib.dialogs import ArtisanDialog
 
-try:
-    from PyQt6.QtCore import pyqtSlot, QSettings, QRegularExpression # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtGui import QRegularExpressionValidator # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtWidgets import (QApplication, QLabel, QGridLayout, QGroupBox, QLineEdit, # @UnusedImport @Reimport  @UnresolvedImport
-        QComboBox, QHBoxLayout, QVBoxLayout) # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import pyqtSlot, QSettings, QRegularExpression # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtGui import QRegularExpressionValidator # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtWidgets import (QApplication, QLabel, QGridLayout, QGroupBox, QLineEdit, # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-        QComboBox, QHBoxLayout, QVBoxLayout) # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import pyqtSlot, QSettings, QRegularExpression
+from PyQt6.QtGui import QRegularExpressionValidator
+from PyQt6.QtWidgets import (QApplication, QLabel, QGridLayout, QGroupBox, QLineEdit,
+    QComboBox, QHBoxLayout, QVBoxLayout)
 
 
 if TYPE_CHECKING:
@@ -55,15 +49,15 @@ class calculatorDlg(ArtisanDialog):
         endlabel = QLabel(QApplication.translate('Label', 'End (00:00)'))
         self.startEdit = QLineEdit()
         self.endEdit = QLineEdit()
-        regextime = QRegularExpression(r'^[0-5][0-9]:[0-5][0-9]$')
+        regextime = QRegularExpression(r'^-?[0-9]?[0-9]?[0-9][:,h][0-5][0-9]$')
         self.startEdit.setValidator(QRegularExpressionValidator(regextime,self))
         self.endEdit.setValidator(QRegularExpressionValidator(regextime,self))
         self.startEdit.editingFinished.connect(self.calculateRC)
         self.endEdit.editingFinished.connect(self.calculateRC)
         nevents = len(self.aw.qmc.specialevents)
-        events_found = [f'{QApplication.translate("Form Caption", "Event")} #0']
+        events_found = [f"{QApplication.translate('Form Caption', 'Event')} #0"]
         for i in range(nevents):
-            events_found.append(f'{QApplication.translate("Form Caption", "Event")} #{str(i+1)}')
+            events_found.append(f"{QApplication.translate('Form Caption', 'Event')} #{str(i+1)}")
         self.eventAComboBox = QComboBox()
         self.eventAComboBox.addItems(events_found)
         self.eventAComboBox.currentIndexChanged.connect(self.calcEventRC)
@@ -234,31 +228,34 @@ class calculatorDlg(ArtisanDialog):
             if not self.startEdit.text() or not self.endEdit.text():
                 #empty field
                 return
-            starttime = stringtoseconds(str(self.startEdit.text()))
-            endtime = stringtoseconds(str(self.endEdit.text()))
-            if starttime == -1 or endtime == -1:
-                self.result1.setText(QApplication.translate('Label', 'Time syntax error. Time not valid'))
+            try:
+                starttime = stringtoseconds(str(self.startEdit.text()))
+                endtime = stringtoseconds(str(self.endEdit.text()))
+                if  endtime > self.aw.qmc.timex[-1] or endtime < starttime:
+                    self.aw.sendmessage(QApplication.translate('Label', 'Error: End time smaller than Start time'))
+                    self.result1.setText('')
+                    self.result2.setText('')
+                    return
+                if self.aw.qmc.timeindex[0] != -1:
+                    start = self.aw.qmc.timex[self.aw.qmc.timeindex[0]]
+                else:
+                    start = 0
+                startindex = self.aw.qmc.time2index(starttime + start)
+                endindex = self.aw.qmc.time2index(endtime + start)
+                #delta
+                deltatime = self.aw.qmc.timex[endindex] -  self.aw.qmc.timex[startindex]
+                deltatemperature = self.aw.qmc.temp2[endindex] - self.aw.qmc.temp2[startindex]
+                deltaseconds = 0 if deltatime == 0 else deltatemperature / deltatime
+                deltaminutes = deltaseconds*60.
+                string1 = QApplication.translate('Label', 'Best approximation was made from {0} to {1}').format(stringfromseconds(self.aw.qmc.timex[startindex]- start),stringfromseconds(self.aw.qmc.timex[endindex]- start))
+                string2 = QApplication.translate('Label', '<b>{0}</b> {1}/sec, <b>{2}</b> {3}/min').format(f'{deltaseconds:.2f}',self.aw.qmc.mode,f'{deltaminutes:.2f}',self.aw.qmc.mode)
+                self.result1.setText(string1)
+                self.result2.setText(string2)
+            except Exception: # pylint: disable=broad-except
+                self.aw.sendmessage(QApplication.translate('Label', 'Time syntax error. Time not valid'))
+                self.result1.setText('')
                 self.result2.setText('')
                 return
-            if  endtime > self.aw.qmc.timex[-1] or endtime < starttime:
-                self.result1.setText(QApplication.translate('Label', 'Error: End time smaller than Start time'))
-                self.result2.setText('')
-                return
-            if self.aw.qmc.timeindex[0] != -1:
-                start = self.aw.qmc.timex[self.aw.qmc.timeindex[0]]
-            else:
-                start = 0
-            startindex = self.aw.qmc.time2index(starttime + start)
-            endindex = self.aw.qmc.time2index(endtime + start)
-            #delta
-            deltatime = self.aw.qmc.timex[endindex] -  self.aw.qmc.timex[startindex]
-            deltatemperature = self.aw.qmc.temp2[endindex] - self.aw.qmc.temp2[startindex]
-            deltaseconds = 0 if deltatime == 0 else deltatemperature / deltatime
-            deltaminutes = deltaseconds*60.
-            string1 = QApplication.translate('Label', 'Best approximation was made from {0} to {1}').format(stringfromseconds(self.aw.qmc.timex[startindex]- start),stringfromseconds(self.aw.qmc.timex[endindex]- start))
-            string2 = QApplication.translate('Label', '<b>{0}</b> {1}/sec, <b>{2}</b> {3}/min').format('%.2f'%(deltaseconds),self.aw.qmc.mode,'%.2f'%(deltaminutes),self.aw.qmc.mode) # pylint: disable=consider-using-f-string # noqa: UP031
-            self.result1.setText(string1)
-            self.result2.setText(string2)
         else:
             self.result1.setText(QApplication.translate('Label', 'No profile found'))
             self.result2.setText('')
@@ -328,7 +325,9 @@ class calculatorDlg(ArtisanDialog):
         self.yieldEdit.setText(f'{cyield:.1f}')
 
     @pyqtSlot('QCloseEvent')
-    def closeEvent(self, _:Optional['QCloseEvent'] = None) -> None:
+    @override
+    def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
+        del a0
         settings = QSettings()
         #save window geometry
         settings.setValue('CalculatorGeometry',self.saveGeometry())

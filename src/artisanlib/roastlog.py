@@ -5,31 +5,32 @@
 import time as libtime
 import dateutil.parser
 import requests
-from requests_file import FileAdapter # type: ignore  # @UnresolvedImport
+from requests_file import FileAdapter
 import re
 from lxml import html
 import logging
-from typing import Final, List, Optional, TYPE_CHECKING
+from collections.abc import Callable
+from typing import Final, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from artisanlib.atypes import ProfileData # pylint: disable=unused-import
     from PyQt6.QtCore import QUrl # pylint: disable=unused-import
 
-try:
-    from PyQt6.QtCore import QDateTime, Qt # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import QDateTime, Qt # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import QDateTime, Qt
 
 
 from artisanlib.util import encodeLocal, stringtoseconds
+from artisanlib.atypes import ProfileData
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
 # returns a dict containing all profile information contained in the given RoastLog document pointed by the given QUrl
-def extractProfileRoastLog(url:'QUrl', _:'ApplicationWindow') -> Optional['ProfileData']:
-    res:ProfileData = {} # the interpreted data set
+def extractProfileRoastLog(url:'QUrl',
+        _etypesdefault:list[str],
+        _alt_etypesdefault:list[str],
+        _artisanflavordefaultlabels:list[str],
+        _eventsExternal2InternalValue:Callable[[int],float]) -> ProfileData|None:
+    res:ProfileData = ProfileData() # the interpreted data set
     try:
         s = requests.Session()
         s.mount('file://', FileAdapter())
@@ -43,25 +44,25 @@ def extractProfileRoastLog(url:'QUrl', _:'ApplicationWindow') -> Optional['Profi
             if isinstance(title0,str):
                 title = title0.strip()
 
-        tag_values = {}
+        tag_values:dict[str,str] = {}
         for tag in ['Roastable:', 'Starting mass:', 'Ending mass:', 'Roasted on:', 'Roasted by:', 'Roaster:', 'Roast level:', 'Roast Notes:']:
             tag_elements = tree.xpath(f'//td[contains(@class,"text-rt") and normalize-space(text())="{tag}"]/following::td[1]/text()')
             if isinstance(tag_elements, list) and len(tag_elements)>0:
                 tag_values[tag] = '\n'.join([str(e).strip() for e in tag_elements])
-        # {'Roastable:': '2003000 Diablo FTO BULK', 'Starting mass:': '140.00 lb', 'Ending mass:': '116.80 lb', 'Roasted on:': 'Thu, Jun 6th, 2019 11:11 PM', 'Roasted by:': 'Ryan@caffeladro.com', 'Roaster:': 'Diedrich CR-70'}
+        # {'Roastable:': '2003000 Diablo FTO BULK', 'Starting mass:': '140.00 lb', 'Ending mass:': '116.80 lb', 'Roasted on:': 'Thu, Jun 6th, 2019 11:11 PM', 'Roasted by:': 'infor@coffee.com', 'Roaster:': 'Diedrich CR-70'}
 
         if 'Roasted on:' in tag_values:
             try:
                 dt = dateutil.parser.parse(tag_values['Roasted on:'])
                 dateQt = QDateTime.fromSecsSinceEpoch(int(round(dt.timestamp())))
                 if dateQt.isValid():
-                    roastdate:Optional[str] = encodeLocal(dateQt.date().toString())
+                    roastdate:str|None = encodeLocal(dateQt.date().toString())
                     if roastdate is not None:
                         res['roastdate'] = roastdate
-                    roastisodate:Optional[str] = encodeLocal(dateQt.date().toString(Qt.DateFormat.ISODate))
+                    roastisodate:str|None = encodeLocal(dateQt.date().toString(Qt.DateFormat.ISODate))
                     if roastisodate is not None:
                         res['roastisodate'] = roastisodate
-                    roasttime:Optional[str] = encodeLocal(dateQt.time().toString())
+                    roasttime:str|None = encodeLocal(dateQt.time().toString())
                     if roasttime is not None:
                         res['roasttime'] = roasttime
                     res['roastepoch'] = int(dateQt.toSecsSinceEpoch())
@@ -116,11 +117,11 @@ def extractProfileRoastLog(url:'QUrl', _:'ApplicationWindow') -> Optional['Profi
                 response = requests.get(url_str, timeout=(4, 15), headers=headers)
                 data_json = response.json()
 
-                timeindex:List[int] = [-1,0,0,0,0,0,0,0]
-                specialevents:List[int] = []
-                specialeventstype:List[int] = []
-                specialeventsvalue:List[float] = []
-                specialeventsStrings:List[str] = []
+                timeindex:list[int] = [-1,0,0,0,0,0,0,0]
+                specialevents:list[int] = []
+                specialeventstype:list[int] = []
+                specialeventsvalue:list[float] = []
+                specialeventsStrings:list[str] = []
                 timex = []
                 temp1,temp2,temp3,temp4 = [],[],[],[]
 
@@ -151,11 +152,11 @@ def extractProfileRoastLog(url:'QUrl', _:'ApplicationWindow') -> Optional['Profi
                     if len(timex) == len(temp1):
                         res['temp2'] = temp1
                     else:
-                        res['temp2'] = [-1]*len(timex)
+                        res['temp2'] = [-1.0]*len(timex)
                     if len(timex) == len(temp2):
                         res['temp1'] = temp2
                     else:
-                        res['temp1'] = [-1]*len(timex)
+                        res['temp1'] = [-1.0]*len(timex)
                     if len(temp3) == len(timex) or len(temp4) == len(timex):
                         temp3_visibility = True
                         temp4_visibility = True
@@ -165,12 +166,12 @@ def extractProfileRoastLog(url:'QUrl', _:'ApplicationWindow') -> Optional['Profi
                         if len(temp3) == len(timex):
                             res['extratemp1'] = [temp3]
                         else:
-                            res['extratemp1'] = [[-1]*len(timex)]
+                            res['extratemp1'] = [[-1.0]*len(timex)]
                             temp3_visibility = False
                         if len(temp4) == len(timex):
                             res['extratemp2'] = [temp4]
                         else:
-                            res['extratemp2'] = [[-1]*len(timex)]
+                            res['extratemp2'] = [[-1.0]*len(timex)]
                             temp4_visibility = False
                         res['extraname1'] = [temp3_label]
                         res['extraname2'] = [temp4_label]

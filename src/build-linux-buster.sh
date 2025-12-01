@@ -95,6 +95,9 @@ cp includes/alarmclock.eot dist
 cp includes/alarmclock.svg dist
 cp includes/alarmclock.ttf dist
 cp includes/alarmclock.woff dist
+cp includes/roboto-300.woff2 dist
+cp includes/roboto-600.woff2 dist
+cp includes/roboto-regular.woff2 dist
 cp includes/android-chrome-192x192.png dist
 cp includes/android-chrome-512x512.png dist
 cp includes/apple-touch-icon.png dist
@@ -106,7 +109,9 @@ cp includes/mstile-150x150.png dist
 cp includes/safari-pinned-tab.svg dist
 cp includes/site.webmanifest dist
 cp includes/artisan.tpl dist
+cp includes/scale_widget.tpl dist
 cp includes/bigtext.js dist
+cp includes/fitty_patched.js dist
 cp includes/sorttable.js dist
 cp includes/report-template.htm dist
 cp includes/roast-template.htm dist

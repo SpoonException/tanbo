@@ -19,36 +19,29 @@ import platform
 import logging
 import re
 
-try:
-    from PyQt6.QtCore import Qt, QEvent, QSettings, pyqtSlot, pyqtSignal, QRegularExpression # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtWidgets import (QApplication, QWidget, QDialog, QMessageBox, QDialogButtonBox, QTextEdit,  # @UnusedImport @Reimport  @UnresolvedImport
-                QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QLayout, QTableWidget, QHeaderView, QPushButton)  # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtGui import QKeySequence, QAction, QIntValidator, QTextCharFormat, QTextCursor, QColor  # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import Qt, QEvent, QSettings, pyqtSlot, pyqtSignal, QRegularExpression # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtWidgets import (QApplication, QWidget, QAction, QDialog, QMessageBox, QDialogButtonBox, QTextEdit, # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-                QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QLayout, QTableWidget, QHeaderView, QPushButton) # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtGui import QKeySequence, QIntValidator, QTextCharFormat, QTextCursor, QColor # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import Qt, QEvent, QSettings, pyqtSlot, pyqtSignal, QRegularExpression
+from PyQt6.QtWidgets import (QApplication, QWidget, QDialog, QMessageBox, QDialogButtonBox, QTextEdit,
+            QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QLayout, QTableWidget, QHeaderView, QPushButton, QSpinBox, QCheckBox)
+from PyQt6.QtGui import QKeySequence, QAction, QIntValidator, QTextCharFormat, QTextCursor, QColor
 
 from artisanlib.widgets import MyQComboBox, ClickableQLineEdit
 from artisanlib.util import comma2dot, float2float, float2floatWeightVolume, convertWeight, weight_units
 
-from typing import Optional, List, Tuple, cast, Callable, TYPE_CHECKING
-from typing import Final  # Python <=3.7
+from collections.abc import Callable
+from typing import override, Final, cast, TYPE_CHECKING
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QPushButton # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent, QKeyEvent, QShowEvent, QTextCursor  # pylint: disable=unused-import
-    from PyQt6.QtCore import QTimerEvent, QEvent, QObject # pylint: disable=unused-import
+    from PyQt6.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent, QKeyEvent, QShowEvent  # pylint: disable=unused-import
+    from PyQt6.QtCore import QTimerEvent, QObject # pylint: disable=unused-import
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
-class ArtisanDialog(QDialog): # pyright: ignore [reportGeneralTypeIssues] # Argument to class must be a base class
+class ArtisanDialog(QDialog): # pyrefly:ignore[invalid-inheritance] # pyright: ignore [reportGeneralTypeIssues] # Argument to class must be a base class
 
     __slots__ = ['aw', 'dialogbuttons']
 
-    def __init__(self, parent:Optional[QWidget], aw:'ApplicationWindow') -> None:
-        super().__init__(parent)
+    def __init__(self, parent:QWidget|None, aw:'ApplicationWindow') -> None:
+        super().__init__(parent)  # pyrefly: ignore[bad-argument-count]
         self.aw = aw # the Artisan application window
 
         # IMPORTANT NOTE: if dialog items have to be access after it has been closed, this Qt.WidgetAttribute.WA_DeleteOnClose attribute
@@ -70,12 +63,12 @@ class ArtisanDialog(QDialog): # pyright: ignore [reportGeneralTypeIssues] # Argu
 
         # configure standard dialog buttons
         self.dialogbuttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,Qt.Orientation.Horizontal)
-        okButton: Optional[QPushButton] = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
+        okButton: QPushButton|None = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
         if okButton is not None:
             okButton.setDefault(True)
             okButton.setAutoDefault(True)
             okButton.setFocusPolicy(Qt.FocusPolicy.StrongFocus) # to add to tab focus switch
-        cancelButton: Optional[QPushButton] = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Cancel)
+        cancelButton: QPushButton|None = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Cancel)
         if cancelButton is not None:
             cancelButton.setDefault(False)
             cancelButton.setAutoDefault(False)
@@ -96,7 +89,7 @@ class ArtisanDialog(QDialog): # pyright: ignore [reportGeneralTypeIssues] # Argu
             self.setButtonTranslations(btn,txt,trans)
 
     @staticmethod
-    def setButtonTranslations(btn: Optional['QPushButton'], txt:str, trans:str) -> None:
+    def setButtonTranslations(btn: 'QPushButton|None', txt:str, trans:str) -> None:
         if btn is not None:
             current_trans = btn.text()
             if txt == current_trans:
@@ -111,23 +104,26 @@ class ArtisanDialog(QDialog): # pyright: ignore [reportGeneralTypeIssues] # Argu
         self.dialogbuttons.rejected.emit()
 
     @pyqtSlot('QCloseEvent')
-    def closeEvent(self,_:Optional['QCloseEvent'] = None) -> None:
+    @override
+    def closeEvent(self, a0:'QCloseEvent|None') -> None:
+        del a0
         self.dialogbuttons.rejected.emit()
 
-    def keyPressEvent(self, event: Optional['QKeyEvent']) -> None:
-        if event is not None:
-            key = int(event.key())
+    @override
+    def keyPressEvent(self, a0: 'QKeyEvent|None') -> None:
+        if a0 is not None:
+            key = int(a0.key())
             #uncomment next line to find the integer value of a key
             #print(key)
             #modifiers = QApplication.keyboardModifiers()
-            modifiers = event.modifiers()
+            modifiers = a0.modifiers()
             if key == 16777216 or (key == 87 and modifiers == Qt.KeyboardModifier.ControlModifier): #ESCAPE or CMD-W
                 self.close()
             else:
-                super().keyPressEvent(event)
+                super().keyPressEvent(a0)
 
 class ArtisanResizeablDialog(ArtisanDialog):
-    def __init__(self, parent:Optional[QWidget], aw:'ApplicationWindow') -> None:
+    def __init__(self, parent:QWidget|None, aw:'ApplicationWindow') -> None:
         super().__init__(parent, aw)
         if str(platform.system()) == 'Windows':
             windowFlags = self.windowFlags()
@@ -136,12 +132,12 @@ class ArtisanResizeablDialog(ArtisanDialog):
             self.setWindowFlags(windowFlags)
 
 # if modal=False the message box is not rendered as native dialog on macOS!
-class ArtisanMessageBox(QMessageBox): # pyright: ignore [reportGeneralTypeIssues] # Argument to class must be a base class
+class ArtisanMessageBox(QMessageBox): # pyrefly:ignore[invalid-inheritance] # pyright: ignore [reportGeneralTypeIssues] # Argument to class must be a base class
 
     __slots__ = ['timeout', 'currentTime']
 
-    def __init__(self, parent:Optional[QWidget] = None, title:Optional[str] = None, text:Optional[str] = None, timeout:int = 0, modal:bool = True) -> None:
-        super().__init__(parent)
+    def __init__(self, parent:QWidget|None = None, title:str|None = None, text:str|None = None, timeout:int = 0, modal:bool = True) -> None:
+        super().__init__(parent) # pyrefly: ignore[bad-argument-count]
         self.setWindowTitle(title)
         self.setText(text)
         self.setModal(modal)
@@ -152,12 +148,16 @@ class ArtisanMessageBox(QMessageBox): # pyright: ignore [reportGeneralTypeIssues
         self.timeout = timeout # configured timeout, defaults to 0 (no timeout)
         self.currentTime = 0 # counts seconds after timer start
 
-    def showEvent(self, _:Optional['QShowEvent']) -> None:
+    @override
+    def showEvent(self, a0:'QShowEvent|None') -> None:
+        del a0
         self.currentTime = 0
         if (self.timeout and self.timeout != 0):
             self.startTimer(1000)
 
-    def timerEvent(self, _:Optional['QTimerEvent']) -> None:
+    @override
+    def timerEvent(self, a0:'QTimerEvent|None') -> None:
+        del a0
         self.currentTime = self.currentTime + 1
         if self.currentTime >= self.timeout:
             self.done(0)
@@ -178,7 +178,7 @@ class HelpDlg(ArtisanDialog):
         self.phelp.setReadOnly(True)
 
         # Initialize search state variables
-        self.matches: List[QTextCursor] = []
+        self.matches: list[QTextCursor] = []
         self.current_match_index = 0
         self.previous_search_term = ''
 
@@ -212,14 +212,15 @@ class HelpDlg(ArtisanDialog):
         hLayout.addLayout(buttonLayout)
         self.setLayout(hLayout)
 
-    def keyPressEvent(self, event: Optional['QKeyEvent']) -> None:
-        if event is not None:
-            key = event.key()
+    @override
+    def keyPressEvent(self, a0: 'QKeyEvent|None') -> None:
+        if a0 is not None:
+            key = a0.key()
             # uncomment next lines to find the integer value and name of a key
             #key_name = QKeySequence(key).toString(QKeySequence.SequenceFormat.PortableText)
             #_log.info(f'{key=}, {key_name=}')
 
-            modifiers = event.modifiers()
+            modifiers = a0.modifiers()
             # Ctrl+F puts focus in the search box
             if key == Qt.Key.Key_F and modifiers == Qt.KeyboardModifier.ControlModifier:
                 self.search_input.setFocus()
@@ -233,10 +234,12 @@ class HelpDlg(ArtisanDialog):
                 if focused_widget is okButton or focused_widget is self.phelp:
                     self.handleClose()
             else:
-                super().keyPressEvent(event)
+                super().keyPressEvent(a0)
 
     @pyqtSlot('QCloseEvent')
-    def closeEvent(self, _: Optional['QCloseEvent'] = None) -> None:
+    @override
+    def closeEvent(self, a0: 'QCloseEvent|None' = None) -> None:
+        del a0
         self.handleClose()
 
     @pyqtSlot()
@@ -276,8 +279,8 @@ class HelpDlg(ArtisanDialog):
             cursor.movePosition(QTextCursor.MoveOperation.Start)
 
             # Collect all matches.
-            for _ in range(500000):  # arbitrarily large limit, better than while True, should always exit via break
-                found = self.phelp.document().find(regex, cursor)  # type: ignore  #self.phelp.document() will never be None
+            for _ in range(1000):  # arbitrarily large limit, better than while True, should always exit via break
+                found = self.phelp.document().find(regex, cursor)  # type: ignore[union-attr]  #self.phelp.document() will never be None
                 if found.isNull():
                     break
                 self.matches.append(found)
@@ -302,8 +305,8 @@ class HelpDlg(ArtisanDialog):
             # Highlight all matches, the current match in current_match_highlight and all others in extra_matches_highlight
             for i, matchCursor in enumerate(self.matches):
                 selection = QTextEdit.ExtraSelection()
-                selection.cursor = matchCursor
-                fmt = QTextCharFormat()
+                selection.cursor = matchCursor  # pyrefly: ignore[bad-assignment]
+                fmt:QTextCharFormat = QTextCharFormat()
                 fmt.setForeground(QColor(match_text))
                 if i == self.current_match_index:
                     fmt.setBackground(QColor(current_match_highlight))
@@ -311,7 +314,7 @@ class HelpDlg(ArtisanDialog):
                     fmt.setBackground(QColor(extra_matches_highlight))
                 if self.aw.app.darkmode:
                     fmt.setForeground(QColor('black'))
-                selection.format = fmt
+                selection.format = fmt # pyrefly: ignore[bad-assignment]
                 extraSelections.append(selection)
             # Move the visible cursor to the current match and clear its active selection
             self.phelp.setTextCursor(self.matches[self.current_match_index])
@@ -355,28 +358,30 @@ class ArtisanInputDialog(ArtisanDialog):
         # connect the ArtisanDialog standard OK/Cancel buttons
         self.dialogbuttons.rejected.connect(self.reject)
         self.dialogbuttons.accepted.connect(self.accept)
-        okButton: Optional[QPushButton] = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
+        okButton: QPushButton|None = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
         if okButton is not None:
             okButton.setFocus()
 
     @pyqtSlot()
+    @override
     def accept(self) -> None:
         self.url = self.inputLine.text()
         super().accept()
 
-    @staticmethod
-    def dragEnterEvent(event:Optional['QDragEnterEvent']) -> None:
-        if event is not None:
-            mimeData = event.mimeData()
+    @override
+    def dragEnterEvent(self, a0:'QDragEnterEvent|None') -> None:  # pylint: disable=no-self-use # overloaded method
+        if a0 is not None:
+            mimeData = a0.mimeData()
             if mimeData is not None:
                 if mimeData.hasUrls():
-                    event.accept()
+                    a0.accept()
                 else:
-                    event.ignore()
+                    a0.ignore()
 
-    def dropEvent(self, event:Optional['QDropEvent']) -> None:
-        if event is not None:
-            mimeData = event.mimeData()
+    @override
+    def dropEvent(self, a0:'QDropEvent|None') -> None:
+        if a0 is not None:
+            mimeData = a0.mimeData()
             if mimeData is not None and mimeData.hasUrls():
                 urls = mimeData.urls()
                 if urls and len(urls)>0:
@@ -387,10 +392,10 @@ class ArtisanComboBoxDialog(ArtisanDialog):
 
     __slots__ = [ 'idx', 'comboBox' ]
 
-    def __init__(self, parent:QWidget, aw:'ApplicationWindow', title:str = '', label:str='', choices:Optional[List[str]] = None, default:int = -1) -> None:
+    def __init__(self, parent:QWidget, aw:'ApplicationWindow', title:str = '', label:str='', choices:list[str]|None = None, default:int = -1) -> None:
         super().__init__(parent, aw)
 
-        self.idx:Optional[int] = None
+        self.idx:int|None = None
 
         self.setWindowTitle(title)
         self.setModal(True)
@@ -407,11 +412,12 @@ class ArtisanComboBoxDialog(ArtisanDialog):
         # connect the ArtisanDialog standard OK/Cancel buttons
         self.dialogbuttons.rejected.connect(self.reject)
         self.dialogbuttons.accepted.connect(self.accept)
-        okButton: Optional[QPushButton] = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
+        okButton: QPushButton|None = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
         if okButton is not None:
             okButton.setFocus()
 
     @pyqtSlot()
+    @override
     def accept(self) -> None:
         self.idx = self.comboBox.currentIndex()
         QDialog.accept(self)
@@ -422,18 +428,18 @@ class PortComboBox(MyQComboBox):  # pyright: ignore [reportGeneralTypeIssues] # 
     __slots__ = ['selection', 'select_device_name', 'ports','edited'] # save some memory by using slots
 
     # the given select_device_name is preferred (if a corresponding port is found) over the given selection port name
-    def __init__(self, parent:Optional[QWidget] = None, selection:Optional[str] = None, select_device_name:Optional[str] = None) -> None:
+    def __init__(self, parent:QWidget|None = None, selection:str|None = None, select_device_name:str|None = None) -> None:
         super().__init__(parent)
         self.installEventFilter(self)
-        self.selection:Optional[str] = selection # just the port name (first element of one of the triples in self.ports)
-        self.select_device_name:Optional[str] = select_device_name # device name (second element of one of the triples in self.ports)
+        self.selection:str|None = selection # just the port name (first element of one of the triples in self.ports)
+        self.select_device_name:str|None = select_device_name # device name (second element of one of the triples in self.ports)
 
         self.setEditable(True)
 
         # a list of triples as returned by serial.tools.list_ports
-        self.ports:List[Tuple[str, Optional[str], str]] = []  # list of tuples (port, desc, hwid)
+        self.ports:list[tuple[str, str|None, str]] = []  # list of tuples (port, desc, hwid)
         self.updateMenu()
-        self.edited:Optional[str] = None
+        self.edited:str|None = None
         if self.selection is not None:
             self.setCurrentText(self.selection)
         self.currentIndexChanged.connect(self.setSelection)
@@ -451,7 +457,7 @@ class PortComboBox(MyQComboBox):  # pyright: ignore [reportGeneralTypeIssues] # 
     def textEdited(self, txt:str) -> None:
         self.edited = txt
 
-    def getSelection(self) -> Optional[str]:
+    def getSelection(self) -> str|None:
         return self.edited or self.selection
 
     @pyqtSlot(int)
@@ -463,13 +469,14 @@ class PortComboBox(MyQComboBox):  # pyright: ignore [reportGeneralTypeIssues] # 
             except Exception: # pylint: disable=broad-except
                 pass
 
-    def eventFilter(self, obj:Optional['QObject'], event:Optional['QEvent']) -> bool:
+    @override
+    def eventFilter(self, a0:'QObject|None', a1:'QEvent|None') -> bool:
 # the next prevents correct setSelection on Windows
-#        if event.type() == QEvent.Type.FocusIn:
+#        if a1.type() == QEvent.Type.FocusIn:
 #            self.setSelection(self.currentIndex())
-        if event is not None and event.type() == QEvent.Type.MouseButtonPress:
+        if a1 is not None and a1.type() == QEvent.Type.MouseButtonPress:
             self.updateMenu()
-        return super().eventFilter(obj, event)
+        return super().eventFilter(a0, a1)
 
     def updateMenu(self) -> None:
         self.blockSignals(True)
@@ -504,12 +511,12 @@ class ArtisanPortsDialog(ArtisanDialog):
 
     __slots__ = [ 'idx', 'comboBox' ]
 
-    def __init__(self, parent:QWidget, aw:'ApplicationWindow', title:Optional[str] = None,
-            label:Optional[str] = None,
-            selection:Optional[str] = None,
-            select_device_name:Optional[str] = None) -> None:
+    def __init__(self, parent:QWidget, aw:'ApplicationWindow', title:str|None = None,
+            label:str|None = None,
+            selection:str|None = None,
+            select_device_name:str|None = None) -> None:
         super().__init__(parent, aw)
-        self.idx:Optional[int] = None
+        self.idx:int|None = None
         self.comboBox = PortComboBox(parent, selection, select_device_name)
 
         self.setWindowTitle(QApplication.translate('Message', 'Port Configuration') if title is None else title)
@@ -523,23 +530,24 @@ class ArtisanPortsDialog(ArtisanDialog):
         # connect the ArtisanDialog standard OK/Cancel buttons
         self.dialogbuttons.rejected.connect(self.reject)
         self.dialogbuttons.accepted.connect(self.accept)
-        okButton: Optional[QPushButton] = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
+        okButton: QPushButton|None = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
         if okButton is not None:
             okButton.setFocus()
 
-    def getSelection(self) -> Optional[str]:
+    def getSelection(self) -> str|None:
         return self.comboBox.getSelection()
 
     @pyqtSlot()
+    @override
     def accept(self) -> None:
         self.idx = self.comboBox.currentIndex()
         QDialog.accept(self)
 
 class ArtisanSliderLCDinputDlg(ArtisanDialog):
 
-    def __init__(self, parent:QWidget, aw:'ApplicationWindow', value:int, value_min:int, value_max:int, title:Optional[str] = None) -> None:
+    def __init__(self, parent:QWidget, aw:'ApplicationWindow', value:int, value_min:int, value_max:int, title:str|None = None) -> None:
         super().__init__(parent, aw)
-        self.value:Optional[int] = None
+        self.value:int|None = None
         if title is None:
             title = ''
         self.setWindowTitle(title)
@@ -576,6 +584,7 @@ class ArtisanSliderLCDinputDlg(ArtisanDialog):
         self.setLayout(mainLayout)
 
     @pyqtSlot()
+    @override
     def accept(self) -> None:
         self.value = int(self.valueEdit.text())
         super().accept()
@@ -589,7 +598,7 @@ class ArtisanSliderLCDinputDlg(ArtisanDialog):
 class tareDlg(ArtisanDialog):
     tare_updated_signal = pyqtSignal()  # signalled after tare data table got updated
 
-    def __init__(self, parent:ArtisanDialog, aw:'ApplicationWindow', get_scale_weight: Callable[[], Optional[float]]) -> None:
+    def __init__(self, parent:ArtisanDialog, aw:'ApplicationWindow', get_scale_weight: Callable[[], float|None]) -> None:
         super().__init__(parent, aw)
         self.parent_dialog = parent
         self.get_scale_weight = get_scale_weight
@@ -642,6 +651,7 @@ class tareDlg(ArtisanDialog):
             self.delButton.setDisabled(False)
 
     @pyqtSlot()
+    @override
     def accept(self) -> None:
         self.saveTareTable()
         self.tare_updated_signal.emit()
@@ -692,8 +702,8 @@ class tareDlg(ArtisanDialog):
 
     def saveTareTable(self) -> None:
         tars = self.taretable.rowCount()
-        names:List[str] = []
-        weights:List[float] = []
+        names:list[str] = []
+        weights:list[float] = []
         for i in range(tars):
             nameWidget = cast(QLineEdit, self.taretable.cellWidget(i,0))
             name = nameWidget.text()
@@ -712,10 +722,10 @@ class tareDlg(ArtisanDialog):
     @pyqtSlot()
     def weightEdited(self) -> None:
         sender = self.sender()
-        if sender and isinstance(sender, QLineEdit):
+        if sender and isinstance(sender, QLineEdit): # pyrefly: ignore[invalid-argument]
             text = sender.text().strip()
             if text == '':
-                w:Optional[float] = self.get_scale_weight() # read value from scale in 'g'
+                w:float|None = self.get_scale_weight() # read value from scale in 'g'
                 sender.setText(str(w if w is not None and w > 0 else 0))
             elif self.aw.qmc.weight[2] == 'Kg':
                 # if container weight in kg, but input value > 10, we interpret it as in g
@@ -736,15 +746,95 @@ class tareDlg(ArtisanDialog):
         self.taretable.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.taretable.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.taretable.setShowGrid(True)
-        vheader: Optional[QHeaderView] = self.taretable.verticalHeader()
+        vheader: QHeaderView|None = self.taretable.verticalHeader()
         if vheader is not None:
             vheader.setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
         for i, cn in enumerate(self.aw.qmc.container_names):
             #add widgets to the table
             self.setTableRow(i, cn, self.aw.qmc.container_weights[i])
 
-        header: Optional[QHeaderView] = self.taretable.horizontalHeader()
+        header: QHeaderView|None = self.taretable.horizontalHeader()
         if header is not None:
             header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
             header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
         self.taretable.setColumnWidth(1,80)
+
+class DesignerSplineNodesDlg(ArtisanDialog):
+    """Dialog for selecting number of spline nodes when fitting a profile to designer."""
+
+    __slots__ = ['nodes_spinbox', 'num_nodes', 'legacy_checkbox', 'nodes_label']
+
+    def __init__(self, parent:QWidget|None, aw:'ApplicationWindow', default_nodes:int = 10) -> None:
+        super().__init__(parent, aw)
+        self.setWindowTitle(QApplication.translate('Dialog','Designer Spline Fit'))
+        self.setModal(True)
+        self.num_nodes = default_nodes
+
+        # Info label
+        info_label = QLabel(QApplication.translate('Label',
+            'Choose how to convert the profile'))
+        info_label.setWordWrap(True)
+
+        # Spline info label
+        self.spline_info_label = QLabel(QApplication.translate('Label',
+            'More nodes: better fit but harder to edit\n'
+            'Fewer nodes: simpler curve but may lose detail'))
+        self.spline_info_label.setWordWrap(True)
+
+        # Legacy mode checkbox
+        self.legacy_checkbox = QCheckBox(QApplication.translate('CheckBox','Use landmarks only'))
+        self.legacy_checkbox.setToolTip(QApplication.translate('Tooltip',
+            'Legacy mode extracts only key points (CHARGE, DRY, FC, SC, DROP).\n'
+            'Unchecked: Fits a smooth spline to preserve curve shape.'))
+        self.legacy_checkbox.stateChanged.connect(self.on_legacy_changed)
+
+        # Create the spinbox for selecting number of nodes
+        self.nodes_label = QLabel(QApplication.translate('Label','Number of spline nodes'))
+        self.nodes_spinbox = QSpinBox()
+        self.nodes_spinbox.setMinimum(3)
+        self.nodes_spinbox.setMaximum(100)
+        self.nodes_spinbox.setValue(default_nodes)
+        self.nodes_spinbox.setSingleStep(1)
+        self.nodes_spinbox.setToolTip(QApplication.translate('Tooltip','Number of control points for spline fitting'))
+
+        # Layout for spline nodes input
+        input_layout = QHBoxLayout()
+        input_layout.addWidget(self.nodes_label)
+        input_layout.addWidget(self.nodes_spinbox)
+        input_layout.addStretch()
+
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(info_label)
+        mainLayout.addWidget(self.legacy_checkbox)
+        mainLayout.addSpacing(10)
+        mainLayout.addLayout(input_layout)
+        mainLayout.addWidget(self.spline_info_label)
+        mainLayout.addWidget(self.dialogbuttons)
+
+        self.setLayout(mainLayout)
+        mainLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+
+        # Connect signals
+        self.dialogbuttons.accepted.connect(self.accept_dialog)
+        self.dialogbuttons.rejected.connect(self.reject)
+
+    @pyqtSlot(int)
+    def on_legacy_changed(self, state: int) -> None:
+        """Enable/disable spinbox based on legacy checkbox state."""
+        is_legacy:bool = state == cast(int, Qt.CheckState.Checked.value)
+        self.nodes_spinbox.setEnabled(not is_legacy)
+        self.nodes_label.setEnabled(not is_legacy)
+        self.spline_info_label.setEnabled(not is_legacy)
+
+    @pyqtSlot()
+    def accept_dialog(self) -> None:
+        """Store the selected number of nodes and accept the dialog."""
+        if self.legacy_checkbox.isChecked():
+            self.num_nodes = 0  # 0 indicates legacy mode
+        else:
+            self.num_nodes = self.nodes_spinbox.value()
+        self.accept()
+
+    def get_num_nodes(self) -> int:
+        """Return the selected number of nodes (0 = legacy mode)."""
+        return self.num_nodes

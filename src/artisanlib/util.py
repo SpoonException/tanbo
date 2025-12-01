@@ -21,18 +21,23 @@ import platform
 import sys
 import math
 import os
+import io
 import re
+import ast
 import numpy
 import functools
+from bisect import bisect_right
 from pathlib import Path
 from matplotlib import colors
-from typing import Final, Optional, Tuple, List, Sequence, Union, Any, TYPE_CHECKING
-from typing_extensions import TypeGuard  # Python <=3.10
+from collections.abc import Iterator
+from typing import Final, Literal, Any, TypeGuard, cast, TYPE_CHECKING # ty:ignore
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from artisanlib.main import Artisan # pylint: disable=unused-import
     import numpy.typing as npt # pylint: disable=unused-import
 
+from artisanlib.atypes import ProfileData
 
 ##
 
@@ -45,12 +50,8 @@ application_organization_domain: Final[str] = 'artisan-scope.org'
 application_desktop_file_name: Final[str] = 'org.artisan_scope.artisan'
 
 
-try:
-    from PyQt6.QtCore import QStandardPaths, QCoreApplication # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtGui import QColor  # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import QStandardPaths, QCoreApplication  # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtGui import QColor  # type: ignore  # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import QStandardPaths, QCoreApplication, QTime, QDate, QDateTime
+from PyQt6.QtGui import QColor
 
 
 deltaLabelPrefix:Final[str] = '<html>&Delta;&thinsp;</html>' # prefix constant for labels to compose DeltaET/BT by prepending this prefix to ET/BT labels
@@ -78,77 +79,107 @@ def appFrozen() -> bool:
         _log.exception(e)
     return ib
 
-def decs2string(x:List[int]) -> bytes:
-    if len(x) > 0:
-        return bytes(x)
-    return b''
+# returns empty string for values out of the valid Unicode range
 def uchr(x:int) -> str:
-    return chr(x)
-def decodeLocal(x:Optional[Any]) -> Optional[str]:
+    try:
+        return chr(x)
+    except ValueError:
+        return ''
+
+def decodeLocal(x:Any) -> str|None:
     if x is not None:
+        try:
+            return codecs.unicode_escape_decode(x)[0]
+        except Exception: # pylint: disable=broad-except
+            return None
+    return None
+def decodeLocalStrict(x:Any|None, default:str = '') -> str:
+    if x is None:
+        return default
+    try:
         return codecs.unicode_escape_decode(x)[0]
-    return None
-def decodeLocalStrict(x:Optional[Any], default:str = '') -> str:
-    if x is None:
+    except Exception: # pylint: disable=broad-except
         return default
-    return codecs.unicode_escape_decode(x)[0]
-def encodeLocal(x:Optional[Any]) -> Optional[str]:
+def encodeLocal(x:Any|None) -> str|None:
     if x is not None:
-        return codecs.unicode_escape_encode(str(x))[0].decode('utf8')
+        try:
+            return codecs.unicode_escape_encode(str(x))[0].decode('utf8')
+        except Exception: # pylint: disable=broad-except
+            return None
     return None
-def encodeLocalStrict(x:Optional[Any], default:str = '') -> str:
+def encodeLocalStrict(x:Any|None, default:str = '') -> str:
     if x is None:
         return default
-    return codecs.unicode_escape_encode(str(x))[0].decode('utf8')
-def hex2int(h1:int, h2:Optional[int] = None) -> int:
+    try:
+        return codecs.unicode_escape_encode(str(x))[0].decode('utf8')
+    except Exception: # pylint: disable=broad-except
+        return default
+def hex2int(h1:int, h2:int|None = None) -> int:
     if h2 is not None:
         return int(h1*256 + h2)
     return int(h1)
+
+# str2cmd converts string to bytes ignoring all non-ascii characters. Result to be used for low-level device communication.
 def str2cmd(s:str) -> bytes:
-    return bytes(s,'ascii')
+    return s.encode('ascii', errors='ignore')
 def cmd2str(c:bytes) -> str:
     return str(c,'latin1')
 def s2a(s:str) -> str:
-    return s.encode('ascii','ignore').decode('ascii')
+    return str2cmd(s).decode('ascii')
 
 # returns True if x is not None, not NaN and not the error value -1 or 0
-def is_proper_temp(x:Union[None, int, float]) -> bool:
-    return x is not None and not numpy.isnan(x) and isinstance(x, (int, float)) and x not in [0, -1]
+def is_proper_temp(x:None|int|float) -> bool:
+    return x is not None and not numpy.isnan(x) and x not in [0, -1, float('-inf'), float('inf')]
 
-# returns the prefix of length ll of s and adds eclipse
+# returns the prefix of length ll-1 of s and adds Unicode ellipsis character
+# the length of the resulting string is max(1, ll, len(s))
 def abbrevString(s:str, ll:int) -> str:
     if len(s) > ll:
-        return f'{s[:ll-1]}...'
+        return f'{s[:max(0,ll-1)]}\u2026'
     return s
 
 # used to convert time from int seconds to string (like in the LCD clock timer). input int, output string xx:xx
+@functools.lru_cache(maxsize=100)
 def stringfromseconds(seconds_raw:float, leadingzero:bool = True) -> str:
+    sep = ':'
+    if abs(seconds_raw)>60*60:
+        seconds_raw /= 60
+        sep = 'h'
     # seconds = int(round(seconds_raw)) # note that round(1.5)=round(2.5)=2
     seconds = int(math.floor(seconds_raw + 0.5))
     if seconds >= 0:
         d, m = divmod(seconds, 60)
         if leadingzero:
-            return f'{d:02d}:{m:02d}'
-        return f'{d:d}:{m:02d}'
+            return f'{d:02d}{sep}{m:02d}'
+        return f'{d:d}{sep}{m:02d}'
     #usually the timex[timeindex[0]] is already taken away in seconds before calling stringfromseconds()
     negtime = abs(seconds)
     d, m = divmod(negtime, 60)
     if leadingzero:
-        return f'-{d:02d}:{m:02d}'
-    return f'-{d:d}:{m:02d}'
+        return f'-{d:02d}{sep}{m:02d}'
+    return f'-{d:d}{sep}{m:02d}'
 
-#Converts a string into a seconds integer. Use for example to interpret times from Roaster Properties Dlg inputs
-#accepted formats: "00:00","-00:00"
+# Converts a string into a seconds integer. Use for example to interpret times from Roaster Properties Dlg inputs
+# accepted formats: "00:00","-00:00"
+# raises ValueError or IndexError on invalid inputs
 def stringtoseconds(string:str) -> int:
-    timeparts = string.split(':')
+    timeparts = string.split(':') # mm:ss
+    hours:bool = False
     if len(timeparts) != 2:
-        return -1
+        timeparts = string.split('h') # hh:mm
+        if len(timeparts) != 2:
+            raise ValueError(f"the string '{string}' is not a properly formatted time string of format xx:xx or -xx:xx or xxhxx or -xxhxx")
+        hours = True
     if timeparts[0][0] != '-':  #if number is positive
         seconds = int(timeparts[1])
         seconds += int(timeparts[0])*60
+        if hours:
+            seconds *= 60
         return seconds
     seconds = int(timeparts[0])*60
     seconds -= int(timeparts[1])
+    if hours:
+        seconds *= 60
     return seconds    #return negative number
 
 def fromFtoCstrict(Ffloat:float) -> float:
@@ -156,8 +187,8 @@ def fromFtoCstrict(Ffloat:float) -> float:
         return Ffloat
     return (Ffloat-32.0)*(5.0/9.0)
 
-def fromFtoC(Ffloat:Optional[float]) -> Optional[float]:
-    if Ffloat is None or Ffloat == -1 or (Ffloat is not None and numpy.isnan(Ffloat)):
+def fromFtoC(Ffloat:float|None) -> float|None:
+    if Ffloat is None or Ffloat == -1 or numpy.isnan(Ffloat):
         return Ffloat
     return fromFtoCstrict(Ffloat)
 
@@ -166,7 +197,7 @@ def fromCtoFstrict(Cfloat:float) -> float:
         return Cfloat
     return (Cfloat*9.0/5.0)+32.0
 
-def fromCtoF(Cfloat:Optional[float]) -> Optional[float]:
+def fromCtoF(Cfloat:float|None) -> float|None:
     """Converts Celsius to Fahrenheit
     >>> fromCtoF(-1)
     -1
@@ -175,7 +206,7 @@ def fromCtoF(Cfloat:Optional[float]) -> Optional[float]:
     >>> fromCtoF(32)
     89.6
     """
-    if Cfloat is None or Cfloat == -1 or (Cfloat is not None and numpy.isnan(Cfloat)):
+    if Cfloat is None or Cfloat == -1 or numpy.isnan(Cfloat):
         return Cfloat
     return fromCtoFstrict(Cfloat)
 
@@ -184,8 +215,8 @@ def RoRfromCtoFstrict(CRoR:float) -> float:
         return CRoR
     return CRoR*9.0/5.0
 
-def RoRfromCtoF(CRoR:Optional[float]) -> Optional[float]:
-    if CRoR is None or CRoR == -1 or (CRoR is not None and numpy.isnan(CRoR)):
+def RoRfromCtoF(CRoR:float|None) -> float|None:
+    if CRoR is None or CRoR == -1 or numpy.isnan(CRoR):
         return CRoR
     return RoRfromCtoFstrict(CRoR)
 
@@ -194,19 +225,19 @@ def RoRfromFtoCstrict(FRoR:float) -> float:
         return FRoR
     return FRoR*(5.0/9.0)
 
-def RoRfromFtoC(FRoR:Optional[float]) -> Optional[float]:
-    if FRoR is None or FRoR == -1 or (FRoR is not None and numpy.isnan(FRoR)):
+def RoRfromFtoC(FRoR:float|None) -> float|None:
+    if FRoR is None or FRoR == -1 or numpy.isnan(FRoR):
         return FRoR
     return RoRfromFtoCstrict(FRoR)
 
-def convertRoR(r:Optional[float], source_unit:str, target_unit:str) -> Optional[float]:
+def convertRoR(r:float|None, source_unit:Literal['C', 'F'], target_unit:Literal['C', 'F']) -> float|None:
     if source_unit == target_unit:
         return r
     if source_unit == 'C':
         return RoRfromCtoF(r)
     return RoRfromFtoC(r)
 
-def convertRoRstrict(r:float, source_unit:str, target_unit:str) -> float:
+def convertRoRstrict(r:float, source_unit:Literal['C', 'F'], target_unit:Literal['C', 'F']) -> float:
     if source_unit == target_unit:
         return r
     if source_unit == 'C':
@@ -216,27 +247,23 @@ def convertRoRstrict(r:float, source_unit:str, target_unit:str) -> float:
 def convertTemp(t:float, source_unit:str, target_unit:str) -> float:
     if source_unit in ('', target_unit) or target_unit == '':
         return t
-    res : Optional[float]
     if source_unit == 'C':
-        res = fromCtoF(t)
-        if res is None:
-            return t
-        return res
-    res = fromFtoC(t)
-    if res is None:
-        return t
-    return res
+        return fromCtoFstrict(t)
+    return fromFtoCstrict(t)
 
+# See https://discuss.python.org/t/pathname2url-changes-in-python-3-14-breaking-pip-tests/97091
+# for changes to urllib in Pyton3.14
 def path2url(path:str) -> str:
-    import urllib.parse as urlparse  # @Reimport
-    import urllib.request as urllib  # @Reimport
-    return urlparse.urljoin(
-      'file:', urllib.pathname2url(path))
+    import urllib.parse as urllib_urlparse  # @Reimport
+    import urllib.request as urllib_request  # @Reimport
+    return urllib_urlparse.urljoin(
+      'file://', urllib_request.pathname2url(path))
 
 # remaining artifacts from Qt4/5 compatibility layer:
 # note: those conversion functions are sometimes called with string arguments
 # thus a simple int(round(s)) won't work and a int(round(float(s))) needs to be applied
-def toInt(x:Optional[Union[int,str,float]]) -> int:
+# float('inf') and float('-inf') cannot be converted to integer and are mapped to 0
+def toInt(x:int|str|float|None) -> int:
     if x is None:
         return 0
     try:
@@ -247,7 +274,7 @@ def toInt(x:Optional[Union[int,str,float]]) -> int:
 def toString(x:Any) -> str:
     return str(x)
 
-def toList(x:Any) -> List[Any]:
+def toList(x:Any) -> list[Any]:
     if x is None:
         return []
     return list(x)
@@ -273,12 +300,12 @@ def toBool(x:Any) -> bool:
             return False
     return bool(x)
 
-def toStringList(x:List[Any]) -> List[str]:
+def toStringList(x:list[Any]) -> list[str]:
     if x:
         return [str(s) for s in x]
     return []
 
-def removeAll(ll:List[str], s:str) -> None:
+def removeAll(ll:list[str], s:str) -> None:
     for _ in range(ll.count(s)):  # @UndefinedVariable
         ll.remove(s)
 
@@ -288,8 +315,8 @@ def removeAll(ll:List[str], s:str) -> None:
 # [-1,-1,2] => [2, 2, 2] # a prefix of -1 of max length 'interpolate_max' will be replaced by the first value in l that is not -1
 # INVARIANT: the resulting list has always the same length as l
 # only gaps of length interpolate_max (should be set to the global aw.qmc.interpolatemax), if not None, are interpolated
-def fill_gaps(ll:Union[Sequence[Union[float, int]], 'npt.NDArray[numpy.floating[Any]]'], interpolate_max:int=3) -> List[float]:
-    res:List[float] = []
+def fill_gaps(ll:'Sequence[float|int]|npt.NDArray[numpy.floating[Any]]', interpolate_max:int=3) -> list[float]:
+    res:list[float] = []
     last_val:float = -1
     skip:int = -1
     for i,e in enumerate(ll):
@@ -299,7 +326,7 @@ def fill_gaps(ll:Union[Sequence[Union[float, int]], 'npt.NDArray[numpy.floating[
                 s:float = -1
                 for ee in ll[:5]:
                     if ee != -1:
-                        s = ee
+                        s = float(ee)
                         break
                 res.append(s)
                 last_val = s
@@ -315,7 +342,7 @@ def fill_gaps(ll:Union[Sequence[Union[float, int]], 'npt.NDArray[numpy.floating[
                     # no further valid values, we append the tail
                     res.extend(ll[i:])
                     return res
-                if interpolate_max is not None and interpolate_max < (next_idx - i):
+                if interpolate_max < (next_idx - i):
                     # gap too big
                     res.extend(ll[i:next_idx])
                 else:
@@ -327,13 +354,14 @@ def fill_gaps(ll:Union[Sequence[Union[float, int]], 'npt.NDArray[numpy.floating[
                         res.append(last_val)
                 skip = next_idx
             else:
-                res.append(e)
-                last_val = e
+                fe = float(e)
+                res.append(fe)
+                last_val = fe
     return res
 
-def replace_duplicates(data:List[float]) -> List[float]:
+def replace_duplicates(data:list[float]) -> list[float]:
     lv:float = -1
-    data_core:List[float] = []
+    data_core:list[float] = []
     for v in data:
         if v == lv:
             data_core.append(-1)
@@ -352,19 +380,20 @@ def replace_duplicates(data:List[float]) -> List[float]:
 # eg. ~/Library/Application Support/artisan-scope/Artisan (macOS)
 #     C:\Users\<USER>\AppData\Local\artisan-scope\Artisan (Windows)
 #     ~/.local/share/artisan-scope/Artisan (Linux)
+#     ~/.var/app/org.artisan_scope.artisan/data/artisan-scope/Artisan/artisan.log (Linux if installed via Flatpack)
 
 # getDataDirectory() returns the Artisan data directory
 # if app is not yet initialized None is returned
 # otherwise the path is computed on first call and then memorized
 # if the computed path does not exists it is created
 # if creation or access of the path fails None is returned and memorized
-def getDataDirectory() -> Optional[str]:
+def getDataDirectory() -> str|None:
     app = QCoreApplication.instance()
     return _getAppDataDirectory(app)
 
 # internal function to return
-@functools.lru_cache(maxsize=None)  #for Python >= 3.9 can use @functools.cache
-def _getAppDataDirectory(app:'Artisan') -> Optional[str]:
+@functools.cache
+def _getAppDataDirectory(app:'Artisan') -> str|None:
     # temporarily switch app name to Artisan (as it might be ArtisanViewer)
     appName = app.applicationName()
     app.setApplicationName(application_name)
@@ -379,7 +408,35 @@ def _getAppDataDirectory(app:'Artisan') -> Optional[str]:
     except Exception:  # pylint: disable=broad-except
         return None
 
-@functools.lru_cache(maxsize=None)  #for Python >= 3.9 can use @functools.cache
+
+# getDocumentsDirectory() returns the Documents directory of the users account
+# if app is not yet initialized None is returned
+# otherwise the path is computed on first call and then memorized
+# if the computed path does not exists it is created
+# if creation or access of the path fails None is returned and memorized
+def getDocumentsDirectory() -> str|None:
+    app = QCoreApplication.instance()
+    return _getAppDocumentsDirectory(app)
+
+# internal function to return
+@functools.cache
+def _getAppDocumentsDirectory(app:'Artisan') -> str|None:
+    # temporarily switch app name to Artisan (as it might be ArtisanViewer)
+    appName = app.applicationName()
+    app.setApplicationName(application_name)
+    data_dir = QStandardPaths.standardLocations(
+        QStandardPaths.StandardLocation.DocumentsLocation
+    )[0]
+    app.setApplicationName(appName)
+    try:
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+        return data_dir
+    except Exception:  # pylint: disable=broad-except
+        return None
+
+
+@functools.cache
 def getAppPath() -> str:
     platf = platform.system()
     if platf in {'Darwin','Linux'}:
@@ -392,7 +449,7 @@ def getAppPath() -> str:
         return os.path.dirname(os.path.realpath(__file__)) + '\\..\\'
     return QCoreApplication.applicationDirPath() + '/'
 
-@functools.lru_cache(maxsize=None)  #for Python >= 3.9 can use @functools.cache
+@functools.cache
 def getResourcePath() -> str:
     platf = platform.system()
     if platf == 'Darwin':
@@ -412,11 +469,11 @@ def getResourcePath() -> str:
 # if share is True, the same (cache) file is shared between the Artisan and
 # ArtisanViewer apps
 # and locks have to be used to avoid race conditions
-def getDirectory(filename: str, ext: Optional[str] = None, share: bool = False) -> str:
+def getDirectory(filename: str, ext: str|None = None, share: bool = False) -> str:
     fn = filename
     if not share:
         app = QCoreApplication.instance()
-        if app.artisanviewerMode: # type: ignore
+        if app.artisanviewerMode: # type: ignore[union-attr]
             fn = filename + '_viewer'
     dd = getDataDirectory()
     fp = Path(('' if dd is None else dd), fn)
@@ -434,18 +491,21 @@ def getDirectory(filename: str, ext: Optional[str] = None, share: bool = False) 
 # standard/MPL hex color strings append alpha information to the end, while QColor assumes the alpha information in color name strings at the begin
 
 # converts QColor ARGB names to a standard/MPL hex color strings with alpha values at the end
+@functools.lru_cache(maxsize=50)
 def argb_colorname2rgba_colorname(c:str) -> str:
     if len(c) == 9 and c[0] == '#':
         return f'#{c[3:9]}{c[1:3]}'
     return c
 
 # converts standard/MPL hex color strings to QColor ARGB names with alpha at the begin
+@functools.lru_cache(maxsize=50)
 def rgba_colorname2argb_colorname(c:str) -> str:
     if len(c) == 9 and c[0] == '#':
         return f'#{c[7:9]}{c[1:7]}'
     return c
 
 # takes a hex color string and returns the same color as hex string with staturation set to 0 and incr. lightness
+@functools.lru_cache(maxsize=50)
 def toGrey(color:str) -> str:
     h, _s, l, a = QColor(rgba_colorname2argb_colorname(color)).getHslF()
     if h is not None and l is not None and a is not None:
@@ -457,6 +517,7 @@ def toGrey(color:str) -> str:
     return gray.name(QColor.NameFormat.HexRgb)
 
 # takes a hex color string and returns the same color as hex string with reduced staturation and incr. lightness
+@functools.lru_cache(maxsize=50)
 def toDim(color:str) -> str:
     h, s, l, a = QColor(rgba_colorname2argb_colorname(color)).getHslF()
     if h is not None and s is not None and l is not None and a is not None:
@@ -468,8 +529,8 @@ def toDim(color:str) -> str:
     return gray.name(QColor.NameFormat.HexRgb)
 
 # creates QLinearGradient style from light to dark by default, or from dark to light if reverse is True
-@functools.lru_cache(maxsize=None)  #for Python >= 3.9 can use @functools.cache
-def createGradient(rgb:Union[QColor, str], tint_factor:float = 0.1, shade_factor:float = 0.1, reverse:bool = False) -> str:
+@functools.cache
+def createGradient(rgb:QColor|str, tint_factor:float = 0.1, shade_factor:float = 0.1, reverse:bool = False) -> str:
     light_grad,dark_grad = createRGBGradient(rgb,tint_factor,shade_factor)
     if reverse:
         # dark to light
@@ -478,10 +539,10 @@ def createGradient(rgb:Union[QColor, str], tint_factor:float = 0.1, shade_factor
     return f'QLinearGradient(x1:0,y1:0,x2:0,y2:1,stop:0 {light_grad}, stop:1 {dark_grad})'
 
 # NOTE: for now alpha values of the rgb argument are ignored and resulting colors are RGB without alphas
-def createRGBGradient(rgb:Union[QColor, str], tint_factor:float = 0.3, shade_factor:float = 0.3) -> Tuple[str,str]:
+def createRGBGradient(rgb:QColor|str, tint_factor:float = 0.3, shade_factor:float = 0.3) -> tuple[str,str]:
     try:
-        rgb_tuple: Tuple[float, float, float]
-        if isinstance(rgb, QColor):
+        rgb_tuple: tuple[float, float, float]
+        if isinstance(rgb, QColor): # pyrefly: ignore[invalid-argument]
             r,g,b,_ = rgb.getRgbF() # type:ignore[unused-ignore]
             if r is not None and g is not None and b is not None:
                 rgb_tuple = (r,g,b)
@@ -519,8 +580,8 @@ def isOpen(ip: str, port: int) -> bool:
 
 # Logging
 
-@functools.lru_cache(maxsize=None)  #for Python >= 3.9 can use @functools.cache
-def getLoggers() -> List[logging.Logger]:
+@functools.cache
+def getLoggers() -> list[logging.Logger]:
     return [logging.getLogger(name) for name in logging.root.manager.loggerDict if '.' not in name]  # @UndefinedVariable pylint: disable=no-member
 
 def debugLogLevelActive() -> bool:
@@ -556,7 +617,7 @@ def setFileLogLevel(logger: logging.Logger, level:int) -> None:
         if handler.get_name() == 'file':
             handler.setLevel(level)
 
-def setFileLogLevels(level:int, logger_names:List[str]) -> None:
+def setFileLogLevels(level:int, logger_names:list[str]) -> None:
     loggers = getLoggers()
     for logger in loggers:
         if logger.name in logger_names:
@@ -568,15 +629,15 @@ def debugLogLevelToggle() -> bool:
     setDebugLogLevel(newDebugLevel)
     return newDebugLevel
 
-def natsort(s:str) -> List[Union[int,str]]:
-    return [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', s)]
+def natsort(s:str) -> list[int|str]:
+    return [int(t) if t.isdigit() else t.casefold() for t in re.split(r'(\d+)', s)]
 
 #convert number to string and auto set the number of decimal places 0, 0.999, 9.99, 999.9, 9999
-def scaleFloat2String(num:Union[float,str]) -> str:
+def scaleFloat2String(num:float|str) -> str:
     n = toFloat(num)
     if n == 0:
         return '0'
-    if abs(n) < 1:
+    if abs(n) < 10:
         return f'{n:.3f}'.rstrip('0').rstrip('.')
     if abs(n) >= 1000:
         return f'{n:.0f}'
@@ -587,34 +648,36 @@ def scaleFloat2String(num:Union[float,str]) -> str:
 
 # for use in widgets that expects a double via a self.createCLocalDoubleValidator that accepts both,
 # one dot and several commas. If there is no dot, the last comma is interpreted as decimal separator and the others removed
-# if there is a dot, the last one is used as a decimal separator and all other comma and dots are removed
+# if there is a dot, the last one is used as a decimal separator and all other comma and dots are removed.
+# Trailing dots are removed as well.
 def comma2dot(s:str) -> str:
     s = s.strip()
     last_dot = s.rfind('.')
-    if last_dot > -1:
+    last_pos = s.rfind(',')
+    if last_dot > -1 and (last_pos == -1 or last_dot > last_pos): # there is no comma after that last dot
         if last_dot + 1 == len(s):
             # this is just a trailing dot, we remove this and all other dots and commas
             return s.replace(',','').replace('.','')
         # we just keep this one and remove all other comma and dots; we also remove trailing zero decimals
         return s[:last_dot].replace(',','').replace('.','') + s[last_dot:].replace(',','').rstrip('0').rstrip('.')
     # there is no dot in the string
-    last_pos = s.rfind(',')
     if last_pos > -1:
         if last_pos + 1 == len(s):
             # this is just a trailing comma, we remove this and all other dots and commas
             return s.replace(',','').replace('.','')
         # we turn the last comma into a dot and remove all others; we also remove trailing zero decimals
-        return s[:last_pos].replace(',','') + '.' + s[last_pos+1:].rstrip('0').rstrip('.')
+        return s[:last_pos].replace(',','').replace('.','') + '.' + s[last_pos+1:].rstrip('0').rstrip('.')
     return s
 
 
 #--- weight / volume
 
-weight_units:Final[Tuple[str,str,str,str]] = ('g','Kg','lb','oz')
-weight_units_lower:Final[Tuple[str,str,str,str]] = ('g','kg','lb','oz') # just for display use
-volume_units:Final[Tuple[str,str,str,str,str,str]] = ('l','gal','qt','pt','cup','ml')
+weight_units:Final[tuple[str,str,str,str]] = ('g','Kg','lb','oz')
+weight_units_lower:Final[tuple[str,str,str,str]] = ('g','kg','lb','oz') # just for display use
+volume_units:Final[tuple[str,str,str,str,str,str]] = ('l','gal','qt','pt','cup','ml')
 
 def weightVolumeDigits(v:float) -> int:
+    v = abs(v)
     if v >= 1000:
         return 1
     if v >= 100:
@@ -628,13 +691,15 @@ def float2floatWeightVolume(v:float) -> float:
     return float2float(v,d)
 
 # the int n specifies the number of digits
-def float2floatNone(f:Optional[float], n:int=1) -> Optional[float]:
+def float2floatNone(f:float|None, n:int=1) -> float|None:
     if f is None:
         return None
     return float2float(f,n)
 
-# the int n specifies the number of digits
-def float2float(f:float, n:int=1) -> float:
+# the int n>=0 specifies the number of digits
+# returns 0 if f is not a number
+def float2float(f:float|str, n:int=1) -> float:
+    n = max(n, 0)
     f = float(f)
     if n==0:
         if math.isnan(f):
@@ -645,21 +710,27 @@ def float2float(f:float, n:int=1) -> float:
         return 0.0
     return res
 
+# removes trailing zeros like f'{n:g}'
+def float2str(n:float) -> str:
+    return f'{n}'.rstrip('0').rstrip('.')
+
 # i/o: 0:g, 1:Kg, 2:lb (pound), 3:oz (ounce)
 def convertWeight(v:float, i:int, o:int) -> float:
     #                g,            kg,         lb,             oz,
-    convtable = [
+    convtable:list[list[float]] = [
                     [1.,           0.001,      0.00220462262,  0.035274],  # g
                     [1000,         1.,         2.205,          35.274],    # Kg
                     [453.591999,   0.45359237, 1.,             16.],       # lb
                     [28.3495,      0.0283495,  0.0625,         1.]         # oz
                 ]
-    return v*convtable[i][o]
+    if 0 <= i < len(convtable) and 0 <= o < len(convtable):
+        return v*convtable[i][o]
+    raise IndexError(f'index error in convertWeight({v},{i},{o})')
 
 # i/o: 0:l (liter), 1:gal (gallons US), 2:qt, 3:pt, 4:cup, 5:cm^3/ml
 def convertVolume(v:float, i:int, o:int) -> float:
                     #liter          gal             qt              pt              cup             ml/cm^3
-    convtable = [
+    convtable:list[list[float]] = [
                     [1.,            0.26417205,     1.05668821,     2.11337643,     4.22675284,     1000.                ],    # liter
                     [3.78541181,    1.,             4.,             8.,             16,             3785.4117884         ],    # gallon
                     [0.94635294,    0.25,           1.,             2.,             4.,             946.352946           ],    # quart
@@ -667,7 +738,9 @@ def convertVolume(v:float, i:int, o:int) -> float:
                     [0.23658823,    0.0625,         0.25,           0.5,            1.,             236.5882365          ],    # cup
                     [0.001,         2.6417205e-4,   1.05668821e-3,  2.11337641e-3,  4.2267528e-3,   1.                   ]     # cm^3
                 ]
-    return v*convtable[i][o]
+    if 0 <= i < len(convtable) and 0 <= o < len(convtable):
+        return v*convtable[i][o]
+    raise IndexError(f'index error in convertVolume({v},{i},{o})')
 
 
 # takes a weight, its weight unit index, and a weight unit target index (decides over metric vs imperial)
@@ -680,6 +753,7 @@ def convertVolume(v:float, i:int, o:int) -> float:
 # if brief is set to 0 (default 0), 3 decimals are returned for lb/kg and 2 for oz/g, if brief > 0 the number of decimals is reduced by that value and
 # the rendering might loose precision
 # with smart_unit_upgrade (default True), a weight like 1600g is rendered more readable as 1.6kg (but leaves 1610g and 1601g as is)
+@functools.lru_cache(maxsize=100)
 def render_weight(amount:float, weight_unit_index:int, target_unit_idx:int,
         right_to_left_lang:bool = False, brief:int=0, smart_unit_upgrade:bool=True) -> str:
     w = convertWeight(
@@ -783,52 +857,383 @@ def render_weight(amount:float, weight_unit_index:int, target_unit_idx:int,
 
 # typing tools
 
-def is_int_list(xs: List[Any]) -> TypeGuard[List[int]]:
-    return all(isinstance(x, int) for x in xs)
+def is_int_list(xs: list[Any]) -> TypeGuard[list[int]]:
+    return all(isinstance(x, int) and not isinstance(x, bool) for x in xs) # bool is a subclass of int!
 
-def is_float_list(xs: List[Any]) -> TypeGuard[List[float]]:
+def is_float_list(xs: list[Any]) -> TypeGuard[list[float]]:
     return all(isinstance(x, float) for x in xs)
 
 
 # locale tools
 
 def right_to_left(locale:str) -> bool:
-    return locale in {'ar', 'fa', 'he'}
+    return locale.casefold() in {'ar', 'fa', 'he'}
 
-#def locale2full_local(locale:str) -> str:
-#    locale_map:Dict[str,str] = {
-#        'ar': 'ar_AA',
-#        'da': 'da_DK',
-#        'de': 'de_DE',
-#        'el': 'el_GR',
-#        'en': 'en_US',
-#        'es': 'es_ES',
-#        'fa': 'fa_IR',
-#        'fi': 'fi_FI',
-#        'fr': 'fr_FR',
-#        'gd': 'gd_GB',
-#        'he': 'he_IL',
-#        'hu': 'hu_HU',
-#        'id': 'id_ID',
-#        'it': 'it_IT',
-#        'ja': 'ja_JP',
-#        'ko': 'ko_KR',
-#        'lv': 'lv_LV',
-#        'nl': 'nl_NL',
-#        'no': 'nn_NO',
-#        'pt': 'pt_PT',
-#        'pt_BR': 'pt_BR',
-#        'pl': 'pl_PL',
-#        'ru': 'ru_RU',
-#        'sk': 'sk_SK',
-#        'sv': 'sv_SE',
-#        'th': 'th_TH',
-#        'tr': 'tr_TR',
-#        'uk': 'uk_UA',
-#        'vi': 'vi_VN',
-#        'zh_CN': 'zh_CN',
-#        'zh_TW': 'zh_TW'
-#    }
-#    if locale in locale_map:
-#        return locale_map[locale]
-#    return locale
+
+# others
+
+# fast variant based on binary search on lists using bisect (using numpy.searchsorted is slower)
+# side-condition: values in self.timex in linear order
+# time: time in seconds
+# nearest: if nearest is True the closest index is returned (slower), otherwise the previous (faster)
+# returns
+#   -1 on empty timex
+#    0 if time smaller than first entry of timex
+#  len(timex)-1 if time larger than last entry of timex (last index)
+def timearray2index(timearray:list[float], time:float, nearest:bool = True) -> int:
+    i = bisect_right(timearray, time)
+    if i:
+        if nearest and i>0 and (i == len(timearray) or abs(time - timearray[i]) > abs(time - timearray[i-1])):
+            return i-1
+        return i
+    return -1
+
+
+def findTPint(timeindex:list[int], timex:list[float], temp:list[float]) -> int:
+    TP:float = 1000
+    idx:int = 0
+    start:int = 0
+    end:int = len(timex)
+    # try to consider only indices until the roast end and not beyond
+    EOR_index = end
+    if timeindex[6]:
+        EOR_index = timeindex[6]
+    if start < EOR_index < end:
+        end = EOR_index
+    # try to consider only indices until FCs and not beyond
+    FCs_index = end
+    if timeindex[2]:
+        FCs_index = timeindex[2]
+    if start < FCs_index < end:
+        end = FCs_index
+    # try to consider only indices from start of roast on and not before
+    SOR_index = start
+    if timeindex[0] != -1:
+        SOR_index = timeindex[0]
+    if start < SOR_index < end:
+        start = SOR_index
+    for i in range(end - 1, start -1, -1):
+        if temp[i] > 0 and temp[i] < TP:
+            TP = temp[i]
+            idx = i
+    return idx
+
+@functools.lru_cache(maxsize=30)
+def eventtime2string(time:float) -> str:
+    _log.debug('PRINT eventtime2string(%s)',time)
+    if time == 0.0:
+        return ''
+    di,mo = divmod(time,60)
+    return f'{di:02.0f}:{mo:02.0f}'
+
+
+# eventsvalues maps the given internal event value v to an external event int value as displayed to the user as special event value
+# historicaly internal event values ranged from [1-11] and external event values from [0-10]
+#   that range was extended to 0-100 in later Artisan versions
+# v is expected to be float value of range [-11.0,11.0] or None (interpreted as 0)
+# negative values are not used as event values, but as step arguments in extra button definitions
+#   11.0 => 100
+#   10.1 => 91
+#   10.0 => 90
+#   1.1 => 1
+#   1.0 => 0
+#   0.5 => 0
+#     0 => 0
+#  -1.0 => 0
+#  -1.1 => -1
+# -10.0 => -90
+# -10.1 => -91
+# -11.0 => -100
+### NOTE: This one is "LINKED" by a staticmethod for compatibility in canvas.py:tgraphcanvas()
+def events_internal_to_external_value(v:float|None) -> int:
+    if v is None:
+        return 0
+    if -1.0 <= v <= 1.0:
+        return 0
+    if v < -1.0:
+        return -(int(round(abs(v)*10)) - 10)
+    return int(round(v*10)) - 10
+
+# the inverse of events_internal_to_external_value, converting an external to an internal event value
+# v from [-100,100]
+### NOTE: This one is "LINKED" by a staticmethod for compatibility in canvas.py:tgraphcanvas()
+def events_external_to_internal_value(v:int) -> float:
+    if v == 0:
+        return 0.
+    if v >= 1:
+        return v/10. + 1.
+    return v/10. - 1.
+
+
+# serialize/deserialize
+
+
+#Write object to file
+def serialize(filename:str, obj:dict[str, Any]) -> None:
+    fn = str(filename)
+    with open(fn, 'w+', encoding='utf-8') as f:
+        f.write(repr(obj))
+
+
+#Read object from file
+def deserialize(filename:str) -> dict[str, Any]:
+    obj:dict[str,Any] = {}
+    try:
+        fn = str(filename)
+        if os.path.exists(fn):
+            with open(fn, encoding='utf-8') as f:
+                obj=ast.literal_eval(f.read()) # pylint: disable=eval-used
+    except Exception as ex: # pylint: disable=broad-except
+        _log.exception(ex)
+    return obj
+
+
+def csv_load(csvFile:io.TextIOWrapper) -> 'ProfileData':
+    import csv
+    profile = ProfileData()
+
+    data = csv.reader(csvFile,delimiter='\t')
+    #read file header
+    header = next(data)
+    date = QDate.fromString(header[0].split('Date:')[1],"dd'.'MM'.'yyyy")
+    if len(header) > 11:
+        try:
+            tm = QTime.fromString(header[11].split('Time:')[1])
+            profile['roasttime'] = encodeLocalStrict(tm.toString())
+            roastdate = QDateTime(date,tm)
+        except Exception: # pylint: disable=broad-except
+            roastdate = QDateTime(date, QTime())
+    else:
+        roastdate = QDateTime(date, QTime())
+    profile['roastdate'] = encodeLocalStrict(QDate(date).toString())
+    profile['roastepoch'] = int(roastdate.toSecsSinceEpoch())
+    profile['roasttzoffset'] = 0
+    unit = header[1].split('Unit:')[1]
+    if unit in {'F', 'C'}:
+        profile['mode'] = unit
+    #read column headers
+    fields = next(data)
+    extra_fields = fields[5:] # columns after 'Event'
+
+    timex:list[float] = []
+    temp1:list[float] = []
+    temp2:list[float] = []
+
+    # add extra devices
+    number_extra_devices = min(10, int(len(extra_fields)/2)) # ApplicationWindow.nLCDS = 10
+    extradevices:list[int] = [50]*number_extra_devices # type dummy
+    extratimex:list[list[float]] = [[] for _ in range(number_extra_devices)] # we don't want exact copies of those empty lists as with [[]]*number_extra_devices!
+    extratemp1:list[list[float]] = [[] for _ in range(number_extra_devices)]
+    extratemp2:list[list[float]] = [[] for _ in range(number_extra_devices)]
+    extraname1:list[str] = ['']*number_extra_devices
+    extraname2:list[str] = ['']*number_extra_devices
+    extramathexpression1:list[str] = ['']*number_extra_devices
+    extramathexpression2:list[str] = ['']*number_extra_devices
+
+    # set extra device names # NOTE: eventuelly we want to set/change the names only for devices that were just added in the line above!?
+    for i, ef in enumerate(extra_fields):
+        if i % 2 == 1:
+            # odd
+            extraname2[int(i/2)] = ef
+        else:
+            # even
+            extraname1[int(i/2)] = ef
+
+    #read data
+    last_time:float|None = None
+
+    i = 0
+    for row in data:
+        i = i + 1
+        try:
+            items = list(zip(fields, row, strict=True)) # ty:ignore
+            item:dict[str,str] = {}
+            for (name, value) in items:
+                item[name] = value.strip()
+            #add one measurement
+            timez = float(stringtoseconds(item['Time1']))
+            if not last_time or last_time < timez:
+                timex.append(timez)
+                temp1.append(float(item['ET']))
+                temp2.append(float(item['BT']))
+                for j, ef in enumerate(extra_fields):
+                    if j % 2 == 1:
+                        # odd
+                        extratemp2[int(j/2)].append(float(item[ef]))
+                    else:
+                        # even
+                        extratimex[int(j/2)].append(timez)
+                        extratemp1[int(j/2)].append(float(item[ef]))
+            last_time = timez
+        except Exception: # pylint: disable=broad-except
+            pass # invalid input can make stringtoseconds fail thus this row is ignored
+
+    timeindex:list[int] = [-1,0,0,0,0,0,0,0] #CHARGE index init set to -1 as 0 could be an actual index used
+
+    #set events
+    CHARGE_entry = header[2].split('CHARGE:')
+    if len(CHARGE_entry)>1:
+        try:
+            CHARGE = stringtoseconds(CHARGE_entry[1])
+            if CHARGE >= 0:
+                timeindex[0] = max(-1, timearray2index(timex, CHARGE, True))
+        except Exception:  # pylint: disable=broad-except
+            pass
+
+    for i, l in enumerate(['DRYe:', 'FCs:', 'FCe:', 'SCs:', 'SCe:', 'DROP:', 'COOL:']):
+        try:
+            label = stringtoseconds(header[i+4].split(l)[1])
+            if label > 0:
+                timeindex[i+1] = max(0, timearray2index(timex, label, True))
+        except Exception:  # pylint: disable=broad-except
+            pass
+
+    profile['timex'] = timex
+    profile['temp1'] = temp1
+    profile['temp2'] = temp2
+    profile['extradevices'] = extradevices
+    profile['extraname1'] = extraname1
+    profile['extraname2'] = extraname2
+    profile['extratimex'] = extratimex
+    profile['extratemp1'] = extratemp1
+    profile['extratemp2'] = extratemp2
+    profile['extramathexpression1'] = extramathexpression1
+    profile['extramathexpression2'] = extramathexpression2
+    profile['timeindex'] = timeindex
+
+    return profile
+
+
+def exportProfile2CSV(filename:str, profile:'ProfileData') -> bool:
+    if all(key in profile for key in [ 'mode', 'timex', 'timeindex', 'temp1', 'temp2', 'roastdate', 'roasttime', 'extratimex' ]) and len(profile['timex']) > 0: # pyright: ignore[reportTypedDictNotRequiredAccess]
+        import csv
+        timeindex = profile['timeindex'] # pyright: ignore[reportTypedDictNotRequiredAccess]
+        timex = profile['timex'] # pyright: ignore[reportTypedDictNotRequiredAccess]
+        temp1 = profile['temp1'] # pyright: ignore[reportTypedDictNotRequiredAccess]
+        temp2 = profile['temp2'] # pyright: ignore[reportTypedDictNotRequiredAccess]
+        extradevices:int = (len(profile['extratimex']) if 'extratimex' in profile else 0) # pyright: ignore[reportTypedDictNotRequiredAccess]
+        # make timex zero based
+        timex_zero = [tx - timex[0] for tx in timex]
+        CHARGE = timex_zero[timeindex[0]] if timeindex[0] > -1 else -1
+        TP_index = findTPint(timeindex, timex, temp2)
+        TP = timex_zero[TP_index] if TP_index and TP_index < len(timex_zero) else 0.
+        DRYe = timex_zero[timeindex[1]] if timeindex[1] else 0.
+        FCs = timex_zero[timeindex[2]] if timeindex[2] else 0.
+        FCe = timex_zero[timeindex[3]] if timeindex[3] else 0.
+        SCs = timex_zero[timeindex[4]] if timeindex[4] else 0.
+        SCe = timex_zero[timeindex[5]] if timeindex[5] else 0.
+        DROP = timex_zero[timeindex[6]] if timeindex[6] else 0.
+        COOL = timex_zero[timeindex[7]] if timeindex[7] else 0.
+        events:list[tuple[float,str]] = [
+            (CHARGE,'CHARGE'),
+            (TP,'TP'),
+            (DRYe,'DRY End'),
+            (FCs,'FCs'),
+            (FCe,'FCe'),
+            (SCs,'SCs'),
+            (SCe,'SCe'),
+            (DROP, 'DROP'),
+            (COOL, 'COOL'),
+        ]
+        with open(filename, 'w',newline='',encoding='utf8') as outfile:
+            writer= csv.writer(outfile,delimiter='\t')
+            writer.writerow([
+                'Date:' + QDate.fromString(decodeLocalStrict(profile['roastdate'])).toString("dd'.'MM'.'yyyy"), # pyright: ignore[reportTypedDictNotRequiredAccess]
+                'Unit:' + profile['mode'], # pyright: ignore[reportTypedDictNotRequiredAccess]
+                'CHARGE:' + (eventtime2string(CHARGE) if CHARGE > 0 else ('' if CHARGE < 0 else '00:00')),
+                'TP:' + eventtime2string(TP),
+                'DRYe:' + eventtime2string(DRYe),
+                'FCs:' + eventtime2string(FCs),
+                'FCe:' + eventtime2string(FCe),
+                'SCs:' + eventtime2string(SCs),
+                'SCe:' + eventtime2string(SCe),
+                'DROP:' + eventtime2string(DROP),
+                'COOL:' + eventtime2string(COOL),
+                'Time:' + QTime.fromString(decodeLocalStrict(profile['roasttime'])).toString()[:-3]]) # pyright: ignore[reportTypedDictNotRequiredAccess]
+            headrow:list[str] = (['Time1','Time2','ET','BT','Event'] + functools.reduce(lambda x,y : x + [str(y[0]),str(y[1])],
+                    (list(zip(profile['extraname1'][0:extradevices],profile['extraname2'][0:extradevices], strict=True)) if 'extraname1' in profile and 'extraname2' in profile else []), # ty:ignore
+                    cast(list[str], [])))
+            writer.writerow(headrow)
+            last_time:str|None = None
+            events_set:set[str] = set()
+            for i, tx in enumerate(timex_zero):
+                if tx >= CHARGE >= 0:
+                    di,mo = divmod(tx - CHARGE, 60)
+                    time2 = f'{di:02.0f}:{mo:02.0f}'
+                else:
+                    time2 = ''
+                event:str = ''
+                for ev in events:
+                    if ev[1] not in events_set and (ev[0]!=0 or (ev[1]=='CHARGE' and ev[0]!=-1)) and int(round(tx)) == int(round(ev[0])):
+                        event = ev[1]
+                        events_set.add(ev[1])
+                        break
+                di,mo = divmod(tx,60)
+                time1 = f'{di:02.0f}:{mo:02.0f}'
+                if last_time is None or last_time != time1:
+                    extratemps = []
+                    if extradevices>0 and 'extratemp1' in profile and 'extratemp2' in profile:
+                        for j in range(extradevices):
+                            if j < len(profile['extratemp1']) and i < len(profile['extratemp1'][j]):
+                                extratemps.append(str(profile['extratemp1'][j][i]))
+                            else:
+                                extratemps.append('-1')
+                            if j < len(profile['extratemp2']) and i < len(profile['extratemp2'][j]):
+                                extratemps.append(str(profile['extratemp2'][j][i]))
+                            else:
+                                extratemps.append('-1')
+                    writer.writerow([str(time1),str(time2),str(temp1[i]),str(temp2[i]),str(event)] + extratemps)
+                last_time = time1
+        return True
+    return False
+
+
+# returns total roast time in seconds based on given timeindex and timex structures or None if data is not extractable
+def roast_time(timeindex:list[int], timex:list[float]) -> float|None:
+    if len(timex) == 0 or len(timeindex) < 7:
+        return None
+    starttime = (timex[timeindex[0]] if timeindex[0] != -1 and timeindex[0] < len(timex) else 0)
+    endtime = (timex[timeindex[6]] if timeindex[6] > 0  and timeindex[6] < len(timex) else timex[-1])
+    return endtime - starttime
+
+# return the total roasting time of the given profile in seconds
+def get_total_roast_time_from_profile(profile:ProfileData) -> float|None:
+    if 'timex' in profile and 'timeindex' in profile:
+        timeindex = profile['timeindex']
+        timex = profile['timex']
+        return roast_time(timeindex, timex)
+    return None
+
+
+### register calculations for S7/MODBUS
+
+# splits (sorted) list of registers into list of segments of (first,last) register tuples with maximal length of MAX_REGISTER_SEGMENT
+# with last-first < max_register_segment
+# ex with max_register_segment = 100:
+#  max_blocks([0, 2, 20, 1040, 1105, 1215]) ==> [(0,20), (1040, 1105), (1215, 1215)]
+def max_blocks(registers:list[int], max_register_segment:int = 100) -> list[tuple[int,int]]:
+    registers_sorted = sorted(registers)
+    res:list[tuple[int,int]] = []
+    start_register:int|None = None
+    last_register:int|None = None
+    for register in registers_sorted:
+        if start_register is None:
+            start_register = register
+        elif last_register is not None and register > start_register + max_register_segment - 1:
+            res.append((start_register, last_register))
+            start_register = register
+        last_register = register
+    # add the last remaining, not yet appended segment
+    if start_register is not None and last_register is not None:
+        res.append((start_register, last_register))
+    return res
+
+# calculates connected blocks of minimal length from a (unsorted) list of registers as list of pairs of the form (start-register,end-register)
+def min_blocks(registers:list[int]) -> list[tuple[int,int]]:
+    registers_sorted:list[int] = sorted(registers) # eg. [12392, 12393, 12394, 12462, 12463, 12465]
+    # split in successive sequences (eg. gaps = [[12394, 12462], [12463, 12465]])
+    gaps:list[list[int]] = [[s, er] for s, er in zip(registers_sorted, registers_sorted[1:], strict=False) if s+1 < er]
+    # edges iter returns in sequence [12392, 12394, 12462, 12463, 12465, 12465]
+    edges:Iterator[int] = iter(registers_sorted[:1] + sum(gaps, cast(list[int], [])) + registers_sorted[-1:])
+    # sequences: eg. [(12392, 12394), (12462, 12463), (12465, 12465)]
+    return list(zip(edges, edges, strict=True)) # ty:ignore

@@ -21,23 +21,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-try:
-    #pylint: disable = E, W, R, C
-    from PyQt6.QtCore import QSemaphore # @UnusedImport @Reimport  @UnresolvedImport
-except Exception: # pylint: disable=broad-except
-    #pylint: disable = E, W, R, C
-    from PyQt5.QtCore import QSemaphore  # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import QSemaphore
 
 from artisanlib import __version__
-from typing import Final, Any, Optional, Dict, Tuple  #for Python >= 3.9: can remove 'Dict' since type hints can now use the generic 'dict'
+from typing import Final, Any
 
+import time
 import uuid
 import datetime
 import gzip
 import json
-#import platform
+import json.decoder
 import logging
 import dateutil.parser
+import requests
+import requests.exceptions
 
 from plus import config, account, util
 
@@ -50,7 +48,7 @@ token_semaphore = QSemaphore(
     1
 )  # protects access to the session token which is manipulated only here
 
-def getToken() -> Optional[str]:
+def getToken() -> str|None:
     try:
         token_semaphore.acquire(1)
         return config.token
@@ -62,7 +60,7 @@ def getToken() -> Optional[str]:
             token_semaphore.release(1)
 
 
-def getNickname() -> Optional[str]:
+def getNickname() -> str|None:
     try:
         token_semaphore.acquire(1)
         return config.nickname
@@ -74,19 +72,18 @@ def getNickname() -> Optional[str]:
             token_semaphore.release(1)
 
 
-def setToken(token: str, nickname: Optional[str] = None) -> None:
+def setToken(token: str, nickname: str|None = None) -> None:
     try:
         token_semaphore.acquire(1)
         config.token = token
         config.nickname = nickname
-        assert config.app_window is not None
-        if (
-            (config.app_window.qmc.operator is None
-            or config.app_window.qmc.operator == '')
+        aw = config.app_window
+        if (aw is not None
+            and aw.qmc.operator == ''
             and nickname is not None
             and nickname != ''
         ):  # @UndefinedVariable
-            config.app_window.qmc.operator = nickname
+            aw.qmc.operator = nickname
     finally:
         if token_semaphore.available() < 1:
             token_semaphore.release(1)
@@ -95,10 +92,11 @@ def setToken(token: str, nickname: Optional[str] = None) -> None:
 def clearCredentials(remove_from_keychain: bool = True) -> None:
     _log.debug('clearCredentials()')
     # remove credentials from keychain
+    aw = config.app_window
     try:
         if (
-            config.app_window is not None
-            and config.app_window.plus_account is not None
+            aw is not None
+            and aw.plus_account is not None
             and remove_from_keychain
         ):  # @UndefinedVariable
             try:
@@ -113,7 +111,7 @@ def clearCredentials(remove_from_keychain: bool = True) -> None:
                 import keyring
 
                 keyring.delete_password(
-                    config.app_name, config.app_window.plus_account
+                    config.app_name, aw.plus_account
                 )  # @UndefinedVariable
             except Exception as e:  # pylint: disable=broad-except
                 _log.error(e)
@@ -123,8 +121,8 @@ def clearCredentials(remove_from_keychain: bool = True) -> None:
     try:
         token_semaphore.acquire(1)
         config.token = None
-        if config.app_window is not None:
-            config.app_window.plus_account = None
+        if aw is not None:
+            aw.plus_account = None
         config.passwd = None
         config.nickname = None
         config.account_nr = None
@@ -162,11 +160,11 @@ def clearCredentials(remove_from_keychain: bool = True) -> None:
 # NOTE: authentify might be called from outside the GUI thread
 def authentify() -> bool:
     _log.debug('authentify()')
-    import requests # @Reimport
     try:
+        aw = config.app_window
         if (
-            config.app_window is not None
-            and config.app_window.plus_account is not None
+            aw is not None
+            and aw.plus_account is not None
         ):  # @UndefinedVariable
             # fetch passwd
             if config.passwd is None:
@@ -181,7 +179,7 @@ def authentify() -> bool:
                     import keyring  # @Reimport # imported last to make py2app work
 
                     config.passwd = keyring.get_password(
-                        config.app_name, config.app_window.plus_account
+                        config.app_name, aw.plus_account
                     )  # @UndefinedVariable
                 except Exception as e:  # pylint: disable=broad-except
                     _log.exception(e)
@@ -191,10 +189,10 @@ def authentify() -> bool:
                 return False
             _log.debug(
                 '-> authentifying %s',
-                config.app_window.plus_account,
+                aw.plus_account,
             )  # @UndefinedVariable
             data = {
-                'email': config.app_window.plus_account,
+                'email': aw.plus_account,
                 'password': config.passwd,
             }  # @UndefinedVariable
             r = sendData(config.auth_url, data, 'POST', False)
@@ -219,24 +217,24 @@ def authentify() -> bool:
                     nickname = util.extractInfo(
                         res['result']['user'], 'nickname', None
                     )
-                    config.app_window.plus_language = util.extractInfo(
+                    aw.plus_language = util.extractInfo(
                         res['result']['user'], 'language', 'en'
                     )
-                    config.app_window.plus_user_id = util.extractInfo(
+                    aw.plus_user_id = util.extractInfo(
                         res['result']['user'], 'user_id', None
                     )
-                    config.app_window.plus_paidUntil = None
-                    config.app_window.plus_subscription = None
-                    config.app_window.plus_rlimit = 0
-                    config.app_window.plus_used = 0
+                    aw.plus_paidUntil = None
+                    aw.plus_subscription = None
+                    aw.plus_rlimit = 0
+                    aw.plus_used = 0
                     if 'account' in res['result']['user']:
                         res_account = res['result']['user']['account']
                         if '_id' in res_account:
-                            config.app_window.plus_account_id = res_account['_id']
+                            aw.plus_account_id = res_account['_id']
                         subscription = util.extractInfo(
                             res_account, 'subscription', ''
                         )
-                        config.app_window.updateSubscriptionSignal.emit(subscription)
+                        aw.updateSubscriptionSignal.emit(subscription)
                         paidUntil = util.extractInfo(
                             res_account, 'paidUntil', ''
                         )
@@ -260,7 +258,7 @@ def authentify() -> bool:
                                 notifications = util.extractInfo(notificationDict, 'unqualified', 0)
                                 machines = util.extractInfo(notificationDict, 'machines', [])
                             try:
-                                config.app_window.updateLimitsSignal.emit(rlimit,rused,paidUntil,notifications,machines)
+                                aw.updateLimitsSignal.emit(rlimit,rused,paidUntil,notifications,machines)
                             except Exception as e:  # pylint: disable=broad-except
                                 _log.exception(e)
 
@@ -270,14 +268,14 @@ def authentify() -> bool:
                             if paidUntil != '' and (
                                 dateutil.parser.parse(paidUntil).date()
     #                            - datetime.datetime.now().date()  # DTZ005 The use of `datetime.datetime.now()` without `tz` argument is not allowed
-                                - datetime.datetime.now(datetime.timezone.utc).date()
+                                - datetime.datetime.now(datetime.UTC).date() # ty:ignore
                             ).days < (-config.expired_subscription_max_days):
                                 _log.debug(
                                         '-> authentication failed due to'
                                         ' long expired subscription'
                                 )
                                 if 'error' in res:
-                                    config.app_window.sendmessage(
+                                    aw.sendmessage(
                                         res['error']
                                     )  # @UndefinedVariable
                                 clearCredentials()
@@ -288,11 +286,11 @@ def authentify() -> bool:
                     if 'readonly' in res['result']['user'] and isinstance(
                         res['result']['user']['readonly'], bool
                     ):
-                        config.app_window.plus_readonly = res['result']['user'][
+                        aw.plus_readonly = res['result']['user'][
                             'readonly'
                         ]
                     else:
-                        config.app_window.plus_readonly = False
+                        aw.plus_readonly = False
                     #
                     setToken(res['result']['user']['token'], nickname)
                     if (
@@ -309,7 +307,7 @@ def authentify() -> bool:
                     return True
                 _log.debug('-> authentication failed')
                 if 'error' in res:
-                    config.app_window.sendmessage(
+                    aw.sendmessage(
                         res['error']
                     )  # @UndefinedVariable
                 clearCredentials()
@@ -331,33 +329,34 @@ def authentify() -> bool:
 
 
 def getHeaders(
-    authorized: bool = True, decompress: bool = True) -> Dict[str, str]:  #for Python >= 3.9 can replace 'Dict' with the generic type hint 'dict'
-    assert config.app_window is not None
-    os, os_version, os_arch = config.app_window.get_os()  # @UndefinedVariable
-    headers = {
-        'user-agent': f'Artisan/{__version__} ({os}; {os_version}; {os_arch})',
-        'Accept-Charset': 'utf-8'
-    }
-    try:
-        locale = config.app_window.locale_str
-        if locale is not None and locale != '':
-            assert isinstance(locale, str)
-            locale = locale.lower().replace('_', '-')
-            headers['Accept-Language'] = locale
-    except Exception as e:  # pylint: disable=broad-except
-        _log.exception(e)
-    if authorized:
-        token = getToken()
-        if token is not None:
-            headers['Authorization'] = f'Bearer {token}'
-    if decompress:
-        headers[
-            'Accept-Encoding'
-        ] = 'deflate, compress, gzip'  # identity should not be in here!
-    return headers
+    authorized: bool = True, decompress: bool = True) -> dict[str, str]:
+    aw = config.app_window
+    if aw is not None:
+        os, os_version, os_arch = aw.get_os()  # @UndefinedVariable
+        headers = {
+            'user-agent': f'Artisan/{__version__} ({os}; {os_version}; {os_arch})',
+            'Accept-Charset': 'utf-8'
+        }
+        try:
+            locale = aw.locale_str
+            if locale != '':
+                assert isinstance(locale, str)
+                locale = locale.lower().replace('_', '-')
+                headers['Accept-Language'] = locale
+        except Exception as e:  # pylint: disable=broad-except
+            _log.exception(e)
+        if authorized:
+            token = getToken()
+            if token is not None:
+                headers['Authorization'] = f'Bearer {token}'
+        if decompress:
+            headers[
+                'Accept-Encoding'
+            ] = 'deflate, compress, gzip'  # identity should not be in here!
+        return headers
+    return {}
 
-
-def getHeadersAndData(authorized: bool, compress: bool, jsondata: JSON, verb: str) -> Tuple[Dict[str, str],bytes]:
+def getHeadersAndData(authorized: bool, compress: bool, jsondata: JSON, verb: str) -> tuple[dict[str, str],bytes]:
     headers = getHeaders(authorized, decompress=compress)
     headers['Content-Type'] = 'application/json; charset=utf-8'
     if verb == 'POST':
@@ -373,7 +372,7 @@ def getHeadersAndData(authorized: bool, compress: bool, jsondata: JSON, verb: st
 
 def sendData(
     url: str,
-    data: Dict[Any, Any],  #for Python >= 3.9 can replace 'Dict' with the generic type hint 'dict'
+    data: dict[Any, Any],
     verb: str, # POST or PUT
     authorized: bool = True,
     compress: bool = config.compress_posts,
@@ -382,8 +381,8 @@ def sendData(
     _log.debug('sendData(%s,_data_,%s,%s)', url, verb, authorized)
     jsondata = json.dumps(data, indent=None, separators=(',', ':'), ensure_ascii=False).encode('utf8')
     _log.debug('-> size %s', len(jsondata))
+#    _log.debug("PRINT jsondata: %s",jsondata)
     headers, postdata = getHeadersAndData(authorized, compress, jsondata, verb)
-    import requests  # @Reimport
     if verb == 'POST':
         r = requests.post(
             url,
@@ -405,6 +404,7 @@ def sendData(
         _log.debug('-> session token outdated (401)')
         # we re-authentify by renewing the session token and try again
         if authentify():
+            time.sleep(0.3) # a little delay not to stress out the server too much
             headers, postdata = getHeadersAndData(
                 authorized, compress, jsondata, verb
             )  # recreate header with new token
@@ -428,12 +428,11 @@ def sendData(
     return r
 
 
-def getData(url: str, authorized: bool = True, params:Optional[Dict[str,str]]=None) -> Any:
+def getData(url: str, authorized: bool = True, params:dict[str,str]|None = None) -> Any:
     _log.debug('getData(%s,%s,%s)', url, authorized, params)
     headers = getHeaders(authorized)
     params = params or {}
     #    _log.debug("-> request headers %s",headers)
-    import requests  # @Reimport
     r = requests.get(
         url,
         headers=headers,

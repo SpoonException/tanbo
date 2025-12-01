@@ -18,37 +18,26 @@
 import sys
 import platform
 import logging
-from typing import Final, List, Optional, Any, cast, TYPE_CHECKING
+from typing import override, Final, Any, cast, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.atypes import Palette
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
+    from artisanlib.dialogs import HelpDlg # pylint: disable=unused-import
     from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
 
-from artisanlib.util import uchr, comma2dot
+from artisanlib.util import uchr, comma2dot, eventtime2string
 from artisanlib.dialogs import ArtisanResizeablDialog, ArtisanDialog
 from artisanlib.widgets import MyQComboBox, MyQDoubleSpinBox
 
 from uic import SliderCalculatorDialog # pyright: ignore[attr-defined] # pylint: disable=no-name-in-module
 
 
-try:
-    from PyQt6.QtCore import (Qt, pyqtSlot, QSettings, QTimer) # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtGui import (QColor, QFont, QIntValidator) # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QPushButton, QSpinBox, QWidget, QTabWidget, QDialogButtonBox, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QGridLayout, QGroupBox, QTableWidget, QHeaderView, QToolButton) # @UnusedImport @Reimport  @UnresolvedImport
-#    from PyQt6 import sip # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import (Qt, pyqtSlot, QSettings, QTimer) # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtGui import (QColor, QFont, QIntValidator) # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-                                 QPushButton, QSpinBox, QWidget, QTabWidget, QDialogButtonBox, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QGridLayout, QGroupBox, QTableWidget, QHeaderView, QToolButton) # @UnusedImport @Reimport  @UnresolvedImport
-#    try:
-#        from PyQt5 import sip # type: ignore # @Reimport @UnresolvedImport @UnusedImport
-#    except ImportError:
-#        import sip  # type: ignore # @Reimport @UnresolvedImport @UnusedImport
+from PyQt6.QtCore import (Qt, pyqtSlot, QSettings, QTimer)
+from PyQt6.QtGui import (QColor, QFont, QIntValidator)
+from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+                             QPushButton, QSpinBox, QWidget, QTabWidget, QDialogButtonBox,
+                             QGridLayout, QGroupBox, QTableWidget, QHeaderView, QToolButton)
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
@@ -61,56 +50,77 @@ class EventsDlg(ArtisanResizeablDialog):
 
         self.buttonlistmaxlen:int = self.aw.buttonlistmaxlen
 
-        self.extraeventslabels: List[str] = []
-        self.extraeventsdescriptions: List[str] = []
-        self.extraeventstypes: List[int] = []
-        self.extraeventsvalues: List[float] = []
-        self.extraeventbuttoncolor:List[str] = []
-        self.extraeventbuttontextcolor:List[str] = []
-        self.extraeventsactionstrings:List[str] = []
-        self.extraeventsactions:List[int] = []
-        self.extraeventsvisibility:List[int] = []
+        self.extraeventslabels: list[str] = []
+        self.extraeventsdescriptions: list[str] = []
+        self.extraeventstypes: list[int] = []
+        self.extraeventsvalues: list[float] = []
+        self.extraeventbuttoncolor:list[str] = []
+        self.extraeventbuttontextcolor:list[str] = []
+        self.extraeventsactionstrings:list[str] = []
+        self.extraeventsactions:list[int] = []
+        self.extraeventsvisibility:list[int] = []
 
-        self.eventslidervisibilities:List[int] = [0,0,0,0]
-        self.eventslideractions:List[int] = [0,0,0,0]
-        self.eventslidercommands:List[str] = ['','','','']
-        self.eventslideroffsets:List[float] = [0.,0.,0.,0.]
-        self.eventsliderfactors:List[float] = [1.0,1.0,1.0,1.0]
-        self.eventslidermin:List[int] = [0,0,0,0]
-        self.eventslidermax:List[int] = [100,100,100,100]
-        self.eventsliderBernoulli:List[int] = [0,0,0,0]
-        self.eventslidercoarse:List[int] = [0,0,0,0]
-        self.eventslidertemp:List[int] = [0,0,0,0]
-        self.eventsliderunits:List[str] = ['','','','']
+        self.eventslidervisibilities:list[int] = [0,0,0,0]
+        self.eventslideractions:list[int] = [0,0,0,0]
+        self.eventslidercommands:list[str] = ['','','','']
+        self.eventslideroffsets:list[float] = [0.,0.,0.,0.]
+        self.eventsliderfactors:list[float] = [1.0,1.0,1.0,1.0]
+        self.eventslidermin:list[int] = [0,0,0,0]
+        self.eventslidermax:list[int] = [100,100,100,100]
+        self.eventsliderBernoulli:list[int] = [0,0,0,0]
+        self.eventslidercoarse:list[int] = [0,0,0,0]
+        self.eventslidertemp:list[int] = [0,0,0,0]
+        self.eventsliderunits:list[str] = ['','','','']
         # quantifiers
-        self.eventquantifieractive:List[int] = [0,0,0,0]
-        self.eventquantifiersource:List[int] = [0,0,0,0]
-        self.eventquantifiermin:List[int] = [0,0,0,0]
-        self.eventquantifiermax:List[int] = [100,100,100,100]
-        self.eventquantifiercoarse:List[int] = [0,0,0,0]
-        self.eventquantifieraction:List[int] = [0,0,0,0]
-        self.eventquantifierSV:List[int] = [0,0,0,0]
+        self.eventquantifieractive:list[int] = [0,0,0,0]
+        self.eventquantifiersource:list[int] = [0,0,0,0]
+        self.eventquantifiermin:list[int] = [0,0,0,0]
+        self.eventquantifiermax:list[int] = [100,100,100,100]
+        self.eventquantifiercoarse:list[int] = [0,0,0,0]
+        self.eventquantifieraction:list[int] = [0,0,0,0]
+        self.eventquantifierSV:list[int] = [0,0,0,0]
         # palettes
-        self.buttonpalette:List[Palette] = []
+        self.buttonpalette:list[Palette] = []
         for _ in range(self.aw.max_palettes):
             self.buttonpalette.append(self.aw.makePalette())
-        self.buttonpalettemaxlen:List[int] = [self.aw.buttonpalettemaxlen_default]*self.aw.max_palettes
-        self.buttonpalette_buttonsize:List[int] =                 [self.aw.buttonsize_default]*self.aw.max_palettes                    # button sizes per pallet
-        self.buttonpalette_mark_last_button_pressed:List[bool] =  [self.aw.mark_last_button_pressed_default]*self.aw.max_palettes      # mark last flag per pallet
-        self.buttonpalette_tooltips:List[bool] =                  [self.aw.show_extrabutton_tooltips_default]*self.aw.max_palettes     # show tooltips flag per pallet
-        self.buttonpalette_slider_alternative_layout:List[bool] = [self.aw.eventsliderAlternativeLayout_default]*self.aw.max_palettes  # alternative layout flag per pallet
+        self.buttonpalettemaxlen:list[int] = [self.aw.buttonpalettemaxlen_default]*self.aw.max_palettes
+        self.buttonpalette_buttonsize:list[int] =                 [self.aw.buttonsize_default]*self.aw.max_palettes                    # button sizes per pallet
+        self.buttonpalette_mark_last_button_pressed:list[bool] =  [self.aw.mark_last_button_pressed_default]*self.aw.max_palettes      # mark last flag per pallet
+        self.buttonpalette_tooltips:list[bool] =                  [self.aw.show_extrabutton_tooltips_default]*self.aw.max_palettes     # show tooltips flag per pallet
+        self.buttonpalette_slider_alternative_layout:list[bool] = [self.aw.eventsliderAlternativeLayout_default]*self.aw.max_palettes  # alternative layout flag per pallet
         self.buttonpalette_label:str = self.aw.buttonpalette_label
+        self.eventsliderAlternativeLayout:bool = self.aw.eventsliderAlternativeLayout_default
+        self.eventsliderAlternativeLayoutstored:bool = self.aw.eventsliderAlternativeLayout_default
+        self.eventsliderKeyboardControlstored:bool = True
+        self.autoDropModestored:int = self.aw.qmc.autoDropMode
+        self.autoChargeModestored:int = self.aw.qmc.autoChargeMode
+        self.autoDropFlagstored:bool = self.aw.qmc.autoDropFlag
+        self.autoChargeFlagstored:bool = self.aw.qmc.autoChargeFlag
+        self.chargeTimerPeriodstored:int = self.aw.qmc.chargeTimerPeriod
+        self.chargeTimerFlagstored:bool = self.aw.qmc.chargeTimerFlag
+        self.etypeComboBoxstored_currentIndex:int = self.aw.etypeComboBox.currentIndex()
+        self.etypesstored:list[str] = self.aw.qmc.etypes[:]
+        self.eventsGraphflagstored:int = self.aw.qmc.eventsGraphflag
+        self.showEtypesstored:list[bool] = self.aw.qmc.showEtypes[:]
+        self.showeventsonbtstored:bool = self.aw.qmc.showeventsonbt
+        self.annotationsflagstored:int = self.aw.qmc.annotationsflag
+        self.eventsshowflagstored:int = self.aw.qmc.eventsshowflag
+        self.eventsbuttonflagstored:int = self.aw.eventsbuttonflag
+        self.markTPFlagstored:bool = self.aw.qmc.markTPflag
+        self.show_extrabutton_tooltips:bool = self.aw.show_extrabutton_tooltips_default
+        self.mark_last_button_pressed:bool = self.aw.mark_last_button_pressed_default
+        self.buttonsize:int = self.aw.buttonsize_default
         # styles
-        self.EvalueColor:List[str] = self.aw.qmc.EvalueColor_default.copy()
-        self.EvalueMarker:List[str] = ['o','s','h','D']
-        self.Evaluelinethickness:List[float] = [1,1,1,1]
-        self.Evaluealpha:List[float] = [.8,.8,.8,.8]
-        self.EvalueMarkerSize:List[float] = [4,4,4,4]
+        self.EvalueColor:list[str] = self.aw.qmc.EvalueColor_default.copy()
+        self.EvalueMarker:list[str] = ['o','s','h','D']
+        self.Evaluelinethickness:list[float] = [1,1,1,1]
+        self.Evaluealpha:list[float] = [.8,.8,.8,.8]
+        self.EvalueMarkerSize:list[float] = [4,4,4,4]
         # event annotations
-        self.specialeventannovisibilities:List[int] = [0,0,0,0]
-        self.specialeventannotations:List[str] = ['','','','']
+        self.specialeventannovisibilities:list[int] = [0,0,0,0]
+        self.specialeventannotations:list[str] = ['','','','']
 
-        self.custom_button_actions:List[str] = ['',
+        self.custom_button_actions:list[str] = ['',
                                      QApplication.translate('ComboBox','Serial Command'),
                                      QApplication.translate('ComboBox','Call Program'),
                                      QApplication.translate('ComboBox','Multiple Event'),
@@ -133,13 +143,13 @@ class EventsDlg(ArtisanResizeablDialog):
                                      QApplication.translate('ComboBox','RC Command'),
                                      QApplication.translate('ComboBox','WebSocket Command'),
                                      QApplication.translate('ComboBox','Stepper Command')]
-        self.custom_button_actions_sorted:List[str] = sorted(self.custom_button_actions)
+        self.custom_button_actions_sorted:list[str] = sorted(self.custom_button_actions)
 
         titlefont = QFont()
         titlefont.setBold(True)
         self.setWindowTitle(QApplication.translate('Form Caption','Events'))
         self.setModal(True)
-        self.helpdialog = None
+        self.helpdialog:HelpDlg|None = None
         settings = QSettings()
         if settings.contains('EventsGeometry'):
             self.restoreGeometry(settings.value('EventsGeometry'))
@@ -245,7 +255,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.overlapEdit.setSuffix(' %')
 
         helpcurveDialogButton = QDialogButtonBox()
-        helpButton: Optional[QPushButton] = helpcurveDialogButton.addButton(QDialogButtonBox.StandardButton.Help)
+        helpButton: QPushButton|None = helpcurveDialogButton.addButton(QDialogButtonBox.StandardButton.Help)
         if helpButton is not None:
             self.setButtonTranslations(helpButton,'Help',QApplication.translate('Button','Help'))
             helpButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -401,7 +411,7 @@ class EventsDlg(ArtisanResizeablDialog):
                         QApplication.translate('Marker','x'),
                         QApplication.translate('Marker','None')]
         #keys interpreted by matplotlib. Must match order of self.markers
-        self.markervals = [None,'o','s','p','D','*','h','H','+','x','None']
+        self.markervals:list[str|None] = [None,'o','s','p','D','*','h','H','+','x','None']
         #Marker type
         self.marker1typeComboBox =  QComboBox()
         self.marker1typeComboBox.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -645,7 +655,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.eventbuttontable = QTableWidget()
         self.eventbuttontable.setTabKeyNavigation(True)
         self.eventbuttontable.itemSelectionChanged.connect(self.selectionChanged)
-        vheader: Optional[QHeaderView] = self.eventbuttontable.verticalHeader()
+        vheader: QHeaderView|None = self.eventbuttontable.verticalHeader()
         if vheader is not None:
             vheader.sectionMoved.connect(self.sectionMoved)
 #        self.createEventbuttonTable()
@@ -653,26 +663,23 @@ class EventsDlg(ArtisanResizeablDialog):
         self.copyeventbuttonTableButton.setToolTip(QApplication.translate('Tooltip','Copy table to clipboard, OPTION or ALT click for tabular text'))
         self.copyeventbuttonTableButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.copyeventbuttonTableButton.clicked.connect(self.copyEventButtonTabletoClipboard)
-        addButton: Optional[QPushButton] = QPushButton(QApplication.translate('Button','Add'))
-        if addButton is not None:
-            addButton.setToolTip(QApplication.translate('Tooltip','Add new extra Event button'))
-            #addButton.setMaximumWidth(100)
-            addButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            addButton.clicked.connect(self.addextraeventbuttonSlot)
-        delButton: Optional[QPushButton] = QPushButton(QApplication.translate('Button','Delete'))
-        if delButton is not None:
-            delButton.setToolTip(QApplication.translate('Tooltip','Delete the last extra Event button'))
-            #delButton.setMaximumWidth(100)
-            delButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            delButton.clicked.connect(self.delextraeventbutton)
-        self.insertButton: Optional[QPushButton] = QPushButton(QApplication.translate('Button','Insert'))
-        if self.insertButton is not None:
-            self.insertButton.clicked.connect(self.insertextraeventbuttonSlot)
-            self.insertButton.setMinimumWidth(80)
-            self.insertButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            self.insertButton.setEnabled(False)
+        addButton: QPushButton = QPushButton(QApplication.translate('Button','Add'))
+        addButton.setToolTip(QApplication.translate('Tooltip','Add new extra Event button'))
+        #addButton.setMaximumWidth(100)
+        addButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        addButton.clicked.connect(self.addextraeventbuttonSlot)
+        delButton: QPushButton = QPushButton(QApplication.translate('Button','Delete'))
+        delButton.setToolTip(QApplication.translate('Tooltip','Delete the last extra Event button'))
+        #delButton.setMaximumWidth(100)
+        delButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        delButton.clicked.connect(self.delextraeventbutton)
+        self.insertButton: QPushButton = QPushButton(QApplication.translate('Button','Insert'))
+        self.insertButton.clicked.connect(self.insertextraeventbuttonSlot)
+        self.insertButton.setMinimumWidth(80)
+        self.insertButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.insertButton.setEnabled(False)
         helpDialogButton = QDialogButtonBox()
-        helpButtonD: Optional[QPushButton] = helpDialogButton.addButton(QDialogButtonBox.StandardButton.Help)
+        helpButtonD: QPushButton|None = helpDialogButton.addButton(QDialogButtonBox.StandardButton.Help)
         if helpButtonD is not None:
             helpButtonD.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             helpButtonD.setToolTip(QApplication.translate('Tooltip','Show help'))
@@ -749,18 +756,6 @@ class EventsDlg(ArtisanResizeablDialog):
         slidertemptitlelabel.setFont(titlefont)
         sliderunittitlelabel = QLabel(QApplication.translate('Label','Unit'))
         sliderunittitlelabel.setFont(titlefont)
-        self.E1visibility = QCheckBox(self.aw.qmc.etypesf(0))
-        self.E1visibility.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.E1visibility.setChecked(bool(self.aw.eventslidervisibilities[0]))
-        self.E2visibility = QCheckBox(self.aw.qmc.etypesf(1))
-        self.E2visibility.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.E2visibility.setChecked(bool(self.aw.eventslidervisibilities[1]))
-        self.E3visibility = QCheckBox(self.aw.qmc.etypesf(2))
-        self.E3visibility.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.E3visibility.setChecked(bool(self.aw.eventslidervisibilities[2]))
-        self.E4visibility = QCheckBox(self.aw.qmc.etypesf(3))
-        self.E4visibility.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.E4visibility.setChecked(bool(self.aw.eventslidervisibilities[3]))
         self.sliderActionTypes = ['',#QApplication.translate("ComboBox", "None"),
                        QApplication.translate('ComboBox', 'Serial Command'),
                        QApplication.translate('ComboBox', 'Modbus Command'),
@@ -901,7 +896,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.E4_calc.setToolTip(QApplication.translate('Form Caption', 'Slider Calculator'))
 
         # https://www.home-barista.com/home-roasting/coffee-roasting-best-practices-scott-rao-t65601-70.html#p724654
-        bernoulli_tooltip_text = QApplication.translate('Tooltip', "Applies the Bernoulli's gas law to the values computed\nby applying the given factor and offset to the slider value\nassuming that the gas pressureand not the gas flow is controlled.\nTo reduce heat (or gas flow) by 50% the gas pressure\nhas to be reduced by 4 times.")
+        bernoulli_tooltip_text = QApplication.translate('Tooltip', "Applies the Bernoulli's gas law to the values computed\nby applying the given factor and offset to the slider value\nassuming that the gas pressure and not the gas flow is controlled.\nTo reduce heat (or gas flow) by 50% the gas pressure\nhas to be reduced by 4 times.")
         self.E1slider_bernoulli = QCheckBox()
         self.E1slider_bernoulli.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.E1slider_bernoulli.setChecked(bool(self.aw.eventsliderBernoulli[0]))
@@ -919,7 +914,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.E4slider_bernoulli.setChecked(bool(self.aw.eventsliderBernoulli[3]))
         self.E4slider_bernoulli.setToolTip(bernoulli_tooltip_text)
 
-        self.sliderStepSizes:List[str] = ['1', '5', '10'] # corresponding to aw.eventslidercoarse values of 0, 2, and 1
+        self.sliderStepSizes:list[str] = ['1', '5', '10'] # corresponding to aw.eventslidercoarse values of 0, 2, and 1
         self.E1slider_step = QComboBox()
         self.E1slider_step.setToolTip(QApplication.translate('Tooltip', 'Step Size'))
         self.E1slider_step.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -973,7 +968,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.E4unit.setMaximumWidth(maxwidth)
         self.E4unit.setToolTip(slider_unit_tooltip_text)
         helpsliderDialogButton = QDialogButtonBox()
-        helpsliderbutton: Optional[QPushButton] = helpsliderDialogButton.addButton(QDialogButtonBox.StandardButton.Help)
+        helpsliderbutton: QPushButton|None = helpsliderDialogButton.addButton(QDialogButtonBox.StandardButton.Help)
         if helpsliderbutton is not None:
             helpsliderbutton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             self.setButtonTranslations(helpsliderbutton,'Help',QApplication.translate('Button','Help'))
@@ -984,6 +979,26 @@ class EventsDlg(ArtisanResizeablDialog):
         self.sliderAlternativeLayoutFlag = QCheckBox(QApplication.translate('CheckBox','Alternative Layout'))
         self.sliderAlternativeLayoutFlag.setToolTip(QApplication.translate('Tooltip', 'Group Slider 1 with Slider 4 and Slider 2 with Slider 3'))
         self.sliderAlternativeLayoutFlag.setChecked(self.aw.eventsliderAlternativeLayout)
+        self.E1visibility = QCheckBox(self.aw.qmc.etypesf(0))
+        self.E1visibility.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.E1visibility.stateChanged.connect(self.slider1_visibility_changed)
+        self.E1visibility.setChecked(bool(self.aw.eventslidervisibilities[0]))
+        self.E2visibility = QCheckBox(self.aw.qmc.etypesf(1))
+        self.E2visibility.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.E2visibility.stateChanged.connect(self.slider2_visibility_changed)
+        self.E2visibility.setChecked(bool(self.aw.eventslidervisibilities[1]))
+        self.E3visibility = QCheckBox(self.aw.qmc.etypesf(2))
+        self.E3visibility.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.E3visibility.stateChanged.connect(self.slider3_visibility_changed)
+        self.E3visibility.setChecked(bool(self.aw.eventslidervisibilities[2]))
+        self.E4visibility = QCheckBox(self.aw.qmc.etypesf(3))
+        self.E4visibility.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.E4visibility.stateChanged.connect(self.slider4_visibility_changed)
+        self.E4visibility.setChecked(bool(self.aw.eventslidervisibilities[3]))
+        self.slider1_visibility_changed(0)
+        self.slider2_visibility_changed(0)
+        self.slider3_visibility_changed(0)
+        self.slider4_visibility_changed(0)
         ## tab4
         qeventtitlelabel = QLabel(QApplication.translate('Label','Event'))
         qeventtitlelabel.setFont(titlefont)
@@ -1077,7 +1092,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.E4quantifierSV.setToolTip(QApplication.translate('Tooltip', 'If source is a Set Value quantification gets never blocked'))
         self.E4quantifierSV.setEnabled(self.E4active.isChecked())
 
-        self.curvenames = []
+        self.curvenames:list[str] = []
         self.curvenames.append(QApplication.translate('ComboBox','ET'))
         self.curvenames.append(QApplication.translate('ComboBox','BT'))
         for i in range(len(self.aw.qmc.extradevices)):
@@ -1144,7 +1159,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.E4max.setValue(self.aw.eventquantifiermax[3])
         self.E4max.setEnabled(self.E4active.isChecked())
         applyDialogButton = QDialogButtonBox()
-        applyquantifierbutton: Optional[QPushButton] = applyDialogButton.addButton(QDialogButtonBox.StandardButton.Apply)
+        applyquantifierbutton: QPushButton|None = applyDialogButton.addButton(QDialogButtonBox.StandardButton.Apply)
         if applyquantifierbutton is not None:
             self.setButtonTranslations(applyquantifierbutton,'Apply',QApplication.translate('Button','Apply'))
             applyquantifierbutton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -1257,7 +1272,7 @@ class EventsDlg(ArtisanResizeablDialog):
                        QApplication.translate('ComboBox', 'Multiple Event'),
                        QApplication.translate('ComboBox', 'WebSocket Command')]
         self.buttonActionTypesSorted = sorted(self.buttonActionTypes)
-        self.CHARGEbutton = QCheckBox(QApplication.translate('CheckBox', 'CHARGE'))
+        self.CHARGEbutton = QCheckBox(QApplication.translate('Label', 'CHARGE'))
         self.CHARGEbutton.setChecked(bool(self.aw.qmc.buttonvisibility[0]))
         self.CHARGEbutton.setToolTip(QApplication.translate('Tooltip', 'Display the button during roast'))
         self.CHARGEbuttonActionType = QComboBox()
@@ -1267,7 +1282,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.CHARGEbuttonActionType.setCurrentIndex(self.buttonActionTypesSorted.index(self.buttonActionTypes[self.aw.qmc.buttonactions[0]]))
         self.CHARGEbuttonActionString = QLineEdit(self.aw.qmc.buttonactionstrings[0])
         self.CHARGEbuttonActionString.setToolTip(QApplication.translate('Tooltip', 'Event action command'))
-        self.DRYbutton = QCheckBox(QApplication.translate('CheckBox', 'DRY END'))
+        self.DRYbutton = QCheckBox(QApplication.translate('Label', 'DRY END'))
         self.DRYbutton.setToolTip(QApplication.translate('Tooltip', 'Display the button during roast'))
         self.DRYbutton.setChecked(bool(self.aw.qmc.buttonvisibility[1]))
         self.DRYbuttonActionType = QComboBox()
@@ -1277,7 +1292,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.DRYbuttonActionType.setCurrentIndex(self.buttonActionTypesSorted.index(self.buttonActionTypes[self.aw.qmc.buttonactions[1]]))
         self.DRYbuttonActionString = QLineEdit(self.aw.qmc.buttonactionstrings[1])
         self.DRYbuttonActionString.setToolTip(QApplication.translate('Tooltip', 'Event action command'))
-        self.FCSbutton = QCheckBox(QApplication.translate('CheckBox', 'FC START'))
+        self.FCSbutton = QCheckBox(QApplication.translate('Label', 'FC START'))
         self.FCSbutton.setChecked(bool(self.aw.qmc.buttonvisibility[2]))
         self.FCSbutton.setToolTip(QApplication.translate('Tooltip', 'Display the button during roast'))
         self.FCSbuttonActionType = QComboBox()
@@ -1287,7 +1302,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.FCSbuttonActionType.setCurrentIndex(self.buttonActionTypesSorted.index(self.buttonActionTypes[self.aw.qmc.buttonactions[2]]))
         self.FCSbuttonActionString = QLineEdit(self.aw.qmc.buttonactionstrings[2])
         self.FCSbuttonActionString.setToolTip(QApplication.translate('Tooltip', 'Event action command'))
-        self.FCEbutton = QCheckBox(QApplication.translate('CheckBox', 'FC END'))
+        self.FCEbutton = QCheckBox(QApplication.translate('Label', 'FC END'))
         self.FCEbutton.setChecked(bool(self.aw.qmc.buttonvisibility[3]))
         self.FCEbutton.setToolTip(QApplication.translate('Tooltip', 'Display the button during roast'))
         self.FCEbuttonActionType = QComboBox()
@@ -1297,7 +1312,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.FCEbuttonActionType.setCurrentIndex(self.buttonActionTypesSorted.index(self.buttonActionTypes[self.aw.qmc.buttonactions[3]]))
         self.FCEbuttonActionString = QLineEdit(self.aw.qmc.buttonactionstrings[3])
         self.FCEbuttonActionString.setToolTip(QApplication.translate('Tooltip', 'Event action command'))
-        self.SCSbutton = QCheckBox(QApplication.translate('CheckBox', 'SC START'))
+        self.SCSbutton = QCheckBox(QApplication.translate('Label', 'SC START'))
         self.SCSbutton.setChecked(bool(self.aw.qmc.buttonvisibility[4]))
         self.SCSbutton.setToolTip(QApplication.translate('Tooltip', 'Display the button during roast'))
         self.SCSbuttonActionType = QComboBox()
@@ -1307,7 +1322,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.SCSbuttonActionType.setCurrentIndex(self.buttonActionTypesSorted.index(self.buttonActionTypes[self.aw.qmc.buttonactions[4]]))
         self.SCSbuttonActionString = QLineEdit(self.aw.qmc.buttonactionstrings[4])
         self.SCSbuttonActionString.setToolTip(QApplication.translate('Tooltip', 'Event action command'))
-        self.SCEbutton = QCheckBox(QApplication.translate('CheckBox', 'SC END'))
+        self.SCEbutton = QCheckBox(QApplication.translate('Label', 'SC END'))
         self.SCEbutton.setChecked(bool(self.aw.qmc.buttonvisibility[5]))
         self.SCEbutton.setToolTip(QApplication.translate('Tooltip', 'Display the button during roast'))
         self.SCEbuttonActionType = QComboBox()
@@ -1317,7 +1332,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.SCEbuttonActionType.setCurrentIndex(self.buttonActionTypesSorted.index(self.buttonActionTypes[self.aw.qmc.buttonactions[5]]))
         self.SCEbuttonActionString = QLineEdit(self.aw.qmc.buttonactionstrings[5])
         self.SCEbuttonActionString.setToolTip(QApplication.translate('Tooltip', 'Event action command'))
-        self.DROPbutton = QCheckBox(QApplication.translate('CheckBox', 'DROP'))
+        self.DROPbutton = QCheckBox(QApplication.translate('Label', 'DROP'))
         self.DROPbutton.setChecked(bool(self.aw.qmc.buttonvisibility[6]))
         self.DROPbutton.setToolTip(QApplication.translate('Tooltip', 'Display the button during roast'))
         self.DROPbuttonActionType = QComboBox()
@@ -1327,7 +1342,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.DROPbuttonActionType.setCurrentIndex(self.buttonActionTypesSorted.index(self.buttonActionTypes[self.aw.qmc.buttonactions[6]]))
         self.DROPbuttonActionString = QLineEdit(self.aw.qmc.buttonactionstrings[6])
         self.DROPbuttonActionString.setToolTip(QApplication.translate('Tooltip', 'Event action command'))
-        self.COOLbutton = QCheckBox(QApplication.translate('CheckBox', 'COOL END'))
+        self.COOLbutton = QCheckBox(QApplication.translate('ComboBox', 'COOL END'))
         self.COOLbutton.setChecked(bool(self.aw.qmc.buttonvisibility[7]))
         self.COOLbutton.setToolTip(QApplication.translate('Tooltip', 'Display the button during roast'))
         self.COOLbuttonActionType = QComboBox()
@@ -1721,7 +1736,7 @@ class EventsDlg(ArtisanResizeablDialog):
         mainLayout.addLayout(buttonLayout)
         self.setLayout(mainLayout)
         if platform.system() != 'Windows':
-            ok_button: Optional[QPushButton] = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
+            ok_button: QPushButton|None = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
             if ok_button is not None:
                 ok_button.setFocus()
         else:
@@ -1732,6 +1747,81 @@ class EventsDlg(ArtisanResizeablDialog):
         # we set the active tab with a QTimer after the tabbar has been rendered once, as otherwise
         # some tabs are not rendered at all on Windows using Qt v6.5.1 (https://bugreports.qt.io/projects/QTBUG/issues/QTBUG-114204?filter=allissues)
         QTimer.singleShot(50, self.setActiveTab)
+
+    @pyqtSlot(int)
+    def slider1_visibility_changed(self, _:int) -> None:
+        self.slider_visiblity_changed(0)
+    @pyqtSlot(int)
+    def slider2_visibility_changed(self, _:int) -> None:
+        self.slider_visiblity_changed(1)
+    @pyqtSlot(int)
+    def slider3_visibility_changed(self, _:int) -> None:
+        self.slider_visiblity_changed(2)
+    @pyqtSlot(int)
+    def slider4_visibility_changed(self, _:int) -> None:
+        self.slider_visiblity_changed(3)
+
+    def slider_visiblity_changed(self, slider:int) -> None:
+        if slider == 0:
+            for widget in [
+                    self.E1action,
+                    self.E1command,
+                    self.E1_min,
+                    self.E1_max,
+                    self.E1offset,
+                    self.E1factor,
+                    self.E1slider_bernoulli,
+                    self.E1slider_step,
+                    self.E1slider_temp,
+                    self.E1unit,
+                    self.E1_calc
+                    ]:
+                widget.setEnabled(self.E1visibility.isChecked())
+        elif slider == 1:
+            for widget in [
+                    self.E2action,
+                    self.E2command,
+                    self.E2_min,
+                    self.E2_max,
+                    self.E2offset,
+                    self.E2factor,
+                    self.E2slider_bernoulli,
+                    self.E2slider_step,
+                    self.E2slider_temp,
+                    self.E2unit,
+                    self.E2_calc
+                    ]:
+                widget.setEnabled(self.E2visibility.isChecked())
+        elif slider == 2:
+            for widget in [
+                    self.E3action,
+                    self.E3command,
+                    self.E3_min,
+                    self.E3_max,
+                    self.E3offset,
+                    self.E3factor,
+                    self.E3slider_bernoulli,
+                    self.E3slider_step,
+                    self.E3slider_temp,
+                    self.E3unit,
+                    self.E3_calc
+                    ]:
+                widget.setEnabled(self.E3visibility.isChecked())
+        elif slider == 3:
+            for widget in [
+                    self.E4action,
+                    self.E4command,
+                    self.E4_min,
+                    self.E4_max,
+                    self.E4offset,
+                    self.E4factor,
+                    self.E4slider_bernoulli,
+                    self.E4slider_step,
+                    self.E4slider_temp,
+                    self.E4unit,
+                    self.E4_calc
+                    ]:
+                widget.setEnabled(self.E4visibility.isChecked())
 
     @pyqtSlot()
     def quantifier_toggle(self) -> None:
@@ -1817,7 +1907,7 @@ class EventsDlg(ArtisanResizeablDialog):
 
     @pyqtSlot(bool)
     def restorepaletteeventbuttons(self, _:bool = False) -> None:
-        filename = self.aw.ArtisanOpenFileDialog(msg=QApplication.translate('Message','Load Palettes'),path=self.aw.profilepath)
+        filename = self.aw.ArtisanOpenFileDialog(msg=QApplication.translate('Message','Load Palettes'), ext='*.apal')
         if filename:
             maxlen = self.aw.loadPalettes(filename,self.aw.buttonpalette)
             if maxlen is not None:
@@ -1825,11 +1915,11 @@ class EventsDlg(ArtisanResizeablDialog):
             self.updatePalettePopup()
 
     @staticmethod
-    def swapItems(l:List[Any], source:int, target:int) -> None:
+    def swapItems(l:list[Any], source:int, target:int) -> None:
         l[target],l[source] = l[source],l[target]
 
     @staticmethod
-    def moveItem(l:List[Any], source:int, target:int) -> None:
+    def moveItem(l:list[Any], source:int, target:int) -> None:
         l.insert(target, l.pop(source))
 
     @pyqtSlot(int,int,int)
@@ -1845,8 +1935,8 @@ class EventsDlg(ArtisanResizeablDialog):
         if QApplication.queryKeyboardModifiers() == Qt.KeyboardModifier.AltModifier:
             # if ALT/OPTION key is hold, the items are swap
             swap = True
-        l:List[Any]
-        event_data:List[List[Any]] = [self.extraeventslabels, self.extraeventsdescriptions, self.extraeventstypes, self.extraeventsvalues,
+        l:list[Any]
+        event_data:list[list[Any]] = [self.extraeventslabels, self.extraeventsdescriptions, self.extraeventstypes, self.extraeventsvalues,
                 self.extraeventsactions, self.extraeventsactionstrings, self.extraeventsvisibility, self.extraeventbuttoncolor,
                 self.extraeventbuttontextcolor]
         for l in event_data:
@@ -1863,11 +1953,10 @@ class EventsDlg(ArtisanResizeablDialog):
     @pyqtSlot()
     def selectionChanged(self) -> None:
         selected = self.eventbuttontable.selectedRanges()
-        if self.insertButton is not None:
-            if selected and len(selected) > 0:
-                self.insertButton.setEnabled(True)
-            else:
-                self.insertButton.setEnabled(False)
+        if selected and len(selected) > 0:
+            self.insertButton.setEnabled(True)
+        else:
+            self.insertButton.setEnabled(False)
 
     @pyqtSlot(int)
     def changeShowMet(self, _:int) -> None:
@@ -1909,12 +1998,12 @@ class EventsDlg(ArtisanResizeablDialog):
                     else:
                         linespacethreshold = abs(linespace[1] - linespace[0]) * self.aw.eventquantifierthresholdfine
                     # loop over that data and classify each value
-                    ld:Optional[float] = None # last digitized value
-                    lt:Optional[float] = None # last digitized temp value
+                    ld:float|None = None # last digitized value
+                    lt:float|None = None # last digitized temp value
                     for ii, t in enumerate(temp):
                         if t != -1: # -1 is an error value
                             d = self.aw.digitize(t,linespace,self.aw.eventquantifiercoarse[i],i)
-                            if d is not None and (ld is None or ld != d) and (ld is None or lt is None or linespacethreshold < abs(t - lt)):
+                            if (ld is None or ld != d) and (ld is None or lt is None or linespacethreshold < abs(t - lt)):
                                 # take only changes
                                 # and only if significantly different than previous to avoid fluktuation
                                 # establish this one
@@ -2268,7 +2357,7 @@ class EventsDlg(ArtisanResizeablDialog):
     def transferbuttonstoSlot(self, _:bool = False) -> None:
         self.transferbuttonsto()
 
-    def transferbuttonsto(self, pindex:Optional[int] = None) -> None:
+    def transferbuttonsto(self, pindex:int|None = None) -> None:
         if pindex is None:
             pindex = self.transferpalettecombobox.currentIndex()
         if 0 <= pindex < self.aw.max_palettes:
@@ -2324,7 +2413,7 @@ class EventsDlg(ArtisanResizeablDialog):
 
     def localSetbuttonsfrom(self, pindex:int) -> int:
         if 0 <= pindex < self.aw.max_palettes:
-            copy = cast('Palette', self.aw.buttonpalette[pindex][:])
+            copy = self.aw.buttonpalette[pindex][:]
             if len(copy):
                 self.extraeventstypes = copy[0][:] # pylint: disable=attribute-defined-outside-init
                 self.extraeventsvalues = copy[1][:] # pylint: disable=attribute-defined-outside-init
@@ -2474,7 +2563,7 @@ class EventsDlg(ArtisanResizeablDialog):
         nrows,extra = divmod(nbuttons,ncolumns)
 
         step = pattern
-        bcolor = []
+        bcolor:list[str] = []
 
         if extra:
             nrows += 1
@@ -2492,7 +2581,7 @@ class EventsDlg(ArtisanResizeablDialog):
             visualIndex = self.eventbuttontable.visualRow(i)
             self.extraeventbuttoncolor[i] = bcolor[visualIndex]
             #Choose text color
-            if self.aw.colorDifference('white', bcolor[visualIndex]) > self.aw.colorDifference('black',bcolor[visualIndex]):
+            if self.aw.colorDifference('white', bcolor[visualIndex]) > self.aw.colorDifference('black', bcolor[visualIndex]):
                 self.extraeventbuttontextcolor[i] = 'white'
             else:
                 self.extraeventbuttontextcolor[i] = 'black'
@@ -2573,7 +2662,7 @@ class EventsDlg(ArtisanResizeablDialog):
 
     def createEventbuttonTable(self) -> None:
         columns = 9
-        if self.eventbuttontable is not None and self.eventbuttontable.columnCount() == columns:
+        if self.eventbuttontable.columnCount() == columns:
             # rows have been already established
             # save the current columnWidth to reset them after table creation
             self.aw.eventbuttontablecolumnwidths = [self.eventbuttontable.columnWidth(c) for c in range(self.eventbuttontable.columnCount())]
@@ -2706,7 +2795,8 @@ class EventsDlg(ArtisanResizeablDialog):
         if hheader is not None:
             hheader.setStretchLastSection(False)
             self.eventbuttontable.resizeColumnsToContents()
-            hheader.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
+            if platform.system() != 'Windows':  # allow resizing as behavior is different on Windows
+                hheader.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
             hheader.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
             hheader.resizeSection(6, hheader.sectionSize(6) + 15)
             hheader.resizeSection(7, self.aw.standard_button_min_width_px)
@@ -2720,11 +2810,10 @@ class EventsDlg(ArtisanResizeablDialog):
 
         # remember the columnwidth
         for i, _ in enumerate(self.aw.eventbuttontablecolumnwidths):
-            if i not in [5,6,7,8]:
-                try:
-                    self.eventbuttontable.setColumnWidth(i,self.aw.eventbuttontablecolumnwidths[i])
-                except Exception: # pylint: disable=broad-except
-                    pass
+            try:
+                self.eventbuttontable.setColumnWidth(i,self.aw.eventbuttontablecolumnwidths[i])
+            except Exception: # pylint: disable=broad-except
+                pass
 
     @pyqtSlot(bool)
     def copyEventButtonTabletoClipboard(self, _:bool=False) -> None:
@@ -2743,7 +2832,7 @@ class EventsDlg(ArtisanResizeablDialog):
                     fields.append(item.text())
             tbl.field_names = fields
             for r in range(nrows):
-                rows = []
+                rows:list[str] = []
                 rows.append(str(r+1))
                 # label
                 labeledit = cast(QLineEdit, self.eventbuttontable.cellWidget(r,0))
@@ -3060,7 +3149,7 @@ class EventsDlg(ArtisanResizeablDialog):
             return
         try:
             focusWidget = QApplication.focusWidget()
-            if focusWidget is not None and isinstance(focusWidget, QLineEdit):
+            if focusWidget is not None and isinstance(focusWidget, QLineEdit): # pyrefly: ignore[invalid-argument]
                 fw:QLineEdit = focusWidget
                 fw.editingFinished.emit()
         except Exception: # pylint: disable=broad-except
@@ -3317,7 +3406,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.showEtypesstored = self.aw.qmc.showEtypes[:]
         self.eventsGraphflagstored = self.aw.qmc.eventsGraphflag
         self.etypesstored = self.aw.qmc.etypes
-        self.etypeComboBoxstored = self.aw.etypeComboBox
+        self.etypeComboBoxstored_currentIndex = self.aw.etypeComboBox.currentIndex()
         self.chargeTimerFlagstored = self.aw.qmc.chargeTimerFlag
         self.chargeTimerPeriodstored = self.aw.qmc.chargeTimerPeriod
         self.autoChargeFlagstored = self.aw.qmc.autoChargeFlag
@@ -3391,7 +3480,10 @@ class EventsDlg(ArtisanResizeablDialog):
         self.aw.qmc.showEtypes = self.showEtypesstored[:]
         self.aw.qmc.eventsGraphflag = self.eventsGraphflagstored
         self.aw.qmc.etypes = self.etypesstored
-        self.aw.etypeComboBox = self.etypeComboBoxstored
+        try:
+            self.aw.etypeComboBox.setCurrentIndex(self.etypeComboBoxstored_currentIndex)
+        except Exception: # pylint: disable=broad-except
+            pass
         self.aw.qmc.chargeTimerFlag = self.chargeTimerFlagstored
         self.aw.qmc.chargeTimerPeriod = self.chargeTimerPeriodstored
         self.aw.qmc.autoChargeFlag = self.autoChargeFlagstored
@@ -3528,7 +3620,7 @@ class EventsDlg(ArtisanResizeablDialog):
                 self.aw.qmc.etypes[1] = self.etype1.text()
                 self.aw.qmc.etypes[2] = self.etype2.text()
                 self.aw.qmc.etypes[3] = self.etype3.text()
-                colorPairsToCheck = []
+                colorPairsToCheck:list[tuple[str,str,str,str]] = []
                 for i, _ in enumerate(self.aw.qmc.EvalueColor):
                     colorPairsToCheck.append(
                         (self.aw.qmc.etypes[i] + ' Event', self.aw.qmc.EvalueColor[i], 'Background', self.aw.qmc.palette['background']),
@@ -3588,7 +3680,9 @@ class EventsDlg(ArtisanResizeablDialog):
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' updatetypes(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
     @pyqtSlot('QCloseEvent')
-    def closeEvent(self,_:Optional['QCloseEvent'] = None) -> None:
+    @override
+    def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
+        del a0
         self.closeHelp()
         settings = QSettings()
         #save window geometry
@@ -3730,16 +3824,16 @@ class SliderCalculator(ArtisanDialog):
             self.applyButton = self.ui.buttonBox.addButton(applyButton.text(), QDialogButtonBox.ButtonRole.AcceptRole)
 
     @pyqtSlot()
+    @override
     def accept(self) -> None:
-        if self.factorWidget is not None and self.offsetWidget is not None:
-            factor_text = self.ui.lineEdit_Factor.text()
-            offset_text = self.ui.lineEdit_Offset.text()
-            if factor_text != '' and offset_text != '':
-                try:
-                    self.factorWidget.setValue(float(factor_text))
-                    self.offsetWidget.setValue(float(offset_text))
-                except Exception: # pylint: disable=broad-except
-                    pass
+        factor_text = self.ui.lineEdit_Factor.text()
+        offset_text = self.ui.lineEdit_Offset.text()
+        if factor_text != '' and offset_text != '':
+            try:
+                self.factorWidget.setValue(float(factor_text))
+                self.offsetWidget.setValue(float(offset_text))
+            except Exception: # pylint: disable=broad-except
+                pass
         self.close()
 
 
@@ -3755,7 +3849,7 @@ class customEventDlg(ArtisanDialog):
             event_time = self.aw.qmc.timex[time_idx]
             if self.aw.qmc.timeindex[0] > -1:
                 event_time -= self.aw.qmc.timex[self.aw.qmc.timeindex[0]]
-            event_time_str = ' @ ' + self.aw.eventtime2string(event_time)
+            event_time_str = ' @ ' + eventtime2string(event_time)
         else:
             event_time_str = ''
         self.setWindowTitle(QApplication.translate('Form Caption','Event') + event_time_str)
@@ -3796,6 +3890,7 @@ class customEventDlg(ArtisanDialog):
         mainLayout.addLayout(buttonsLayout)
         self.setLayout(mainLayout)
 
+    @override
     def accept(self) -> None:
         self.description = self.descriptionEdit.text()
         evalue = self.valueEdit.text()

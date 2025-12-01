@@ -32,23 +32,23 @@ jobs:
 #    if: github.ref == 'refs/heads/master'
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v6
+    - name: Set up Python 3.14
+      uses: actions/setup-python@v6
       with:
-        python-version: '3.12'
+        python-version: '3.14'
         cache: 'pip' # caching pip dependencies
     - name: Install dependencies
       run: |
-        pip install --upgrade pip==24.0 # downgrade pip as pip v24.1 fails with pip._vendor.packaging.version.InvalidVersion: Invalid version: '6.5.0-1022-azure' (image name!)
+        python -m pip install --upgrade pip
         pip install --upgrade -r src/requirements-dev.txt
         pip install -r src/requirements.txt
     - name: Analysing the code with pylint
-      env:
-        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      env:
+#        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        pylint --disable=C --disable=R --extension-pkg-allow-list=PyQt6 --load-plugins=pylint.extensions.no_self_use src/plus
-        pylint --disable=C --disable=R --extension-pkg-allow-list=PyQt6 --load-plugins=pylint.extensions.no_self_use src/artisanlib
+        pylint --disable=C,R,E0401,E0611 --extension-pkg-allow-list=PyQt6 --load-plugins=pylint.extensions.no_self_use,pylint.extensions.private_import src/plus
+        pylint --disable=C,R,E0401,E0611 --extension-pkg-allow-list=PyQt6 --load-plugins=pylint.extensions.no_self_use,pylint.extensions.private_import src/artisanlib
 #    - name: Set up reviewdog
 #      run: |
 #        mkdir -p "$HOME/bin"

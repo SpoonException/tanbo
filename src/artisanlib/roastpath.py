@@ -5,25 +5,22 @@
 import time as libtime
 import dateutil.parser
 import requests
-from requests_file import FileAdapter # type: ignore # @UnresolvedImport
+from requests_file import FileAdapter
 import re
 import json
 from lxml import html
 import logging
-from typing import Final, TypedDict, Optional, List, TYPE_CHECKING
+from collections.abc import Callable
+from typing import Final, TypedDict, cast, TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from artisanlib.atypes import ProfileData # pylint: disable=unused-import
     from PyQt6.QtCore import QUrl # pylint: disable=unused-import
 
-try:
-    from PyQt6.QtCore import QDateTime, Qt # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import QDateTime, Qt # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import QDateTime, Qt
 
 from artisanlib.util import encodeLocal
+from artisanlib.atypes import ProfileData
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
@@ -38,24 +35,28 @@ class RoastPathDataItem(TypedDict, total=False):
 #    ReadingTypeId: int
 #    IsRateOfRiseReading: bool
 #    RoastStageId: int
-    EventName: Optional[str]
+    EventName: str|None
     Note: float
     NoteTypeId: int
 
 class RoastPathData(TypedDict, total=False):
-    btData: List[RoastPathDataItem]
-    etData: List[RoastPathDataItem]
-    atData: List[RoastPathDataItem]
-    eventData: List[RoastPathDataItem]
-    rorData: List[RoastPathDataItem]
-    noteData: List[RoastPathDataItem]
-    fuelData: List[RoastPathDataItem]
-    fanData: List[RoastPathDataItem]
-    drumData: List[RoastPathDataItem]
+    btData: list[RoastPathDataItem]
+    etData: list[RoastPathDataItem]
+    atData: list[RoastPathDataItem]
+    eventData: list[RoastPathDataItem]
+    rorData: list[RoastPathDataItem]
+    noteData: list[RoastPathDataItem]
+    fuelData: list[RoastPathDataItem]
+    fanData: list[RoastPathDataItem]
+    drumData: list[RoastPathDataItem]
 
 # returns a dict containing all profile information contained in the given RoastPATH document pointed by the given QUrl
-def extractProfileRoastPathHTML(url:'QUrl', _:'ApplicationWindow') -> Optional['ProfileData']:
-    res:ProfileData = {} # the interpreted data set
+def extractProfileRoastPathHTML(url:'QUrl',
+        _etypesdefault:list[str],
+        _alt_etypesdefault:list[str],
+        _artisanflavordefaultlabels:list[str],
+        eventsExternal2InternalValue:Callable[[int],float]) -> ProfileData|None:
+    res:ProfileData = ProfileData() # the interpreted data set
     try:
         sess = requests.Session()
         sess.mount('file://', FileAdapter())
@@ -69,13 +70,13 @@ def extractProfileRoastPathHTML(url:'QUrl', _:'ApplicationWindow') -> Optional['
             if len(date_str) > 2:
                 dateQt = QDateTime.fromString(date_str[-2]+date_str[-1], 'yyyy-MM-ddhh:mm')
                 if dateQt.isValid():
-                    rd:Optional[str] = encodeLocal(dateQt.date().toString())
+                    rd:str|None = encodeLocal(dateQt.date().toString())
                     if rd is not None:
                         res['roastdate'] = rd
-                    rd_iso:Optional[str] = encodeLocal(dateQt.date().toString(Qt.DateFormat.ISODate))
+                    rd_iso:str|None = encodeLocal(dateQt.date().toString(Qt.DateFormat.ISODate))
                     if rd_iso is not None:
                         res['roastisodate'] = rd_iso
-                    rt:Optional[str] = encodeLocal(dateQt.time().toString())
+                    rt:str|None = encodeLocal(dateQt.time().toString())
                     if rt is not None:
                         res['roasttime'] = rt
                     res['roastepoch'] = int(dateQt.toSecsSinceEpoch())
@@ -127,7 +128,7 @@ def extractProfileRoastPathHTML(url:'QUrl', _:'ApplicationWindow') -> Optional['
         if title != '' and 'title' not in res:
             res['title'] = title
 
-        data:RoastPathData = {}
+        data:RoastPathData = RoastPathData()
         for elem in ['btData', 'etData', 'atData', 'eventData', 'rorData', 'noteData', 'fuelData', 'fanData', 'drumData']:
             page_content = ''
             try:
@@ -136,7 +137,7 @@ def extractProfileRoastPathHTML(url:'QUrl', _:'ApplicationWindow') -> Optional['
                 page_content = page.content.decode('latin-1')
             d = re.findall(fr"var {elem} = JSON\.parse\('(.+?)'\);", page_content, re.S)  # @UndefinedVariable
             if d:
-                data[elem] = json.loads(d[0]) # type: ignore # generic strings accessors cannot be handled by mypy
+                data[elem] = json.loads(d[0]) # type: ignore[literal-required] # generic strings accessors cannot be handled by mypy
 
         if 'btData' in data and len(data['btData']) > 0 and 'Timestamp' in data['btData'][0]:
             # BT
@@ -155,7 +156,7 @@ def extractProfileRoastPathHTML(url:'QUrl', _:'ApplicationWindow') -> Optional['
                 res['temp1'] = res['temp1'][:temp2len] # truncate
                 # now temp1 should be the same length of temp2
             else:
-                res['temp1'] = [-1]*len(res['temp2'])
+                res['temp1'] = [-1.0]*len(res['temp2'])
 
             # Events
             timeindex = [-1,0,0,0,0,0,0,0]
@@ -167,28 +168,27 @@ def extractProfileRoastPathHTML(url:'QUrl', _:'ApplicationWindow') -> Optional['
                     'Second Crack' : 4,
                     'Drop' : 6}
                 for dd in data['eventData']:
-                    if 'EventName' in dd and dd['EventName'] in marks and 'Timestamp' in dd:
+                    if 'EventName' in dd and dd['EventName'] is not None and dd['EventName'] in marks and 'Timestamp' in dd:
                         tx = dateutil.parser.parse(dd['Timestamp']).timestamp() - baseTime
                         try:
 #                            tx_idx = res["timex"].index(tx) # does not cope with dropouts as the next line:
                             tx_idx = next(i for i,item in enumerate(res['timex']) if item >= tx)
-                            timeindex[marks[dd['EventName']]] = max(0,tx_idx)
+                            timeindex[marks[dd['EventName']]] = max(0, tx_idx) # pyrefly: ignore[index-error]
                         except Exception: # pylint: disable=broad-except
                             pass
             res['timeindex'] = timeindex
 
             # Notes
-            noteData = None
+            noteData:list[RoastPathDataItem] = []
             for tag in ['noteData','fuelData','fanData','drumData']:
                 if tag in data:
-                    if noteData is None:
-                        noteData = data[tag] # type: ignore # mypy cannot check generic tags on TypedDicts
-                    noteData = noteData + data[tag] # type: ignore # mypy cannot check generic tags on TypedDicts
-            if noteData is not None:
-                specialevents = []
-                specialeventstype = []
-                specialeventsvalue = []
-                specialeventsStrings = []
+                    noteData.append(cast(RoastPathDataItem, data[tag])) # type:ignore[literal-required]
+            if len(noteData)>0:
+                specialevents:list[int] = []
+                specialeventstype:list[int] = []
+                specialeventsvalue:list[float] = []
+                specialeventsStrings:list[str] = []
+                n:RoastPathDataItem
                 for n in noteData:
                     if 'Timestamp' in n and 'NoteTypeId' in n and 'Note' in n:
                         c = dateutil.parser.parse(n['Timestamp']).timestamp() - baseTime
@@ -210,12 +210,13 @@ def extractProfileRoastPathHTML(url:'QUrl', _:'ApplicationWindow') -> Optional['
                                 else: # n == 3: # Notes
                                     specialeventstype.append(4)
                                 try:
-                                    vv:float = float(n['Note'])
-                                    vv = vv/10. + 1
-                                    specialeventsvalue.append(vv)
+                                    if 'Note' in n:
+                                        vv:float = float(n['Note'])
+                                        specialeventsvalue.append(eventsExternal2InternalValue(round(vv)))
                                 except Exception: # pylint: disable=broad-except
                                     specialeventsvalue.append(0)
-                                specialeventsStrings.append(n['Note'])
+                                if 'Note' in n:
+                                    specialeventsStrings.append(str(n['Note']))
                         except Exception as e: # pylint: disable=broad-except
                             _log.exception(e)
                 if len(specialevents) > 0:
@@ -285,7 +286,7 @@ def extractProfileRoastPathHTML(url:'QUrl', _:'ApplicationWindow') -> Optional['
                     timex = [dateutil.parser.parse(d['Timestamp']).timestamp() - baseTime if 'Timestamp' in d else 0 for d in at]
                     res['extratimex'].append(timex)
                     res['extratemp1'].append([d.get('StandardValue', -1) for d in at])
-                    res['extratemp2'].append([-1]*len(timex))
+                    res['extratemp2'].append([-1.0]*len(timex))
 
                 # BT RoR
                 if 'rorData' in data:
@@ -315,10 +316,10 @@ def extractProfileRoastPathHTML(url:'QUrl', _:'ApplicationWindow') -> Optional['
                     res['extradrawstyles1'].append('default')
                     res['extradrawstyles2'].append('default')
                     ror = data['rorData']
-                    timex = [dateutil.parser.parse(d['Timestamp']).timestamp() - baseTime if 'Tiestamp' in d else 0 for d in ror]
+                    timex = [dateutil.parser.parse(d['Timestamp']).timestamp() - baseTime if 'Timestamp' in d else 0 for d in ror]
                     res['extratimex'].append(timex)
                     res['extratemp1'].append([d.get('StandardValue', -1) for d in ror])
-                    res['extratemp2'].append([-1]*len(timex))
+                    res['extratemp2'].append([-1.0]*len(timex))
 
     except Exception as e: # pylint: disable=broad-except
         _log.exception(e)

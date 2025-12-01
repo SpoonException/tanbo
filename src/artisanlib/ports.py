@@ -19,7 +19,7 @@ import sys
 import time
 import platform
 import logging
-from typing import Final, List, Optional, cast, TYPE_CHECKING
+from typing import override, Final, cast, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
@@ -32,20 +32,12 @@ from artisanlib.dialogs import ArtisanDialog, ArtisanResizeablDialog, PortComboB
 from artisanlib.comm import serialport
 
 
-try:
-    from PyQt6.QtCore import (Qt, pyqtSlot, QSettings) # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtGui import QIntValidator, QStandardItemModel # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QPushButton, QTabWidget, QComboBox, QDialogButtonBox, QGridLayout,QSizePolicy, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QGroupBox, QTableWidget, QTableWidgetItem, QDialog, QTextEdit, QDoubleSpinBox, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QHeaderView, QMessageBox, QScrollArea, QFrame)  # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import (Qt, pyqtSlot, QSettings) # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtGui import QIntValidator, QStandardItemModel # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-                                 QPushButton, QTabWidget, QComboBox, QDialogButtonBox, QGridLayout,QSizePolicy, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QGroupBox, QTableWidget, QTableWidgetItem, QDialog, QTextEdit, QDoubleSpinBox, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QHeaderView, QMessageBox, QScrollArea, QFrame) # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import (Qt, pyqtSlot, QSettings)
+from PyQt6.QtGui import QIntValidator, QStandardItemModel
+from PyQt6.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+                             QPushButton, QTabWidget, QComboBox, QDialogButtonBox, QGridLayout,QSizePolicy,
+                             QGroupBox, QTableWidget, QTableWidgetItem, QDialog, QTextEdit, QDoubleSpinBox,
+                             QHeaderView, QScrollArea, QFrame)
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
@@ -76,12 +68,12 @@ class scanModbusDlg(ArtisanDialog):
         self.mport_aw:int = self.aw.modbus.port
         self.stop:bool = False # if True stop the processing
         self.setWindowTitle(QApplication.translate('Form Caption','Scan Modbus'))
-        self.slave:int = 1
-        self.slaveLabel:QLabel = QLabel(QApplication.translate('Label', 'Slave'))
-        self.slaveEdit:QLineEdit = QLineEdit(str(self.slave))
-        self.slaveEdit.setValidator(QIntValidator(1,247,self.slaveEdit))
-        self.slaveEdit.setFixedWidth(65)
-        self.slaveEdit.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.deviceID:int = 1
+        self.deviceIDLabel:QLabel = QLabel(QApplication.translate('Label', 'Device'))
+        self.deviceIDEdit:QLineEdit = QLineEdit(str(self.deviceID))
+        self.deviceIDEdit.setValidator(QIntValidator(1, 247, self.deviceIDEdit))
+        self.deviceIDEdit.setFixedWidth(65)
+        self.deviceIDEdit.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.min_register:int = 0
         self.registerLabel:QLabel = QLabel(QApplication.translate('Label', 'Register'))
         self.toLabel:QLabel = QLabel(uchr(8212))
@@ -108,12 +100,12 @@ class scanModbusDlg(ArtisanDialog):
         startButton.setMaximumWidth(150)
         startButton.clicked.connect(self.start_pressed)
         labellayout:QHBoxLayout = QHBoxLayout()
-        labellayout.addWidget(self.slaveLabel)
+        labellayout.addWidget(self.deviceIDLabel)
         labellayout.addStretch()
         labellayout.addWidget(self.registerLabel)
         labellayout.addStretch()
         srlayout:QHBoxLayout = QHBoxLayout()
-        srlayout.addWidget(self.slaveEdit)
+        srlayout.addWidget(self.deviceIDEdit)
         srlayout.addStretch()
         srlayout.addWidget(self.minRegisterEdit)
         srlayout.addWidget(self.toLabel)
@@ -136,9 +128,10 @@ class scanModbusDlg(ArtisanDialog):
         layout.addLayout(hlayout)
         self.setLayout(layout)
 
-    def keyPressEvent(self, event: Optional['QKeyEvent']) -> None:
-        if event is not None:
-            key = int(event.key())
+    @override
+    def keyPressEvent(self, a0: 'QKeyEvent|None') -> None:
+        if a0 is not None:
+            key = int(a0.key())
             if key != 0:
                 self.stop = True
 
@@ -157,8 +150,8 @@ class scanModbusDlg(ArtisanDialog):
             self.aw.modbus.port = self.mport
             self.stop = False
 
-            # update slave and register limits
-            self.slave = int(self.slaveEdit.text())
+            # update device and register limits
+            self.deviceID = int(self.deviceIDEdit.text())
             self.min_register = int(self.minRegisterEdit.text())
             self.max_register = int(self.maxRegisterEdit.text())
 
@@ -176,17 +169,17 @@ class scanModbusDlg(ArtisanDialog):
                 if self.code4:
                     for __ in range(10):
                         self.aw.modbus.sleepBetween()
-                    res = self.aw.modbus.peekSingleRegister(self.slave,int(register),code=4)
+                    res = self.aw.modbus.peekSingleRegister(self.deviceID, int(register), code=4)
                     if res is not None:
                         result += str(register) + '(4),' + str(res) + '<br>'
                         self.modbusEdit.setHtml(result)
                 if self.code3:
                     for __ in range(10):
                         self.aw.modbus.sleepBetween()
-                    res = self.aw.modbus.peekSingleRegister(self.slave,int(register),code=3)
+                    res = self.aw.modbus.peekSingleRegister(self.deviceID, int(register), code=3)
                     if res is not None:
                         result += str(register) + '(3),' + str(res) + '<br>'
-                        self.modbusEdit.setHtml(result)
+                        self.modbusEdit.setHtml(result) # pyrefly: ignore[bad-assignment]
             self.aw.modbus.disconnect()
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
@@ -219,7 +212,9 @@ class scanModbusDlg(ArtisanDialog):
             self.code4 = False
 
     @pyqtSlot('QCloseEvent')
-    def closeEvent(self,_:Optional['QCloseEvent'] = None) -> None:
+    @override
+    def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
+        del a0
         self.stop = True
         self.accept()
 
@@ -306,9 +301,10 @@ class scanS7Dlg(ArtisanDialog):
         layout.addLayout(hlayout)
         self.setLayout(layout)
 
-    def keyPressEvent(self, event: Optional['QKeyEvent']) -> None:
-        if event is not None:
-            key = int(event.key())
+    @override
+    def keyPressEvent(self, a0: 'QKeyEvent|None') -> None:
+        if a0 is not None:
+            key = int(a0.key())
             if key != 0:
                 self.stop = True
 
@@ -324,7 +320,7 @@ class scanS7Dlg(ArtisanDialog):
 
             self.stop = False
 
-            # update slave and register limits
+            # update device and register limits
             self.area = int(self.areaCombo.currentIndex())
             self.DBnr = int(self.DBnrEdit.text())
             self.min_register = int(self.minRegisterEdit.text())
@@ -347,7 +343,7 @@ class scanS7Dlg(ArtisanDialog):
                     res = self.aw.s7.peekInt(self.area,self.DBnr,register)
                 if res is not None:
                     result += f'{str(register)}: {str(res)}<br>'
-                    self.S7Edit.setHtml(result)
+                    self.S7Edit.setHtml(result) # pyrefly: ignore[bad-assignment]
                 time.sleep(0.4)
             self.aw.s7.disconnect()
         except Exception as e: # pylint: disable=broad-except
@@ -380,7 +376,9 @@ class scanS7Dlg(ArtisanDialog):
             self.checkbox3.setChecked(not self.typeFloat)
 
     @pyqtSlot('QCloseEvent')
-    def closeEvent(self,_:Optional['QCloseEvent'] = None) -> None:
+    @override
+    def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
+        del a0
         self.stop = True
         self.accept()
 
@@ -391,7 +389,7 @@ class comportDlg(ArtisanResizeablDialog):
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False) # overwrite the ArtisanDialog class default here!!
         self.setWindowTitle(QApplication.translate('Form Caption','Ports Configuration'))
         self.setModal(True)
-        self.helpdialog:Optional[HelpDlg] = None
+        self.helpdialog:HelpDlg|None = None
         ##########################    TAB 1 WIDGETS
         comportlabel =QLabel(QApplication.translate('Label', 'Comm Port'))
         self.comportEdit = PortComboBox(selection = self.aw.ser.comport)
@@ -430,7 +428,7 @@ class comportDlg(ArtisanResizeablDialog):
         self.serialtable = QTableWidget()
         self.serialtable.setTabKeyNavigation(True)
         self.serialtable.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding)
-        hheader: Optional[QHeaderView] = self.serialtable.horizontalHeader()
+        hheader: QHeaderView|None = self.serialtable.horizontalHeader()
         if hheader is not None:
             hheader.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
             hheader.setStretchLastSection(True)
@@ -479,26 +477,26 @@ class comportDlg(ArtisanResizeablDialog):
         modbus_divs = ['', '1/10','1/100']
         modbus_decode = ['uInt16', 'uInt32', 'sInt16', 'sInt32', 'BCD16', 'BCD32', 'Float32']
 
-        modbus_input1slavelabel = QLabel(QApplication.translate('Label', 'Slave'))
+        modbus_input1devicelabel = QLabel(QApplication.translate('Label', 'Device'))
         modbus_input1registerlabel = QLabel(QApplication.translate('Label', 'Register'))
         modbus_input1floatlabel = QLabel(QApplication.translate('Label', 'Decode'))
         modbus_input1codelabel = QLabel(QApplication.translate('Label', 'Function'))
         modbus_input1divlabel = QLabel(QApplication.translate('Label', 'Divider'))
         modbus_input1modelabel = QLabel(QApplication.translate('Label', 'Mode'))
 
-        self.modbus_inputSlaveEdits:List[Optional[QLineEdit]] = [None]*self.aw.modbus.channels
-        self.modbus_inputRegisterEdits:List[Optional[QLineEdit]] = [None]*self.aw.modbus.channels
-        self.modbus_inputCodes:List[Optional[QComboBox]] = [None]*self.aw.modbus.channels
-        self.modbus_inputDivs:List[Optional[QComboBox]] = [None]*self.aw.modbus.channels
-        self.modbus_inputModes:List[Optional[QComboBox]] = [None]*self.aw.modbus.channels
-        self.modbus_inputDecodes:List[Optional[QComboBox]] = [None]*self.aw.modbus.channels
+        self.modbus_inputDeviceEdits:list[QLineEdit|None] = [None] * self.aw.modbus.channels # pyrefly: ignore[bad-assignment]
+        self.modbus_inputRegisterEdits:list[QLineEdit|None] = [None]*self.aw.modbus.channels # pyrefly: ignore[bad-assignment]
+        self.modbus_inputCodes:list[QComboBox|None] = [None]*self.aw.modbus.channels # pyrefly: ignore[bad-assignment]
+        self.modbus_inputDivs:list[QComboBox|None] = [None]*self.aw.modbus.channels # pyrefly: ignore[bad-assignment]
+        self.modbus_inputModes:list[QComboBox|None] = [None]*self.aw.modbus.channels # pyrefly: ignore[bad-assignment]
+        self.modbus_inputDecodes:list[QComboBox|None] = [None]*self.aw.modbus.channels # pyrefly: ignore[bad-assignment]
 
         for i in range(self.aw.modbus.channels):
-            modbus_inputSlaveEdit:QLineEdit = QLineEdit(str(self.aw.modbus.inputSlaves[i]))
-            modbus_inputSlaveEdit.setValidator(QIntValidator(0,247,self.modbus_inputSlaveEdits[i]))
-            modbus_inputSlaveEdit.setFixedWidth(75)
-            modbus_inputSlaveEdit.setAlignment(Qt.AlignmentFlag.AlignRight)
-            self.modbus_inputSlaveEdits[i] = modbus_inputSlaveEdit
+            modbus_inputDeviceEdit:QLineEdit = QLineEdit(str(self.aw.modbus.inputDeviceIds[i]))
+            modbus_inputDeviceEdit.setValidator(QIntValidator(0, 247, self.modbus_inputDeviceEdits[i]))
+            modbus_inputDeviceEdit.setFixedWidth(75)
+            modbus_inputDeviceEdit.setAlignment(Qt.AlignmentFlag.AlignRight)
+            self.modbus_inputDeviceEdits[i] = modbus_inputDeviceEdit
             #
             modbus_inputRegisterEdit:QLineEdit = QLineEdit(str(self.aw.modbus.inputRegisters[i]))
             modbus_inputRegisterEdit.setValidator(QIntValidator(0,65536,self.modbus_inputRegisterEdits[i]))
@@ -561,7 +559,7 @@ class comportDlg(ArtisanResizeablDialog):
 #        modbus_typelabel.setBuddy(self.modbus_type)
         self.modbus_type.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.modbus_type.addItems(['Serial RTU', 'Serial ASCII', 'Serial Binary', 'TCP', 'UDP'])
-        modbus_type_model:Optional[QStandardItemModel] = cast(Optional[QStandardItemModel], self.modbus_type.model())
+        modbus_type_model:QStandardItemModel|None = cast(QStandardItemModel|None, self.modbus_type.model())
         if modbus_type_model is not None:
             serial_binary_item = modbus_type_model.item(2)
             if serial_binary_item is not None:
@@ -581,11 +579,11 @@ class comportDlg(ArtisanResizeablDialog):
         self.modbus_portEdit.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         # modbus external PID conf
-        modbus_PIDslave_label = QLabel(QApplication.translate('Label', 'Slave'))
-        self.modbus_PIDslave_Edit = QLineEdit(str(self.aw.modbus.PID_slave_ID))
-        self.modbus_PIDslave_Edit.setValidator(QIntValidator(0,65536,self.modbus_PIDslave_Edit))
-        self.modbus_PIDslave_Edit.setFixedWidth(50)
-        self.modbus_PIDslave_Edit.setAlignment(Qt.AlignmentFlag.AlignRight)
+        modbus_PIDdevice_label = QLabel(QApplication.translate('Label', 'Device'))
+        self.modbus_PIDdevice_Edit = QLineEdit(str(self.aw.modbus.PID_device_ID))
+        self.modbus_PIDdevice_Edit.setValidator(QIntValidator(0, 65536, self.modbus_PIDdevice_Edit))
+        self.modbus_PIDdevice_Edit.setFixedWidth(50)
+        self.modbus_PIDdevice_Edit.setAlignment(Qt.AlignmentFlag.AlignRight)
         modbus_SVregister_label = QLabel(QApplication.translate('Label', 'SV'))
         self.modbus_SVregister_Edit = QLineEdit(str(self.aw.modbus.PID_SV_register))
         self.modbus_SVregister_Edit.setValidator(QIntValidator(0,65536,self.modbus_SVregister_Edit))
@@ -687,8 +685,8 @@ class comportDlg(ArtisanResizeablDialog):
 
         modbus_pid = QHBoxLayout()
         modbus_pid.addStretch()
-        modbus_pid.addWidget(modbus_PIDslave_label)
-        modbus_pid.addWidget(self.modbus_PIDslave_Edit)
+        modbus_pid.addWidget(modbus_PIDdevice_label)
+        modbus_pid.addWidget(self.modbus_PIDdevice_Edit)
         modbus_pid.addWidget(modbus_pid_registers_box)
         modbus_pid.addWidget(modbus_pid_commands_box)
         modbus_pid.addStretch()
@@ -705,7 +703,7 @@ class comportDlg(ArtisanResizeablDialog):
         self.modbus_Serial_delayEdit.setValidator(self.aw.createCLocaleDoubleValidator(0,3,1,self.modbus_Serial_delayEdit))
         self.modbus_Serial_delayEdit.setFixedWidth(50)
         self.modbus_Serial_delayEdit.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.modbus_Serial_delayEdit.setToolTip(QApplication.translate('Tooltip', 'Extra delay in Milliseconds between MODBUS Serial commands'))
+        self.modbus_Serial_delayEdit.setToolTip(QApplication.translate('Tooltip', 'Extra delay after connect in seconds before sending requests (needed by Arduino devices restarting on connect)'))
         modbus_Serial_retries = QLabel(QApplication.translate('Label', 'Retries'))
         self.modbus_Serial_retriesComboBox = QComboBox()
 #        modbus_Serial_retries.setBuddy(self.modbus_Serial_retriesComboBox)
@@ -772,105 +770,12 @@ class comportDlg(ArtisanResizeablDialog):
         self.modbus_full_block.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.modbus_full_block.setEnabled(bool(self.aw.modbus.optimizer))
 
-        ##########################    TAB 4 WIDGETS   SCALE
-        scale_devicelabel = QLabel(QApplication.translate('Label', 'Device'))
-        self.scale_deviceEdit = QComboBox()
-        self.supported_scales = list(self.aw.scale.devicefunctionlist.keys())
-        self.scale_deviceEdit.addItems(self.supported_scales)
-        try:
-            if self.aw.scale.device is not None:
-                self.scale_deviceEdit.setCurrentIndex(self.supported_scales.index(self.aw.scale.device))
-        except Exception: # pylint: disable=broad-except
-            self.scale_deviceEdit.setCurrentIndex(0)
-        self.scale_deviceEdit.setEditable(False)
-        self.scale_deviceEdit.activated.connect(self.scaleDeviceIndexChanged)
-#        scale_devicelabel.setBuddy(self.scale_deviceEdit)
-        scale_comportlabel = QLabel(QApplication.translate('Label', 'Comm Port'))
-        self.scale_comportEdit = PortComboBox(selection = self.aw.scale.comport)
-        self.scale_comportEdit.activated.connect(self.portComboBoxIndexChanged)
-#        scale_comportlabel.setBuddy(self.scale_comportEdit)
-        scale_baudratelabel = QLabel(QApplication.translate('Label', 'Baud Rate'))
-        self.scale_baudrateComboBox = QComboBox()
-#        scale_baudratelabel.setBuddy(self.scale_baudrateComboBox)
-        self.scale_bauds = ['1200','2400','4800','9600','19200','38400','57600','115200']
-        self.scale_baudrateComboBox.addItems(self.scale_bauds)
-        try:
-            self.scale_baudrateComboBox.setCurrentIndex(self.scale_bauds.index(str(self.aw.scale.baudrate)))
-        except Exception as e: # pylint: disable=broad-except
-            _log.exception(e)
-        scale_bytesizelabel = QLabel(QApplication.translate('Label', 'Byte Size'))
-        self.scale_bytesizeComboBox = QComboBox()
-#        scale_bytesizelabel.setBuddy(self.scale_bytesizeComboBox)
-        self.scale_bytesizes = ['7','8']
-        self.scale_bytesizeComboBox.addItems(self.scale_bytesizes)
-        self.scale_bytesizeComboBox.setCurrentIndex(self.scale_bytesizes.index(str(self.aw.scale.bytesize)))
-        scale_paritylabel = QLabel(QApplication.translate('Label', 'Parity'))
-        self.scale_parityComboBox = QComboBox()
-#        scale_paritylabel.setBuddy(self.scale_parityComboBox)
-        #0 = Odd, E = Even, N = None. NOTE: These strings cannot be translated as they are arguments to the lib pyserial.
-        self.scale_parity = ['O','E','N']
-        self.scale_parityComboBox.addItems(self.scale_parity)
-        self.scale_parityComboBox.setCurrentIndex(self.scale_parity.index(self.aw.scale.parity))
-        scale_stopbitslabel = QLabel(QApplication.translate('Label', 'Stopbits'))
-        self.scale_stopbitsComboBox = QComboBox()
-#        scale_stopbitslabel.setBuddy(self.scale_stopbitsComboBox)
-        self.scale_stopbits = ['1','2']
-        self.scale_stopbitsComboBox.addItems(self.stopbits)
-        self.scale_stopbitsComboBox.setCurrentIndex(self.aw.scale.stopbits - 1)
-        scale_timeoutlabel = QLabel(QApplication.translate('Label', 'Timeout'))
-        self.scale_timeoutEdit = QLineEdit(str(float2float(self.aw.scale.timeout)))
-        self.scale_timeoutEdit.setValidator(self.aw.createCLocaleDoubleValidator(0,5,1,self.scale_timeoutEdit))
-        ##########################    TAB 5 WIDGETS   COLOR
-        color_devicelabel = QLabel(QApplication.translate('Label', 'Device'))
-        self.color_deviceEdit = QComboBox()
-        supported_color_meters = list(self.aw.color.devicefunctionlist.keys())
-        self.color_deviceEdit.addItems(supported_color_meters)
-        try:
-            if self.aw.color.device is not None:
-                self.color_deviceEdit.setCurrentIndex(supported_color_meters.index(self.aw.color.device))
-        except Exception: # pylint: disable=broad-except
-            self.color_deviceEdit.setCurrentIndex(0)
-        self.color_deviceEdit.setEditable(False)
-        self.color_deviceEdit.activated.connect(self.colorDeviceIndexChanged)
-#        color_devicelabel.setBuddy(self.color_deviceEdit)
-        color_comportlabel = QLabel(QApplication.translate('Label', 'Comm Port'))
-        self.color_comportEdit = PortComboBox(selection = self.aw.color.comport)
-        self.color_comportEdit.activated.connect(self.portComboBoxIndexChanged)
-#        color_comportlabel.setBuddy(self.color_comportEdit)
-        color_baudratelabel = QLabel(QApplication.translate('Label', 'Baud Rate'))
-        self.color_baudrateComboBox = QComboBox()
-#        color_baudratelabel.setBuddy(self.color_baudrateComboBox)
-        self.color_bauds = ['1200','2400','4800','9600','19200','38400','57600','115200']
-        self.color_baudrateComboBox.addItems(self.color_bauds)
-        self.color_baudrateComboBox.setCurrentIndex(self.color_bauds.index(str(self.aw.color.baudrate)))
-        color_bytesizelabel = QLabel(QApplication.translate('Label', 'Byte Size'))
-        self.color_bytesizeComboBox = QComboBox()
-#        color_bytesizelabel.setBuddy(self.color_bytesizeComboBox)
-        self.color_bytesizes = ['7','8']
-        self.color_bytesizeComboBox.addItems(self.color_bytesizes)
-        self.color_bytesizeComboBox.setCurrentIndex(self.color_bytesizes.index(str(self.aw.color.bytesize)))
-        color_paritylabel = QLabel(QApplication.translate('Label', 'Parity'))
-        self.color_parityComboBox = QComboBox()
-#        color_paritylabel.setBuddy(self.color_parityComboBox)
-        #0 = Odd, E = Even, N = None. NOTE: These strings cannot be translated as they are arguments to the lib pyserial.
-        self.color_parity = ['O','E','N']
-        self.color_parityComboBox.addItems(self.color_parity)
-        self.color_parityComboBox.setCurrentIndex(self.color_parity.index(self.aw.color.parity))
-        color_stopbitslabel = QLabel(QApplication.translate('Label', 'Stopbits'))
-        self.color_stopbitsComboBox = QComboBox()
-#        color_stopbitslabel.setBuddy(self.color_stopbitsComboBox)
-        self.color_stopbits = ['1','2']
-        self.color_stopbitsComboBox.addItems(self.stopbits)
-        self.color_stopbitsComboBox.setCurrentIndex(self.aw.color.stopbits - 1)
-        color_timeoutlabel = QLabel(QApplication.translate('Label', 'Timeout'))
-        self.color_timeoutEdit = QLineEdit(str(self.aw.color.timeout))
-        self.color_timeoutEdit.setValidator(self.aw.createCLocaleDoubleValidator(0,5,1,self.color_timeoutEdit))
         #### dialog buttons
         # connect the ArtisanDialog standard OK/Cancel buttons
         self.dialogbuttons.accepted.connect(self.accept)
         self.dialogbuttons.rejected.connect(self.reject)
 
-        helpButton: Optional[QPushButton] = self.dialogbuttons.addButton(QDialogButtonBox.StandardButton.Help)
+        helpButton: QPushButton|None = self.dialogbuttons.addButton(QDialogButtonBox.StandardButton.Help)
         if helpButton is not None:
             helpButton.setToolTip(QApplication.translate('Tooltip','Show help'))
             self.setButtonTranslations(helpButton,'Help',QApplication.translate('Button','Help'))
@@ -934,7 +839,7 @@ class comportDlg(ArtisanResizeablDialog):
 
         modbus_input_grid = QGridLayout()
 
-        modbus_input_grid.addWidget(modbus_input1slavelabel,1,0,Qt.AlignmentFlag.AlignRight)
+        modbus_input_grid.addWidget(modbus_input1devicelabel, 1, 0, Qt.AlignmentFlag.AlignRight)
         modbus_input_grid.addWidget(modbus_input1registerlabel,2,0,Qt.AlignmentFlag.AlignRight)
         modbus_input_grid.addWidget(modbus_input1codelabel,3,0,Qt.AlignmentFlag.AlignRight)
         modbus_input_grid.addWidget(modbus_input1divlabel,4,0,Qt.AlignmentFlag.AlignRight)
@@ -942,26 +847,26 @@ class comportDlg(ArtisanResizeablDialog):
         modbus_input_grid.addWidget(modbus_input1floatlabel,6,0,Qt.AlignmentFlag.AlignRight)
 
         for i in range(self.aw.modbus.channels):
-            if (len(self.modbus_inputSlaveEdits)>i and
+            if (len(self.modbus_inputDeviceEdits)>i and
                     len(self.modbus_inputRegisterEdits)>i and
                     len(self.modbus_inputCodes)>i and
                     len(self.modbus_inputDivs)>i and
                     len(self.modbus_inputModes)>i and
                     len(self.modbus_inputDecodes)>i):
                 modbus_input_grid.addWidget(QLabel(QApplication.translate('GroupBox', 'Input') + ' ' + str(i+1)),0,i+1,Qt.AlignmentFlag.AlignCenter)
-                inputSlaveEdit:Optional[QLineEdit] = self.modbus_inputSlaveEdits[i]
-                inputRegisterEdit:Optional[QLineEdit] = self.modbus_inputRegisterEdits[i]
-                inputCode:Optional[QComboBox] = self.modbus_inputCodes[i]
-                inputDiv:Optional[QComboBox] = self.modbus_inputDivs[i]
-                inputMode:Optional[QComboBox] = self.modbus_inputModes[i]
-                inputDecode:Optional[QComboBox] = self.modbus_inputDecodes[i]
-                if (inputSlaveEdit is not None and
+                inputDeviceEdit:QLineEdit|None = self.modbus_inputDeviceEdits[i]
+                inputRegisterEdit:QLineEdit|None = self.modbus_inputRegisterEdits[i]
+                inputCode:QComboBox|None = self.modbus_inputCodes[i]
+                inputDiv:QComboBox|None = self.modbus_inputDivs[i]
+                inputMode:QComboBox|None = self.modbus_inputModes[i]
+                inputDecode:QComboBox|None = self.modbus_inputDecodes[i]
+                if (inputDeviceEdit is not None and
                         inputRegisterEdit is not None and
                         inputCode is not None and
                         inputDiv is not None and
                         inputMode is not None and
                         inputDecode is not None):
-                    modbus_input_grid.addWidget(inputSlaveEdit,1,i+1)
+                    modbus_input_grid.addWidget(inputDeviceEdit, 1, i + 1)
                     modbus_input_grid.addWidget(inputRegisterEdit,2,i+1)
                     modbus_input_grid.addWidget(inputCode,3,i+1)
                     modbus_input_grid.addWidget(inputDiv,4,i+1)
@@ -1060,12 +965,12 @@ class comportDlg(ArtisanResizeablDialog):
         s7_modeLabel = QLabel(QApplication.translate('Label', 'Mode'))
         s7_divLabel = QLabel(QApplication.translate('Label', 'Factor'))
 
-        self.s7_areaCombos = []
-        self.s7_dbEdits = []
-        self.s7_startEdits = []
-        self.s7_typeCombos = []
-        self.s7_modeCombos = []
-        self.s7_divCombos = []
+        self.s7_areaCombos:list[QComboBox] = []
+        self.s7_dbEdits:list[QLineEdit] = []
+        self.s7_startEdits:list[QLineEdit] = []
+        self.s7_typeCombos:list[QComboBox] = []
+        self.s7_modeCombos:list[QComboBox] = []
+        self.s7_divCombos:list[QComboBox] = []
 
         s7_areas = [' ','PE','PA','MK','CT','TM','DB']
         s7_types = ['Int', 'Float', 'IntFloat','Bool(0)', 'Bool(1)', 'Bool(2)', 'Bool(3)', 'Bool(4)', 'Bool(5)', 'Bool(6)', 'Bool(7)']
@@ -1304,51 +1209,6 @@ class comportDlg(ArtisanResizeablDialog):
         tab4Layout.setContentsMargins(0,0,0,0)
         tab4Layout.setSpacing(5)
 
-        #LAYOUT TAB 5
-        scale_grid = QGridLayout()
-        scale_grid.addWidget(scale_devicelabel,0,0,Qt.AlignmentFlag.AlignRight)
-        scale_grid.addWidget(self.scale_deviceEdit,0,1)
-        scale_grid.addWidget(scale_comportlabel,1,0,Qt.AlignmentFlag.AlignRight)
-        scale_grid.addWidget(self.scale_comportEdit,1,1)
-        scale_grid.addWidget(scale_baudratelabel,2,0,Qt.AlignmentFlag.AlignRight)
-        scale_grid.addWidget(self.scale_baudrateComboBox,2,1)
-        scale_grid.addWidget(scale_bytesizelabel,3,0,Qt.AlignmentFlag.AlignRight)
-        scale_grid.addWidget(self.scale_bytesizeComboBox,3,1)
-        scale_grid.addWidget(scale_paritylabel,4,0,Qt.AlignmentFlag.AlignRight)
-        scale_grid.addWidget(self.scale_parityComboBox,4,1)
-        scale_grid.addWidget(scale_stopbitslabel,5,0,Qt.AlignmentFlag.AlignRight)
-        scale_grid.addWidget(self.scale_stopbitsComboBox,5,1)
-        scale_grid.addWidget(scale_timeoutlabel,6,0,Qt.AlignmentFlag.AlignRight)
-        scale_grid.addWidget(self.scale_timeoutEdit,6,1)
-        scaleH = QHBoxLayout()
-        scaleH.addLayout(scale_grid)
-        scaleH.addStretch()
-        tab5Layout = QVBoxLayout()
-        tab5Layout.addLayout(scaleH)
-        tab5Layout.addStretch()
-
-        #LAYOUT TAB 6
-        color_grid = QGridLayout()
-        color_grid.addWidget(color_devicelabel,0,0,Qt.AlignmentFlag.AlignRight)
-        color_grid.addWidget(self.color_deviceEdit,0,1)
-        color_grid.addWidget(color_comportlabel,1,0,Qt.AlignmentFlag.AlignRight)
-        color_grid.addWidget(self.color_comportEdit,1,1)
-        color_grid.addWidget(color_baudratelabel,2,0,Qt.AlignmentFlag.AlignRight)
-        color_grid.addWidget(self.color_baudrateComboBox,2,1)
-        color_grid.addWidget(color_bytesizelabel,3,0,Qt.AlignmentFlag.AlignRight)
-        color_grid.addWidget(self.color_bytesizeComboBox,3,1)
-        color_grid.addWidget(color_paritylabel,4,0,Qt.AlignmentFlag.AlignRight)
-        color_grid.addWidget(self.color_parityComboBox,4,1)
-        color_grid.addWidget(color_stopbitslabel,5,0,Qt.AlignmentFlag.AlignRight)
-        color_grid.addWidget(self.color_stopbitsComboBox,5,1)
-        color_grid.addWidget(color_timeoutlabel,6,0,Qt.AlignmentFlag.AlignRight)
-        color_grid.addWidget(self.color_timeoutEdit,6,1)
-        colorH = QHBoxLayout()
-        colorH.addLayout(color_grid)
-        colorH.addStretch()
-        tab6Layout = QVBoxLayout()
-        tab6Layout.addLayout(colorH)
-        tab6Layout.addStretch()
         #
         # host (IP or hostname)
         ws_hostlabel = QLabel(QApplication.translate('Label', 'Host'))
@@ -1574,9 +1434,9 @@ class comportDlg(ArtisanResizeablDialog):
         ws_line3.addWidget(ws_events_box)
 
 
-        self.ws_requestEdits = []
-        self.ws_nodeEdits = []
-        self.ws_modeCombos = []
+        self.ws_requestEdits:list[QLineEdit] = []
+        self.ws_nodeEdits:list[QLineEdit] = []
+        self.ws_modeCombos:list[QComboBox] = []
 
         ws_grid = QGridLayout()
 
@@ -1652,12 +1512,6 @@ class comportDlg(ArtisanResizeablDialog):
         C4Widget = QWidget()
         C4Widget.setLayout(tab4Layout)
         self.TabWidget.addTab(C4Widget,QApplication.translate('Tab','S7'))
-        C5Widget = QWidget()
-        C5Widget.setLayout(tab5Layout)
-        self.TabWidget.addTab(C5Widget,QApplication.translate('Tab','Scale'))
-        C6Widget = QWidget()
-        C6Widget.setLayout(tab6Layout)
-        self.TabWidget.addTab(C6Widget,QApplication.translate('Tab','Color'))
         C7Widget = QWidget()
         C7Widget.setLayout(tab7Layout)
         self.TabWidget.addTab(C7Widget,QApplication.translate('Tab','WebSocket'))
@@ -1669,7 +1523,7 @@ class comportDlg(ArtisanResizeablDialog):
         elif devid == 79: # switch to S7 tab if S7 device was selected as main device
             self.TabWidget.setCurrentIndex(3)
         elif devid == 111:  # switch to WebSocket tab if WebSocket device was selected as main device
-            self.TabWidget.setCurrentIndex(6)
+            self.TabWidget.setCurrentIndex(4)
         #incorporate layouts
         Mlayout = QVBoxLayout()
         Mlayout.addWidget(self.TabWidget)
@@ -1678,7 +1532,7 @@ class comportDlg(ArtisanResizeablDialog):
         Mlayout.setSpacing(5)
         self.setLayout(Mlayout)
         if platform.system() != 'Windows':
-            ok_button: Optional[QPushButton] = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
+            ok_button: QPushButton|None = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
             if ok_button is not None:
                 ok_button.setFocus()
         else:
@@ -1686,16 +1540,6 @@ class comportDlg(ArtisanResizeablDialog):
         settings = QSettings()
         if settings.contains('PortsGeometry'):
             self.restoreGeometry(settings.value('PortsGeometry'))
-
-    @pyqtSlot(int)
-    def scaleDeviceIndexChanged(self, i:int) -> None:
-        if self.supported_scales[i] in self.aw.scale.bluetooth_devices:
-            permission_status:Optional[bool] = self.aw.app.getBluetoothPermission(request=True)
-            if permission_status is False:
-                message:str = QApplication.translate('Message','Bluetootooth access denied')
-                QMessageBox.warning(None, #self, # only without super this one shows the native dialog on macOS under Qt 6.6.2 and later
-                    message, message)
-
 
     @pyqtSlot(int)
     def s7_optimize_toggle(self, i:int) -> None:
@@ -1710,17 +1554,6 @@ class comportDlg(ArtisanResizeablDialog):
             self.modbus_full_block.setEnabled(True)
         else:
             self.modbus_full_block.setEnabled(False)
-
-    @pyqtSlot(int)
-    def colorDeviceIndexChanged(self, i:int) -> None:
-        try:
-            if i==2: # Classic Tonino
-                self.aw.color.baudrate = 115200
-            elif i==1: # Tiny Tonino
-                self.aw.color.baudrate = 57600
-            self.color_baudrateComboBox.setCurrentIndex(self.color_bauds.index(str(self.aw.color.baudrate)))
-        except Exception as e: # pylint: disable=broad-except
-            _log.exception(e)
 
     @pyqtSlot(bool)
     def scanS7(self, _:bool = False) -> None:
@@ -1769,7 +1602,7 @@ class comportDlg(ArtisanResizeablDialog):
                 self.serialtable.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
                 self.serialtable.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
                 self.serialtable.setShowGrid(True)
-                vheader: Optional[QHeaderView] = self.serialtable.verticalHeader()
+                vheader: QHeaderView|None = self.serialtable.verticalHeader()
                 if vheader is not None:
                     vheader.setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
                 for i in range(nssdevices):
@@ -1887,13 +1720,16 @@ class comportDlg(ArtisanResizeablDialog):
         self.closeHelp()
 
     @pyqtSlot('QCloseEvent')
-    def closeEvent(self,_:Optional['QCloseEvent'] = None) -> None:
+    @override
+    def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
+        del a0
         self.closeHelp()
         settings = QSettings()
         #save window geometry
         settings.setValue('PortsGeometry',self.saveGeometry())
 
     @pyqtSlot()
+    @override
     def accept(self) -> None:
         #validate serial parameter against input errors
         class comportError(Exception):

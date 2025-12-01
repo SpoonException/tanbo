@@ -13,7 +13,7 @@ maintainers = [
     {name = 'Dave Baxter'}
 ]
 license = {file = 'LICENSE'}
-requires-python = '>=3.8'
+requires-python = '>=3.12'
 keywords = ['roasting', 'roast logging', 'speciality coffee']
 classifiers = [
     'Development Status :: 5 - Production/Stable',
@@ -23,10 +23,9 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
-    'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3.14',
     'Programming Language :: Python :: 3 :: Only',
     'Programming Language :: Python :: Implementation :: CPython',
     'Topic :: Other/Nonlisted Topic'
@@ -44,7 +43,7 @@ classifiers = [
 
 [tool.black]
 line-length = 100
-target-version = ['py38']
+target-version = ['py313']
 include = '\.pyi?$'
 extend-exclude = '''
 # A regex preceded with ^/ will apply only to files and directories
@@ -66,7 +65,7 @@ load-plugins = [
     'pylint.extensions.eq_without_hash',
     'pylint.extensions.for_any_all',
     'pylint.extensions.overlapping_exceptions',
-#    'pylint.extensions.private_import',
+    'pylint.extensions.private_import',
     'pylint.extensions.set_membership',
     'pylint.extensions.typing',
 #    'pylint.extensions.redefined_variable_type', # NOT YET
@@ -77,17 +76,18 @@ ignore-paths = [ "^uic/.*$",
                  "^build/.*$",
                  "^dist/.*$",
                  "^proto/.*$",
-                 "^test/.*$" ]
+                 "^test/.*$",
+                 "^.pytype/.*$" ]
 
 # Use multiple processes to speed up Pylint. Specifying 0 will auto-detect the
 # number of processors available to use.
 jobs = "0"
 
 # Minimum supported python version
-py-version = "3.8"
+py-version = "3.12"
 
 # Pickle collected data for later comparisons.
-persistent = "no"
+persistent = "yes"
 
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
@@ -240,9 +240,9 @@ enable='''c-extension-no-member,'''
 ## mypy conf
 
 [tool.mypy]
-files = ["artisanlib/*.py", "plus/*.py"]
+files = ["artisanlib/*.py", "plus/*.py", "test/**/*.py"]
 exclude = ['build', 'dist', 'uic', 'misc']
-python_version = "3.8"
+python_version = "3.12"
 
 # Ensure full coverage
 check_untyped_defs = true
@@ -250,7 +250,8 @@ disallow_incomplete_defs = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true
 disallow_untyped_decorators = true
-disallow_any_unimported = false # raises about 100 errors with numpy >= 2.1
+disallow_any_unimported = true
+
 
 # Restrict dynamic typing
 disallow_any_generics = true
@@ -266,16 +267,15 @@ warn_redundant_casts = true
 warn_unused_configs = true
 warn_unused_ignores = true
 warn_unreachable = true
-#show_error_codes = true
+show_error_codes = true
+
+enable_error_code = "possibly-undefined,truthy-bool,redundant-expr,unused-awaitable, explicit-override, ignore-without-code"
 
 # Explicit is better than implicit
 no_implicit_optional = true
 
-
-plugins = ["numpy.typing.mypy_plugin"]
-
 [[tool.mypy.overrides]]
-module = ["matplotlib.*", "aiohttp.*", "aiohttp.web.*", "aiohttp_jinja2.*", "libusb_package.*"]
+module = ["libusb_package.*"]
 ignore_missing_imports = true
 
 
@@ -287,6 +287,8 @@ follow_imports = 'skip'
 ## ruff conf
 
 [tool.ruff]
+include = ["artisanlib/*.py", "plus/*.py", "test/*.py", "test/**/*.py"]
+
 # Enable pycodestyle (`E`), Pyflakes (`F`), Updates ('UP'), flake8-bugbear (`B`) codes by default.
 # also flake8-2020 (YTT), flake8-commas (COM), flake8-comprehensions (C4),
 # flake8-datetimez (DTZ), flake8-pie (PIE), flake8-raise (RSE), flake8-return (RET),
@@ -306,8 +308,8 @@ lint.ignore = ["E501", "E741", "E402", "PLR0912", "PLR0913", "PLR0915", "SIM105"
 # Exclude a variety of commonly ignored directories.
 exclude = ["dist", "build", "proto", ".pytype", ".mypy_cache", ".git", ".venv", ".venv_universal", ".venv_arm"]
 
-# Assume Python 3.8.
-target-version = "py38"
+# Assume Python 3.12
+target-version = "py312"
 
 [tool.ruff.lint.per-file-ignores]
 "uic/*.py" = ["UP004", "F401", "ARG002"]
@@ -317,33 +319,35 @@ target-version = "py38"
 ## pyright conf
 
 [tool.pyright]
-include = ["artisanlib", "plus" ]
+include = ["artisanlib", "plus" ] #, "test" ]
 exclude = ["proto"]
 # ignore = ["src/oldstuff"]
 
 reportMissingImports = true
 reportMissingTypeStubs = false
 
-pythonVersion = "3.8"
+pythonVersion = "3.12"
 pythonPlatform = "All"
 
 #typeCheckingMode = "strict" # "off", "basic", "strict"
 
 # strict disabled checks # "error", "warning", false, true
-#reportUnboundVariable = "error"
-#reportUnknownParameterType = false
-#reportMissingParameterType = false
-#reportUnknownMemberType = false
-#reportUnknownArgumentType = false
-#reportGeneralTypeIssues = false
-useLibraryCodeForTypes = false
-reportInvalidTypeForm = false # since numpy 2.1 more than 150 errors are reported
+reportUnboundVariable = true # "error"
+reportMissingParameterType = true
+reportUnknownParameterType = true
+#reportUnknownMemberType = false # PyQt signal/slot issues
+reportUnknownArgumentType = true
+reportGeneralTypeIssues = true
+useLibraryCodeForTypes = true
+reportInvalidTypeForm = true
+reportUnnecessaryComparison = true
+reportUninitializedInstanceVariable = true
 
 
 ## pytest conf
 
 [tool.pytest.ini_options]
-minversion = "7.4"
+minversion = "9.0"
 addopts = "-ra -v"
 testpaths = [
     "test",
@@ -351,9 +355,91 @@ testpaths = [
 pythonpath = [
   "."
 ]
+filterwarnings = [
+  "ignore::RuntimeWarning",
+  "ignore::pytest.PytestUnraisableExceptionWarning",
+]
+
+
+## coverage
+
+[tool.coverage.run]
+omit = [
+    "test/*",
+    "uic/*",
+    "proto/*",
+    "help/*",
+    "dist/*",
+    "build/*",
+    "artisan.py",
+    "conftest.py",
+    "pylupdate6pro.py",
+    "artisan.py ",
+    "setup-*.py",
+    ]
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_also = [
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+
+    # Don't complaint about PyQt5 compatibility
+    "except ImportError",
+    "from PyQt5.",
+]
+[tool.coverage.html]
+directory = ".htmlcov"
+
+
+## codespell
 
 [tool.codespell]
-skip = '*.ts,./coverage,./build,./dist*,./htmlcov,./*.spec'
+skip = '*.ts,./coverage,./build,./dist*,./htmlcov,./*.spec,*.svg'
 count = ''
 quiet-level = 3
-ignore-words-list = 'Abd,ser,alog,nd,iterm,dout,te,commandi,dout,exitt,currenty,exaust,controle,coment,controle,outweight,everytime,sade,weightIn,weightin'
+ignore-words-list = 'Abd,ser,alog,nd,iterm,dout,te,commandi,dout,exitt,currenty,exaust,controle,coment,controle,outweight,everytime,sade,weightIn,weightin,Caf,caf'
+
+
+
+## ty conf
+
+[tool.ty.src]
+include = [
+    "artisanlib/*.py",
+    "plus/*.py",
+    "test/**/*.py"
+]
+
+#[tool.ty.rules]
+#invalid-assignment = "ignore"
+#unused-ignore-comment = "warn"
+#redundant-cast = "ignore"
+#possibly-unbound-attribute = "error"
+#possibly-unbound-import = "error"
+
+
+## pyrefly conf
+
+[tool.pyrefly]
+project_includes = [
+    "artisanlib/*.py",
+    "plus/*.py",
+#    "test/**/*.py"
+]
+project_excludes = [
+    "**/build*",
+    "**/dist*",
+    "**/uic*",
+    "**/misc*",
+]
+python_version = "3.12.0"
+replace_imports_with_any = [
+    "libusb_package.*",
+    "uic.*",
+]
+
+[tool.pyrefly.errors]
+missing-attribute = false   # does not understand PyQt connect/disconnect methods
+missing-argument = false # pyrefly misinterprets @pyqtSlot() declarations
+bad-argument-type = false # pyrefly misinterprets @pyqtSlot() declarations

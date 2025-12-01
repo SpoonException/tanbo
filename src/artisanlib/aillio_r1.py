@@ -16,18 +16,20 @@
 # Rui Paulo, 2023
 
 import time
+import array
 import random
+import threading
 from struct import unpack
 from multiprocessing import Pipe
-import threading
 from platform import system
+from collections.abc import Generator
+
 import usb.core # type: ignore[import-untyped]
 import usb.util # type: ignore[import-untyped]
 
-import array
 
 if system().startswith('Windows'):
-    import libusb_package # pyright:ignore[reportMissingImports] # pylint: disable=import-error
+    import libusb_package # pyright:ignore[reportMissingImports] # pylint: disable=import-error # ty:ignore[unresolved-import]
 
 #import requests
 #from requests_file import FileAdapter # type: ignore # @UnresolvedImport
@@ -35,22 +37,13 @@ if system().startswith('Windows'):
 #from lxml import html # unused
 
 import logging
-from typing import Final, Optional, List, Any, TYPE_CHECKING
+from typing import Final, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     try:
         from multiprocessing.connection import PipeConnection as Connection # type: ignore[unused-ignore,attr-defined,assignment] # pylint: disable=unused-import
     except ImportError:
         from multiprocessing.connection import Connection # type: ignore[unused-ignore,attr-defined,assignment] # pylint: disable=unused-import
-#    from artisanlib.atypes import ProfileData # pylint: disable=unused-import
-#    from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-
-#try:
-#    from PyQt6.QtCore import QDateTime, Qt # @UnusedImport @Reimport  @UnresolvedImport
-#except ImportError:
-#    from PyQt5.QtCore import QDateTime, Qt # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-
-#from artisanlib.util import weight_units
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
@@ -92,7 +85,7 @@ class AillioR1:
         self.simulated = False
         self.AILLIO_DEBUG = debug
         self.__dbg('init')
-        self.usbhandle:Optional[usb.core.Device] = None # type:ignore[no-any-unimported,unused-ignore]
+        self.usbhandle:Generator[usb.core.Device, Any, None]|usb.core.Device|None = None # type:ignore[no-any-unimported,unused-ignore]
         self.bt:float = 0
         self.dt:float = 0
         self.heater:float = 0
@@ -103,13 +96,13 @@ class AillioR1:
         self.exitt:float = 0
         self.state_str:str = ''
         self.r1state:int = 0
-        self.worker_thread:Optional[threading.Thread] = None
+        self.worker_thread:threading.Thread|None = None
         self.worker_thread_run = True
         self.roast_number:int = -1
         self.fan_rpm:float = 0
 
-        self.parent_pipe:Optional[Connection] = None # type:ignore[no-any-unimported,unused-ignore]
-        self.child_pipe:Optional[Connection] = None # type:ignore[no-any-unimported,unused-ignore]
+        self.parent_pipe:Connection|None = None # type:ignore[no-any-unimported,unused-ignore]
+        self.child_pipe:Connection|None = None # type:ignore[no-any-unimported,unused-ignore]
         self.irt:float = 0
         self.pcbt:float = 0
         self.coil_fan:int = 0
@@ -152,14 +145,14 @@ class AillioR1:
                         '/usr/lib/aarch64-linux-gnu/libusb-1.0.so.0']:
                     if os.path.isfile(shared_libusb_path):
                         import usb.backend.libusb1 as libusb10 # type: ignore[import-untyped, unused-ignore]
-                        libusb10._load_library = _load_library # pylint: disable=protected-access # overwrite the overwrite of the pyinstaller runtime hook pyi_rth_usb.py
+                        libusb10._load_library = _load_library # pylint: disable=protected-access # ty: ignore[invalid-assignment] # overwrite the overwrite of the pyinstaller runtime hook pyi_rth_usb.py
                         from usb.backend.libusb1 import get_backend  # type: ignore[import-untyped, unused-ignore]
                         backend = get_backend(find_library=lambda _,shared_libusb_path=shared_libusb_path: shared_libusb_path)
                         break
             self.usbhandle = usb.core.find(idVendor=self.AILLIO_VID,
-                                           idProduct=self.AILLIO_PID, backend=backend)
+                                           idProduct=self.AILLIO_PID, backend=backend) # pyrefly: ignore[bad-assignment]
             if self.usbhandle is None:
-                self.usbhandle = usb.core.find(idVendor=self.AILLIO_VID,
+                self.usbhandle = usb.core.find(idVendor=self.AILLIO_VID, # pyrefly: ignore[bad-assignment]
                                                idProduct=self.AILLIO_PID_REV3, backend=backend)
         else:
             self.usbhandle = libusb_package.find(idVendor=self.AILLIO_VID, # pyright:ignore[reportPossiblyUnboundVariable] # pylint: disable=possibly-used-before-assignment
@@ -169,6 +162,8 @@ class AillioR1:
                                                      idProduct=self.AILLIO_PID_REV3)
         if self.usbhandle is None:
             raise OSError('not found or no permission')
+        if isinstance(self.usbhandle, Generator):
+            raise OSError('Generator not supported')
         self.__dbg('device found!')
         if not system().startswith('Windows') and self.usbhandle.is_kernel_driver_active(self.AILLIO_INTERFACE):
             try:
@@ -180,7 +175,7 @@ class AillioR1:
 #                raise OSError('unable to detach kernel driver') from e
         try:
             config = self.usbhandle.get_active_configuration()
-            if config.bConfigurationValue != self.AILLIO_CONFIGURATION:
+            if config is not None and config.bConfigurationValue != self.AILLIO_CONFIGURATION: # pyright:ignore[reportAttributeAccessIssue]
                 self.usbhandle.set_configuration(configuration=self.AILLIO_CONFIGURATION)
         except Exception as e:  # pylint: disable=broad-except
             self.usbhandle = None
@@ -204,8 +199,7 @@ class AillioR1:
         self.parent_pipe, self.child_pipe = Pipe()
         self.worker_thread = threading.Thread(target=self.__updatestate,
                                               args=(self.child_pipe,))
-        if self.worker_thread is not None:
-            self.worker_thread.start()
+        self.worker_thread.start()
 
     def _close_port(self) -> None:
         if self.simulated:
@@ -419,10 +413,10 @@ class AillioR1:
             self.__dbg('IR temperature: ' + str(self.pcbt))
             self.__dbg('voltage: ' + str(self.voltage))
             self.__dbg('coil fan: ' + str(self.coil_fan))
-            self.__dbg('fan: ' + str(self.fan))
-            self.__dbg('heater: ' + str(self.heater))
-            self.__dbg('drum speed: ' + str(self.drum))
-            self.__dbg('time: ' + str(self.minutes) + ':' + str(self.seconds))
+            self.__dbg(f'fan: {self.fan}')
+            self.__dbg(f'heater: {self.heater}')
+            self.__dbg(f'drum speed: {self.drum}')
+            self.__dbg('time: {self.minutes}:{self.seconds}')
 
         state = state[64:]         # type:ignore[reportIndexIssue, unused-ignore]
         self.coil_fan2 = round(unpack('i', state[32:36])[0], 1) # type:ignore[reportIndexIssue, unused-ignore]
@@ -443,14 +437,14 @@ class AillioR1:
         self.__dbg('state: ' + self.state_str)
         self.__dbg('second coil fan: ' + str(self.coil_fan2))
 
-    def __sendcmd(self, cmd:List[int]) -> None:
+    def __sendcmd(self, cmd:list[int]) -> None:
         self.__dbg('sending command: ' + str(cmd))
-        if self.usbhandle is not None:
-            self.usbhandle.write(self.AILLIO_ENDPOINT_WR, cmd)
+        if self.usbhandle is not None and not isinstance(self.usbhandle, Generator):
+            self.usbhandle.write(self.AILLIO_ENDPOINT_WR, cmd) # ty: ignore[possibly-missing-attribute]
 
     def __readreply(self, length:int) -> Any:
-        if self.usbhandle is not None:
-            return self.usbhandle.read(self.AILLIO_ENDPOINT_RD, length)
+        if self.usbhandle is not None and not isinstance(self.usbhandle, Generator):
+            return self.usbhandle.read(self.AILLIO_ENDPOINT_RD, length) # ty: ignore[possibly-missing-attribute]
         raise OSError('not found or no permission')
 
 #def extractProfileBulletDict(data:Dict, aw:'ApplicationWindow') -> 'ProfileData':
@@ -470,13 +464,13 @@ class AillioR1:
 #                except Exception: # pylint: disable=broad-except
 #                    dateQt = QDateTime.fromMSecsSinceEpoch (data['dateTime'])
 #                if dateQt.isValid():
-#                    roastdate:Optional[str] = encodeLocal(dateQt.date().toString())
+#                    roastdate:str|None = encodeLocal(dateQt.date().toString())
 #                    if roastdate is not None:
 #                        res['roastdate'] = roastdate
-#                    roastisodate:Optional[str] = encodeLocal(dateQt.date().toString(Qt.DateFormat.ISODate))
+#                    roastisodate:str|None = encodeLocal(dateQt.date().toString(Qt.DateFormat.ISODate))
 #                    if roastisodate is not None:
 #                        res['roastisodate'] = roastisodate
-#                    roasttime:Optional[str] = encodeLocal(dateQt.time().toString())
+#                    roasttime:str|None = encodeLocal(dateQt.time().toString())
 #                    if roasttime is not None:
 #                        res['roasttime'] = roasttime
 #                    res['roastepoch'] = int(dateQt.toSecsSinceEpoch())
@@ -589,7 +583,7 @@ class AillioR1:
 #            eventtypes = ['blowerSetting','drumSpeedSetting','--','inductionPowerSetting']
 #            for j, eventname in enumerate(eventtypes):
 #                if eventname != '--' and eventname in data:
-#                    last:Optional[float] = None
+#                    last:float|None = None
 #                    ip = data[eventname]
 #                    for i, _ in enumerate(ip):
 #                        v = ip[i]+1
@@ -674,7 +668,7 @@ class AillioR1:
 #        _log.exception(e)
 #        return {}
 
-#def extractProfileRoastWorld(url:'QUrl', aw:'ApplicationWindow') -> Optional['ProfileData']:
+#def extractProfileRoastWorld(url:'QUrl', aw:'ApplicationWindow') -> 'ProfileData|None':
 #    s = requests.Session()
 #    s.mount('file://', FileAdapter())
 #    page = s.get(url.toString(), timeout=(4, 15), headers={'Accept-Encoding' : 'gzip'})

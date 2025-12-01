@@ -19,22 +19,21 @@ import asyncio
 import logging
 import numpy as np
 
-from artisanlib.async_comm import AsyncComm
-from artisanlib.ble_port import ClientBLE
-from artisanlib.filters import LiveMean, LiveMedian
+from PyQt6.QtCore import QRegularExpression
 
-try:
-    from PyQt6.QtCore import QRegularExpression # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import QRegularExpression # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-
-from typing import Final, Optional, Callable, Tuple, TYPE_CHECKING
+from collections.abc import Callable
+from typing import override, Final, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from PyQt6.QtCore import QRegularExpressionMatch # pylint: disable=unused-import
     from artisanlib.atypes import SerialSettings # pylint: disable=unused-import
     import numpy.typing as npt # pylint: disable=unused-import
     from bleak.backends.characteristic import BleakGATTCharacteristic  # pylint: disable=unused-import
+
+
+from artisanlib.async_comm import AsyncComm
+from artisanlib.ble_port import ClientBLE
+from artisanlib.filters import LiveMean, LiveMedian
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -43,9 +42,9 @@ class ColorTrack(AsyncComm):
 
     __slots__ = [ '_color_regex', '_weights', '_received_readings' ]
 
-    def __init__(self, host:str = '127.0.0.1', port:int = 8080, serial:Optional['SerialSettings'] = None,
-                connected_handler:Optional[Callable[[], None]] = None,
-                disconnected_handler:Optional[Callable[[], None]] = None) -> None:
+    def __init__(self, host:str = '127.0.0.1', port:int = 8080, serial:'SerialSettings|None' = None,
+                connected_handler:Callable[[], None]|None = None,
+                disconnected_handler:Callable[[], None]|None = None) -> None:
 
         super().__init__(host, port, serial, connected_handler, disconnected_handler)
 
@@ -83,6 +82,7 @@ class ColorTrack(AsyncComm):
     # asyncio read implementation
 
     # https://www.oreilly.com/library/view/using-asyncio-in/9781492075325/ch04.html
+    @override
     async def read_msg(self, stream: asyncio.StreamReader) -> None:
         line = await stream.readline()
         if self._logging:
@@ -108,8 +108,8 @@ class ColorTrackBLE(ClientBLE):
 
 
     def __init__(self, mean_window_size:int, median_window_size:int,
-                       connected_handler:Optional[Callable[[], None]] = None,
-                       disconnected_handler:Optional[Callable[[], None]] = None):
+                       connected_handler:Callable[[], None]|None = None,
+                       disconnected_handler:Callable[[], None]|None = None):
         super().__init__()
 
         # handlers
@@ -136,7 +136,7 @@ class ColorTrackBLE(ClientBLE):
     # maps received byte decimal value to ColorTrack readings in range 0-100
     @staticmethod
     def map_reading(x:int) -> float:
-        return min(100, max(0, 3.402e-8 *x*x + 1.028e-6 * x - 0.0069))
+        return min(100.0, max(0.0, 3.402e-8 *x*x + 1.028e-6 * x - 0.0069))
 
     def register_reading(self, value:float) -> None:
 #        self._received_readings = np.append(self._received_readings, value)
@@ -154,7 +154,7 @@ class ColorTrackBLE(ClientBLE):
 
 
     # second result is the raw average
-    def getColor(self) -> Tuple[float, float]:
+    def getColor(self) -> tuple[float, float]:
 #        read_res = self.read(self.COLORTRACK_READ_NOTIFY_LASER_UUID) # returns 20 bytes (same format as via the notifications)
 #        _log.debug('getLaser: %s',read_res)
 
@@ -182,11 +182,13 @@ class ColorTrackBLE(ClientBLE):
 #    def notify_temp_hum_callback(_sender:'BleakGATTCharacteristic', payload:bytearray) -> None:
 #        _log.info('temp/hum: %s', payload)
 
+    @override
     def on_connect(self) -> None: # pylint: disable=no-self-use
 #        self._received_readings = np.array([])
         if self._connected_handler is not None:
             self._connected_handler()
 
+    @override
     def on_disconnect(self) -> None: # pylint: disable=no-self-use
         if self._disconnected_handler is not None:
             self._disconnected_handler()
@@ -197,13 +199,13 @@ def main() -> None:
     import time
     from artisanlib.atypes import SerialSettings
     # bench top
-    colortrack_serial:SerialSettings = {
-        'port': '/dev/slave',
-        'baudrate': 9600,
-        'bytesize': 8,
-        'stopbits': 1,
-        'parity': 'N',
-        'timeout': 0.3}
+    colortrack_serial = SerialSettings(
+        port = '/dev/port',
+        baudrate = 9600,
+        bytesize = 8,
+        stopbits = 1,
+        parity = 'N',
+        timeout = 0.3)
     colorTrack = ColorTrack(serial=colortrack_serial)
     colorTrack.start()
     for _ in range(4):

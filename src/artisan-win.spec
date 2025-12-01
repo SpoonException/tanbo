@@ -153,7 +153,7 @@ a = Analysis(['artisan.py'],
              binaries=binaries,
              datas=datas, # + copy_metadata('tzdata')
              hookspath=[],
-             runtime_hooks=[],
+             runtime_hooks=[r'pyinstaller_hooks\rthooks\pyi_rth_mplconfig.py'], # overwrites default MPL runtime hook which keeps loading font cache from (new) temp directory
              excludes=[],
              hiddenimports=hiddenimports_list,
              win_no_prefer_redirects=False,
@@ -229,12 +229,15 @@ for tr in [
 # Add the translations not available in PyQt5 for legacy Windows.
 if not ARTISAN_LEGACY=='True':
     for tr in [
+        'qtbase_cs.qm',
         'qtbase_da.qm',
         'qtbase_fa.qm',
         'qtbase_gd.qm',
         'qtbase_lv.qm',
         'qtbase_nl.qm',
         'qtbase_pt_BR.qm',
+        'qtbase_ru.qm',
+        'qtbase_sk.qm',
         'qtbase_zh_CN.qm',
 #        'qtconnectivity_da.qm',
 #        'qtconnectivity_ko.qm',
@@ -276,7 +279,12 @@ for fn in [
     r'includes\alarmclock.svg',
     r'includes\alarmclock.ttf',
     r'includes\alarmclock.woff',
+    r'includes\roboto-300.woff2',
+    r'includes\roboto-600.woff2',
+    r'includes\roboto-regular.woff2',
     r'includes\artisan.tpl',
+    r'includes\scale_widget.tpl',
+    r'includes\fitty_patched.js',
     r'includes\bigtext.js',
     r'includes\sorttable.js',
     r'includes\report-template.htm',
@@ -312,7 +320,7 @@ xcopy_files(r'includes\Icons', TARGET + 'Icons')
 ###################################
 # remove unused translations of unused Qt modules
 rootdir = f'{TARGET}_internal'
-SUPPORTED_LANGUAGES = ['ar', 'da', 'de','el','en','es','fa','fi','fr','gd', 'he','hu','id','it','ja','ko','lv', 'nl','no','pl','pt_BR','pt','sk', 'sv','th','tr','uk','vi','zh_CN','zh_TW']
+SUPPORTED_LANGUAGES = ['ar', 'cs', 'da', 'de','el','en','es','fa','fi','fr','gd', 'he','hu','id','it','ja','ko','lv', 'nl','no','pl','pt_BR','pt','sk', 'sv','th','tr','uk','vi','zh_CN','zh_TW']
 
 qt_trans_prefix_keep = {
     'qtbase',
@@ -340,8 +348,10 @@ for qt_dir in [r'PyQt5\Qt5\translations', r'PyQt6\Qt6\translations']:
 logging.info(">>>>> Removing unneeded language support from babel")
 for root, _, files in os.walk(rootdir + r'\babel\locale-data'):
     for file in files:
-        if file.endswith('.dat') and file != 'root.dat' and (('_' not in file and file.split('.')[0] not in SUPPORTED_LANGUAGES) or
-                ('_' in file and file.split('.')[0] not in SUPPORTED_LANGUAGES)):
+        if (file.endswith('.dat') and
+                file != 'root.dat' and not (file.startswith('zh') and file.endswith('.dat')) and
+                (('_' not in file and file.split('.')[0] not in SUPPORTED_LANGUAGES) or
+                    ('_' in file and file.split('.')[0] not in SUPPORTED_LANGUAGES))):
             file_path = os.path.join(root, file)
             del_file(file_path, True)
             #logging.info(file_path)

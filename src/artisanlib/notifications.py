@@ -15,20 +15,15 @@
 # AUTHOR
 # Marko Luther, 2023
 
-try:
-    from PyQt6.QtWidgets import QSystemTrayIcon, QApplication, QMenu # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtGui import QIcon, QDesktopServices, QAction # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtCore import QTimer, pyqtSlot, QUrl, QObject, QDateTime, QLocale # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtWidgets import QSystemTrayIcon, QApplication, QMenu, QAction # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtGui import QIcon, QDesktopServices # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtCore import QTimer, pyqtSlot, QUrl, QObject, QDateTime, QLocale # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtWidgets import QSystemTrayIcon, QApplication, QMenu
+from PyQt6.QtGui import QIcon, QDesktopServices, QAction
+from PyQt6.QtCore import QTimer, pyqtSlot, QUrl, QObject, QDateTime, QLocale
 
 import os
 import sys
 import time
 import logging
-from datetime import datetime, timezone
+import datetime
 from enum import Enum, unique
 from artisanlib.util import getResourcePath
 from artisanlib.qtsingleapplication import QtSingleApplication
@@ -36,7 +31,7 @@ import plus.util
 import plus.connection
 import plus.config
 
-from typing import Final, Optional, List, Union
+from typing import Final
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -63,7 +58,7 @@ def ntype2NotificationType(ntype:str) -> NotificationType:
 # for notifications received from artisan.plus id is set to the notifications hr_id to be able to confirm its processing on click
 # created is the timestamp as EPOCH indicating when this notification was created
 class Notification:
-    def __init__(self, title: str, message: str, notification_type: NotificationType, created: Optional[float] = None, hr_id: Optional[str] = None, link: Optional[str] = None) -> None:
+    def __init__(self, title: str, message: str, notification_type: NotificationType, created: float|None = None, hr_id: str|None = None, link: str|None = None) -> None:
         self._title:str = title
         self._message:str = message
         self._type:NotificationType = notification_type
@@ -72,8 +67,8 @@ class Notification:
             self._created = time.time()
         else:
             self._created = created
-        self._id:Optional[str] = hr_id
-        self._link:Optional[str] = link
+        self._id:str|None = hr_id
+        self._link:str|None = link
 
     @property
     def title(self) -> str:
@@ -92,11 +87,11 @@ class Notification:
         return self._created
 
     @property
-    def id(self)-> Optional[str]: # noqa: A003
+    def id(self)-> str|None: # noqa: A003
         return self._id
 
     @property
-    def link(self) -> Optional[str]: # noqa: A003
+    def link(self) -> str|None: # noqa: A003
         return self._link
 
     def formatedTitle(self) -> str:
@@ -117,7 +112,7 @@ class Notification:
 
 
 # data a datetime.datetime object representing the timestamp of the acknowledgement by the user
-def sendPlusNotificationSeen(hr_id:str, date:datetime) -> None:
+def sendPlusNotificationSeen(hr_id:str, date:datetime.datetime) -> None:
     _log.debug('sendPlusNotificationSeen(%s,%s)', hr_id, date.isoformat())
     try:
         plus.connection.sendData(
@@ -128,7 +123,7 @@ def sendPlusNotificationSeen(hr_id:str, date:datetime) -> None:
         _log.exception(e)
 
 
-class NotificationManager(QObject): # pyright: ignore [reportGeneralTypeIssues]
+class NotificationManager(QObject): # pyrefly:ignore[invalid-inheritance] # pyright: ignore [reportGeneralTypeIssues]
 
     __slots__ = ( 'notification_timeout', 'notification_queue_max_length', 'notification_queue_max_age',
                 'tray_menu', 'tray_icon', 'notifications_available', 'notifications_enabled', 'notifications_visible',
@@ -150,20 +145,23 @@ class NotificationManager(QObject): # pyright: ignore [reportGeneralTypeIssues]
         # notfication_available is true if the operating system supports notifications
         self.notifications_available = self.tray_icon.isSystemTrayAvailable() and self.tray_icon.supportsMessages()
         if self.notifications_available:
-            # the tray icon is displayed only if notifications are supported by the system
-            self.tray_icon.setIcon(self.artisanTrayIcon())
-            self.tray_icon.setToolTip('Artisan Notifications')
-            self.tray_icon.messageClicked.connect(self.messageClicked)
-            #self.tray_icon.show() # if try_icon is not visible, notifications are not delivered
-            self.tray_icon.setContextMenu(self.tray_menu)
+            QTimer.singleShot(600, self.configTrayIcon) # configure using a QTimer not to delay startup
 
         self.notifications_enabled = True # if False, issued notification messages are ignored
         self.notifications_visible = True # if False, the tray_menu icon (and thus notifications) are not shown
-        self.notifications_queue:List[Notification] = [] # FIFO of Notification objects. Note: notification ids of all queued notifications are unique if given (not None)
+        self.notifications_queue:list[Notification] = [] # FIFO of Notification objects. Note: notification ids of all queued notifications are unique if given (not None)
         # the allocated menu actions
-        self.notification_menu_actions:List[QAction] = []
+        self.notification_menu_actions:list[QAction] = []
         # holds the currently displayed notification
-        self.active_notification:Optional[Notification] = None
+        self.active_notification:Notification|None = None
+
+    def configTrayIcon(self) -> None:
+        # the tray icon is displayed only if notifications are supported by the system
+        self.tray_icon.setIcon(self.artisanTrayIcon())
+        self.tray_icon.setToolTip('Artisan Notifications')
+        self.tray_icon.messageClicked.connect(self.messageClicked)
+        #self.tray_icon.show() # if try_icon is not visible, notifications are not delivered
+        self.tray_icon.setContextMenu(self.tray_menu)
 
     @staticmethod
     def artisanTrayIcon() -> QIcon:
@@ -224,7 +222,7 @@ class NotificationManager(QObject): # pyright: ignore [reportGeneralTypeIssues]
                     pass
                 if self.active_notification.id:
                     n = self.active_notification.id # bind the number here such that is available after clearing active_notification
-                    QTimer.singleShot(500, lambda : sendPlusNotificationSeen(n, datetime.now(timezone.utc)))
+                    QTimer.singleShot(500, lambda : sendPlusNotificationSeen(n, datetime.datetime.now(datetime.UTC))) # ty: ignore
                 self.removeNotificationItem(self.active_notification)
                 self.active_notification = None
         except Exception as e: # pylint: disable=broad-except
@@ -256,7 +254,7 @@ class NotificationManager(QObject): # pyright: ignore [reportGeneralTypeIssues]
     def disableNotifications(self) -> None:
         self.notifications_enabled = False
 
-    def getNotificationItems(self) -> List[Notification]:
+    def getNotificationItems(self) -> list[Notification]:
         return self.notifications_queue
 
     def addNotificationItem(self, notification: Notification) -> None:
@@ -271,8 +269,10 @@ class NotificationManager(QObject): # pyright: ignore [reportGeneralTypeIssues]
     def clearNotificationQueue(self) -> None:
         self.notifications_queue = []
 
-    def isNotificationInQueue(self, hr_id:Optional[str]) -> bool:
-        return not id and any(n.id == hr_id for n in self.getNotificationItems()) # type: ignore
+    def isNotificationInQueue(self, hr_id:str|None) -> bool:
+        if hr_id is None:
+            return False
+        return any(n.id == hr_id for n in self.getNotificationItems())
 
     def cleanNotificationQueue(self) -> None:
         try:
@@ -315,7 +315,7 @@ class NotificationManager(QObject): # pyright: ignore [reportGeneralTypeIssues]
     @pyqtSlot(bool)
     def notificationItemSelected(self, _checked:bool = False) -> None:
         action = self.sender()
-        if action is not None and hasattr(action, 'data'):
+        if action is not None and isinstance(action, QAction) and hasattr(action, 'data'):
             n = action.data()
             self.setNotification(n, addToQueue=False)
 
@@ -323,7 +323,7 @@ class NotificationManager(QObject): # pyright: ignore [reportGeneralTypeIssues]
     def showNotification(self, notification: Notification) -> None:
         _log.debug('showNotification(%s)',notification)
         try:
-            icon:Union[QIcon, QSystemTrayIcon.MessageIcon] = QSystemTrayIcon.MessageIcon.Information # NoIcon, Information, Warning, Critical
+            icon:QIcon|QSystemTrayIcon.MessageIcon = QSystemTrayIcon.MessageIcon.Information # NoIcon, Information, Warning, Critical
             if notification.type in [NotificationType.ARTISAN_SYSTEM, NotificationType.ARTISAN_USER]:
                 icon = self.notificationArtisanIcon()
             elif notification.type in [
@@ -332,7 +332,7 @@ class NotificationManager(QObject): # pyright: ignore [reportGeneralTypeIssues]
                     NotificationType.PLUS_ADMIN,
                     NotificationType.PLUS_ADMIN]:
                 icon = self.notificationPlusIcon()
-            self.tray_icon.showMessage(notification.formatedTitle(), notification.message, icon, self.notification_timeout)
+            self.tray_icon.showMessage(notification.formatedTitle(), notification.message, icon, self.notification_timeout) # pyrefly: ignore[no-matching-overload]
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
@@ -359,9 +359,9 @@ class NotificationManager(QObject): # pyright: ignore [reportGeneralTypeIssues]
             title: str,
             message: str,
             notification_type: NotificationType,
-            created:Optional[float] = None,
-            hr_id: Optional[str] = None,
-            link: Optional[str] = None,
+            created:float|None = None,
+            hr_id:str|None = None,
+            link:str|None = None,
             pos:int = 0) -> None:
         _log.debug('sendNotificationMessage(%s,%s,%s,%s)', title, message, notification_type, hr_id)
         try:

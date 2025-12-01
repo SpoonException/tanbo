@@ -3,10 +3,7 @@
 # then execute artisan/doc/help_dialogs/Script/xlsx_to_artisan_help.py
 import prettytable
 import re
-try:
-    from PyQt6.QtWidgets import QApplication # @Reimport @UnresolvedImport @UnusedImport # pylint: disable=import-error
-except Exception: # pylint: disable=broad-except
-    from PyQt5.QtWidgets import QApplication # type: ignore # @Reimport @UnresolvedImport @UnusedImport
+from PyQt6.QtWidgets import QApplication
 
 def content() -> str:
     strlist = []
@@ -16,6 +13,10 @@ def content() -> str:
     strlist.append('<b>')
     strlist.append(QApplication.translate('HelpDlg','SYMBOLIC VARIABLES'))
     strlist.append('</b>')
+    tbl_SymbolicVariablestop = prettytable.PrettyTable()
+    tbl_SymbolicVariablestop.header = False
+    tbl_SymbolicVariablestop.add_row([QApplication.translate('HelpDlg','Note: All symbolic variables are case sensitive!')])
+    strlist.append(tbl_SymbolicVariablestop.get_html_string(attributes={'width':'100%','border':'1','padding':'1','border-collapse':'collapse'}))
     tbl_SymbolicVariables = prettytable.PrettyTable()
     tbl_SymbolicVariables.field_names = [QApplication.translate('HelpDlg','Symbol'),QApplication.translate('HelpDlg','Description'),QApplication.translate('HelpDlg','Can  shift?\n(see below)')]
     tbl_SymbolicVariables.add_row(['t',QApplication.translate('HelpDlg','Absolute time (seconds) from begin of recording (not only the time after CHARGE!)'),QApplication.translate('HelpDlg','Yes')])
@@ -45,11 +46,15 @@ def content() -> str:
     tbl_SymbolicVariables.add_row(['E3',QApplication.translate('HelpDlg','Last event value of the third event type'),'&#160;'])
     tbl_SymbolicVariables.add_row(['E4',QApplication.translate('HelpDlg','Last event value of the fourth event type'),'&#160;'])
     tbl_SymbolicVariables.add_row(['&#160;','&#160;','&#160;'])
-    tbl_SymbolicVariables.add_row(['R1',QApplication.translate('HelpDlg','ET rate of rise'),QApplication.translate('HelpDlg','Yes')])
-    tbl_SymbolicVariables.add_row(['R2',QApplication.translate('HelpDlg','BT rate of rise'),QApplication.translate('HelpDlg','Yes')])
-    tbl_SymbolicVariables.add_row(['RB1',QApplication.translate('HelpDlg','Background ET rate of rise'),QApplication.translate('HelpDlg','Yes')])
-    tbl_SymbolicVariables.add_row(['RB2',QApplication.translate('HelpDlg','Background BT rate of rise'),QApplication.translate('HelpDlg','Yes')])
+    tbl_SymbolicVariables.add_row(['R1',QApplication.translate('HelpDlg','ET rate of rise (smoothed)'),QApplication.translate('HelpDlg','Yes')])
+    tbl_SymbolicVariables.add_row(['R2',QApplication.translate('HelpDlg','BT rate of rise  (smoothed)'),QApplication.translate('HelpDlg','Yes')])
+    tbl_SymbolicVariables.add_row(['RB1',QApplication.translate('HelpDlg','Background ET rate of rise  (smoothed)'),QApplication.translate('HelpDlg','Yes')])
+    tbl_SymbolicVariables.add_row(['RB2',QApplication.translate('HelpDlg','Background BT rate of rise  (smoothed)'),QApplication.translate('HelpDlg','Yes')])
     strlist.append(tbl_SymbolicVariables.get_html_string(attributes={'width':'100%','border':'1','padding':'1','border-collapse':'collapse'}))
+    tbl_SymbolicVariablesbottom = prettytable.PrettyTable()
+    tbl_SymbolicVariablesbottom.header = False
+    tbl_SymbolicVariablesbottom.add_row([QApplication.translate('HelpDlg','Note: Smoothing is normally applied to all Extra Devices.  Smoothing is not applied when an Extra Device symbolic equation includes a rate of rise variable (R1, R2, RB1 or RB2).  Rate of rise variables already have smoothing applied.')])
+    strlist.append(tbl_SymbolicVariablesbottom.get_html_string(attributes={'width':'100%','border':'1','padding':'1','border-collapse':'collapse'}))
     strlist.append('<br/><br/><b>')
     strlist.append(QApplication.translate('HelpDlg','SHIFTED SYMBOLIC VARIABLES'))
     strlist.append('</b>')

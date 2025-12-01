@@ -13,23 +13,23 @@
 # the GNU General Public License for more details.
 #
 # AUTHOR
-# Dave Baxter, Marko Luther 2023
+# Dave Baxter, Marko Luther 2025
 
 # Include "skip ci" in the commit message to prevent this build process from running
 environment:
   # Set the default Appveyor Python version here. Does not affect windows_legacy. Can be overridden in platform environment.
   PYTHON_V: 3.13
   # Upgrade to specific version (for platforms supporting upgrade). Upgrade skipped if env var is missing or blank.
-  PYUPGRADE_WIN_V: 3.13.3
-  #PYUPGRADE_MACOS_V: 3.12.1
+  PYUPGRADE_WIN_V: 3.14.0
+  #PYUPGRADE_MACOS_V: 3.12.1  # when upgrading see the notes in the deploy phase
 
   matrix:
-  - job_name: windows_legacy
-    appveyor_build_worker_image: Visual Studio 2019
+#  - job_name: windows_legacy
+#    appveyor_build_worker_image: Visual Studio 2019
   - job_name: windows
     appveyor_build_worker_image: Visual Studio 2022
   - job_name: macos
-    appveyor_build_worker_image: macos-monterey # macos-bigsur (macOS 11 not support by brew any longer)
+    appveyor_build_worker_image: macos-ventura
   - job_name: linux
     appveyor_build_worker_image: Ubuntu2204
 
@@ -59,69 +59,69 @@ stack:
   python ${PYTHON_V}
 
 for:
--
-  matrix:
-    only:
-      - job_name: windows_legacy
-    fast_finish: false
-
-  environment:
-    PYTHON_PATH: "C:/Python38-x64"
-    QT_PATH: "C:/qt/5.15/msvc2019_64"
-    PYUIC: "pyuic5.exe"
-    PYQT: "5"
-    BUILD_PYINSTALLER: "True"
-    ARTISAN_LEGACY: "True"
-    VC_REDIST: "https://aka.ms/vs/16/release/vc_redist.x64.exe"  #redistributable for VS 2015-2019
-    VCVARSALL: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvarsall.bat"
-
-  install:
-    - cmd: echo Windows Legacy Install
-
-    # generate the path to PyQt translations files
-    - ps: $env:QT_TRANSL = "$env:PYTHON_PATH/Lib/site-packages/PyQt5/Qt5/translations"
-
-    # pull library versions from requirments file
-    - ps: $env:PYINSTALLER_VER = Select-String -Path ./src/requirements.txt "pyinstaller==([\d\.]*).*platform_system='Windows'" -List | ForEach-Object {$_.Matches.Groups[1].Value}
-    - ps: Write-Host "PYINSTALLER_VER= $env:PYINSTALLER_VER"
-
-    # update path env var
-    - cmd: set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%PATH%
-
-    # run the install script
-    - cmd: .ci\install-win.bat
-
-  build_script:
-    - cmd: echo Windows Legacy Build
-    - cmd: cd src
-
-    #update the copyright year used by pyinstaller to set exe properties for Windows
-    - ps: $YEAR=(Get-Date).year
-    - ps: gc version-metadata.yml | %{ $_ -replace "yyyy", "$YEAR" } | out-file newfile -encoding ascii
-    - ps: move -force newfile version-metadata.yml
-
-    # update the __revision__ field with the left seven of the GIT commit hash
-    - ps: $GIT_VERSION=git rev-parse --verify --short HEAD
-    - ps: gc artisanlib/__init__.py | %{ $_ -replace "__revision__ = '.*'", "__revision__ = '$GIT_VERSION'" } | out-file newfile -encoding ascii
-    - ps: move -force newfile artisanlib/__init__.py
-
-    # run the build script
-    - cmd: build-win3-pi.bat
-
-#  test_script:
-#    - cmd: python -m unittest discover
-
-  artifacts:
-#    - path: 'generated-win-legacy.zip'
-    - path: 'src\%artifact_prefix%-win*setup.exe'
-
-  deploy_script:
-    - cmd: bash ../.ci/upload.sh artisan-win*setup.exe
-
-#  # uncomment this section for remote desktop connection to build image
-#  on_finish:
-#    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-
+#-
+#  matrix:
+#    only:
+#      - job_name: windows_legacy
+#    fast_finish: false
+#
+#  environment:
+#    PYTHON_PATH: "C:/Python38-x64"
+#    QT_PATH: "C:/qt/5.15/msvc2019_64"
+#    PYUIC: "pyuic5.exe"
+#    PYQT: "5"
+#    BUILD_PYINSTALLER: "True"
+#    ARTISAN_LEGACY: "True"
+#    VC_REDIST: "https://aka.ms/vs/16/release/vc_redist.x64.exe"  #redistributable for VS 2015-2019
+#    VCVARSALL: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvarsall.bat"
+#
+#  install:
+#    - cmd: echo Windows Legacy Install
+#
+#    # generate the path to PyQt translations files
+#    - ps: $env:QT_TRANSL = "$env:PYTHON_PATH/Lib/site-packages/PyQt5/Qt5/translations"
+#
+#    # pull library versions from requirments file
+#    - ps: $env:PYINSTALLER_VER = Select-String -Path ./src/requirements.txt "pyinstaller==([\d\.]*).*platform_system='Windows'" -List | ForEach-Object {$_.Matches.Groups[1].Value}
+#    - ps: Write-Host "PYINSTALLER_VER= $env:PYINSTALLER_VER"
+#
+#    # update path env var
+#    - cmd: set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%PATH%
+#
+#    # run the install script
+#    - cmd: .ci\install-win.bat
+#
+#  build_script:
+#    - cmd: echo Windows Legacy Build
+#    - cmd: cd src
+#
+#    #update the copyright year used by pyinstaller to set exe properties for Windows
+#    - ps: $YEAR=(Get-Date).year
+#    - ps: gc version-metadata.yml | %{ $_ -replace "yyyy", "$YEAR" } | out-file newfile -encoding ascii
+#    - ps: move -force newfile version-metadata.yml
+#
+#    # update the __revision__ field with the left seven of the GIT commit hash
+#    - ps: $GIT_VERSION=git rev-parse --verify --short HEAD
+#    - ps: gc artisanlib/__init__.py | %{ $_ -replace "__revision__ = '.*'", "__revision__ = '$GIT_VERSION'" } | out-file newfile -encoding ascii
+#    - ps: move -force newfile artisanlib/__init__.py
+#
+#    # run the build script
+#    - cmd: build-win3-pi.bat
+#
+##  test_script:
+##    - cmd: python -m unittest discover
+#
+#  artifacts:
+##    - path: 'generated-win-legacy.zip'
+#    - path: 'src\%artifact_prefix%-win*setup.exe'
+#
+#  deploy_script:
+#    - cmd: bash ../.ci/upload.sh artisan-win*setup.exe
+#
+##  # uncomment this section for remote desktop connection to build image
+##  on_finish:
+##    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#
 
 -
   matrix:
@@ -163,8 +163,16 @@ for:
     # update path env var
     - cmd: set PATH=%PYTHON_PATH%;%PYTHON_PATH%\Scripts;%PATH%
 
+    # patch for libusb_package until a Python 3.14 version is available on pypi.org
+    - cmd: echo *** PATCH install version of libusb_package modified for Python 3.14
+    - cmd: pip install .ci\patches\libusb_package-1.0.26.3-py314-none-win_amd64.whl
+        
     # run the install script
     - cmd: .ci/install-win.bat
+        
+    # patch for pylupdate6 until this is fixed on pypi.org
+    - cmd: echo *** PATCH pylupdate6 for Python 3.14
+    - cmd: copy /Y .ci\patches\python_source.py C:\Python314-x64\Lib\site-packages\PyQt6\lupdate\python_source.py
 
   build_script:
     - cmd: echo Windows Build
@@ -207,7 +215,7 @@ for:
   environment:
     PYTHON_V: 3.12  # Override the stack key
     ARTISAN_OS: macos
-    MACOSX_DEPLOYMENT_TARGET: 12.0
+    MACOSX_DEPLOYMENT_TARGET: 13.0
     PYTHONSITEPKGS: /Users/appveyor/venv${PYTHON_V}/lib/python${PYTHON_V}/site-packages
     QT_PATH: ${PYTHONSITEPKGS}/PyQt6/Qt6
     QT_SRC_PATH: /Users/appveyor/Qt/6.6/macos
@@ -247,14 +255,14 @@ for:
     # we upgrade libidn2 and curl to prevent issues caused by the previous python update
     # on running curl for later upload (libunistring.2.dylib not found)
     # this is done here after generating the build to prevent SSL issues
-    - brew upgrade libidn2 # 2.3.4 -> 2.3.4_1
+    # ...at present python is not updated so we can skip this and save the time
+    #- brew upgrade libidn2 # 2.3.4 -> 2.3.4_1
     - ../.ci/upload.sh artisan-*.dmg
 
-#  # uncomment this section for vnc or ssh connection to the build image
+#  # uncomment this section for ssh connection to the build image
 #  on_finish:
-#    - sh: export APPVEYOR_VNC_BLOCK=true
-#    - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-vnc.sh' | bash -e -
-#    #- sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
+#    - sh: export APPVEYOR_SSH_BLOCK=true
+#    - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
 
 
 -

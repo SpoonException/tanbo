@@ -5,29 +5,27 @@
 import os
 import csv
 import logging
-from typing import Final, List, Optional, TYPE_CHECKING
+from collections.abc import Callable
+from typing import Final
 
-if TYPE_CHECKING:
-    from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from artisanlib.atypes import ProfileData # pylint: disable=unused-import
-
-try:
-    from PyQt6.QtWidgets import QApplication # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtWidgets import QApplication # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-
+from artisanlib.util import encodeLocalStrict
+from artisanlib.atypes import ProfileData
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 
 # returns a dict containing all profile information contained in the given Rubasse CSV file
-def extractProfileRubasseCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
-    res:ProfileData = {} # the interpreted data set
+def extractProfileRubasseCSV(file:str,
+        _etypesdefault:list[str],
+        alt_etypesdefault:list[str],
+        _artisanflavordefaultlabels:list[str],
+        eventsExternal2InternalValue:Callable[[int],float]) -> ProfileData:
+    res:ProfileData = ProfileData() # the interpreted data set
 
     res['samplinginterval'] = 1.0
     filename:str = os.path.basename(file)
-    res['title'] = filename
+    res['title'] = encodeLocalStrict(filename)
 
     res['roastertype'] = 'Rubase'
     res['roasterheating'] = 3 # electric
@@ -38,34 +36,34 @@ def extractProfileRubasseCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
         header_row = next(data)
         header = ['time','BT','Fan','Heater','RoR','Drum','Humidity','ET','Pressure'] + ['DT', 'timeB', 'BTB', 'FanB', 'HeaterB', 'RoRB', 'DrumB', 'HumidityB', 'ETB', 'PressureB', 'DTB']
 
-        fan:Optional[float] = None # holds last processed fan event value
-        fan_last:Optional[float] = None # holds the fan event value before the last one
-        heater:Optional[float] = None # holds last processed heater event value
-        heater_last:Optional[float] = None # holds the heater event value before the last one
+        fan:float|None = None # holds last processed fan event value
+        fan_last:float|None = None # holds the fan event value before the last one
+        heater:float|None = None # holds last processed heater event value
+        heater_last:float|None = None # holds the heater event value before the last one
         fan_event:bool = False # set to True if a fan event exists
         heater_event:bool = False # set to True if a heater event exists
 
-        specialevents:List[int] = []
-        specialeventstype:List[int] = []
-        specialeventsvalue:List[float] = []
-        specialeventsStrings:List[str] = []
-        timex:List[float] = []
-        temp1:List[float] = []
-        temp2:List[float] = []
-        extra1:List[float] = []
-        extra2:List[float] = []
-        extra3:List[float] = []
-        extra4:List[float] = []
-        extra5:List[float] = []
-        extra6:List[float] = []
-        timeindex:List[int] = [-1,0,0,0,0,0,0,0] #CHARGE index init set to -1 as 0 could be an actual index used
+        specialevents:list[int] = []
+        specialeventstype:list[int] = []
+        specialeventsvalue:list[float] = []
+        specialeventsStrings:list[str] = []
+        timex:list[float] = []
+        temp1:list[float] = []
+        temp2:list[float] = []
+        extra1:list[float] = []
+        extra2:list[float] = []
+        extra3:list[float] = []
+        extra4:list[float] = []
+        extra5:list[float] = []
+        extra6:list[float] = []
+        timeindex:list[int] = [-1,0,0,0,0,0,0,0] #CHARGE index init set to -1 as 0 could be an actual index used
 
 
 
         i = 0
         for row in data:
-            items = list(zip(header, row))
-            item = {}
+            items = list(zip(header, row, strict=False)) # ty:ignore
+            item:dict[str,str] = {}
             for (name, value) in items:
                 item[name] = value.strip()
 
@@ -80,13 +78,6 @@ def extractProfileRubasseCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
             temp1.append(et)
 
             bt:float = -1.0
-            try:
-                bt = float(item['BT'])
-                # after 2min we mark DRY if not auto adjusted
-                if timeindex[1] == 0 and i>60 and (not aw.qmc.phasesbuttonflag) and bt >= aw.qmc.phases[1]:
-                    timeindex[1] = max(0,i)
-            except Exception: # pylint: disable=broad-except
-                pass
             temp2.append(bt)
 
             heaterV:float = -1.0
@@ -152,8 +143,7 @@ def extractProfileRubasseCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
                                 fan_last = fan
                                 fan = v
                                 fan_event = True
-                                v = v/10. + 1
-                                specialeventsvalue.append(v)
+                                specialeventsvalue.append(eventsExternal2InternalValue(int(round(v))))
                                 specialevents.append(i)
                                 specialeventstype.append(0)
                                 specialeventsStrings.append(f"{float(item['Fan'])}%")
@@ -163,7 +153,7 @@ def extractProfileRubasseCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
                     _log.exception(e)
             if 'Heater' in item:
                 try:
-                    vh = item['Heater']
+                    vh:str = item['Heater']
                     if vh != '':
                         v = float(vh)
                         if heater is None or v != heater:
@@ -181,8 +171,7 @@ def extractProfileRubasseCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
                                 heater_last = heater
                                 heater = v
                                 heater_event = True
-                                v = v/10. + 1
-                                specialeventsvalue.append(v)
+                                specialeventsvalue.append(eventsExternal2InternalValue(int(round(v))))
                                 specialevents.append(i)
                                 specialeventstype.append(3)
                                 specialeventsStrings.append(f"{float(item['Heater'])}%")
@@ -241,22 +230,19 @@ def extractProfileRubasseCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
     res['extratemp2'] = [extra2,extra4,extra6]
     res['extramathexpression2'] = ['','','']
 
+    res['extraCurveVisibility1'] = [False, True, False, False, True, True, True, True, True, True]
+    res['extraCurveVisibility2'] = [False, False, False, False, True, True, True, True, True, True]
+    res['extraDelta1'] = [False]*10
+    res['extraDelta2'] = [False]*10
+    res['extraNoneTempHint1'] = [True, True, True]
+    res['extraNoneTempHint2'] = [True, True, True]
+
     if len(specialevents) > 0:
         res['specialevents'] = specialevents
         res['specialeventstype'] = specialeventstype
         res['specialeventsvalue'] = specialeventsvalue
         res['specialeventsStrings'] = specialeventsStrings
         if heater_event or fan_event:
-            # first set etypes to defaults
-            res['etypes'] = [QApplication.translate('ComboBox', 'Air'),
-                             QApplication.translate('ComboBox', 'Drum'),
-                             QApplication.translate('ComboBox', 'Damper'),
-                             QApplication.translate('ComboBox', 'Burner'),
-                             '--']
-            # update
-            if fan_event:
-                res['etypes'][0] = 'Fan'
-            if heater_event:
-                res['etypes'][3] = 'Heater'
+            res['etypes'] = alt_etypesdefault
 
     return res

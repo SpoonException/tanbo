@@ -20,7 +20,7 @@ import numpy as np
 from collections import deque
 from bisect import bisect_left, insort
 
-from typing import List, Optional, Deque, Any, TYPE_CHECKING
+from typing import override, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     import numpy.typing as npt # pylint: disable=unused-import
@@ -63,9 +63,10 @@ class LiveLFilter(LiveFilter):
         """
         self.b = b_
         self.a = a_
-        self._xs:Deque[float] = deque([0.0] * len(b), maxlen=len(b))
-        self._ys:Deque[float] = deque([0.0] * (len(a) - 1), maxlen=len(a)-1)
+        self._xs:deque[float] = deque([0.0] * len(self.b), maxlen=len(self.b))         # pyrefly: ignore[bad-argument-type]
+        self._ys:deque[float] = deque([0.0] * (len(self.a) - 1), maxlen=len(self.a)-1) # pyrefly: ignore[bad-argument-type]
 
+    @override
     def _process(self, x:float) -> float:
         """Filter incoming data with standard difference equations.
         """
@@ -98,6 +99,7 @@ class LiveSosFilter(LiveFilter):
         self.n_sections = self.sos.shape[0]
         self.state = np.zeros((self.n_sections, 2))
 
+    @override
     def _process(self, x:float) -> float:
         """Filter incoming data with cascaded second-order sections.
         """
@@ -124,23 +126,23 @@ class LiveMedian(LiveFilter):
         """
         assert k % 2 == 1, 'Median filter length must be odd.'
         self.k:int = k
-        self.init_list:List[float] = [] # collects first k readings until initialized
+        self.init_list:list[float] = [] # collects first k readings until initialized
         self.total:float = 0 # the sum of the last n<k readings
         self.initialized:bool = False
-        self.q:Optional[Deque[float]] = None
-        self.l:Optional[List[float]] = None
+        self.q:deque[float]|None = None
+        self.l:list[float]|None = None
         self.mididx:int = 0
 
     def init_queue(self) -> None:
         self.q = deque(self.init_list)
-        if self.q is not None:
-            self.l = list(self.q)
-            self.l.sort()
-            self.mididx = (len(self.q) - 1) // 2
-            self.initialized = True
-            del self.init_list
-            del self.total
+        self.l = list(self.q)
+        self.l.sort()
+        self.mididx = (len(self.q) - 1) // 2
+        self.initialized = True
+        del self.init_list
+        del self.total
 
+    @override
     def _process(self, x:float) -> float:
         """Filter incoming data with median low-pass filter.
         """
@@ -169,17 +171,17 @@ class LiveMean(LiveFilter):
             k: window size
         """
         self.k:int = k
-        self.init_list:List[float] = [] # collects first k readings until initialized
+        self.init_list:list[float] = [] # collects first k readings until initialized
         self.total:float = 0 # the sum of the last n<=k readings
         self.initialized:bool = False
-        self.window:Optional[Deque[float]] = None
+        self.window:deque[float]|None = None
 
     def init_queue(self) -> None:
         self.window = deque(self.init_list)
-        if self.window is not None:
-            self.initialized = True
-            del self.init_list
+        self.initialized = True
+        del self.init_list
 
+    @override
     def _process(self, x:float) -> float:
         """Filter incoming data with mean low-pass filter.
         """
@@ -210,10 +212,10 @@ if __name__ == '__main__':
     yraw = ys + yerr
 
     # define the filters
-    from scipy.signal import iirfilter, lfilter, sosfilt # type:ignore[import-untyped]
+    from scipy.signal import iirfilter, lfilter, sosfilt # type # ignore[import-untyped]
     #
     # define lowpass filter with 2.5 Hz cutoff frequency of order 4 (note: delay increases with order)
-    b, a = iirfilter(4, Wn=2.5, fs=fs, btype='low', ftype='butter')
+    b, a = iirfilter(4, Wn=2.5, fs=fs, btype='low', ftype='butter') # pyrefly: ignore
     y_scipy_lfilter = lfilter(b, a, yraw)
 
     live_lfilter = LiveLFilter(b, a)

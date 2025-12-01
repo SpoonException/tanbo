@@ -24,10 +24,7 @@ from artisanlib import __revision__
 
 from artisanlib.dialogs import ArtisanDialog
 
-try:
-    from PyQt6.QtWidgets import QApplication, QVBoxLayout, QTextEdit # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtWidgets import QApplication, QVBoxLayout, QTextEdit # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtWidgets import QApplication, QVBoxLayout, QTextEdit
 
 
 if TYPE_CHECKING:
@@ -39,7 +36,7 @@ class platformDlg(ArtisanDialog):
         super().__init__(parent, aw)
         self.setModal(True)
         self.setWindowTitle(QApplication.translate('Form Caption','Artisan Platform'))
-        platformdic = {}
+        platformdic:dict[str,str] = {}
         platformdic['Architecture'] = str(platform.architecture())
         platformdic['Machine'] = str(platform.machine())
         platformdic['Platform name'] =  str(platform.platform())
@@ -61,11 +58,11 @@ class platformDlg(ArtisanDialog):
         elif system == 'Linux':
             try:
                 import distro # type: ignore[import-not-found,unused-ignore] # @UnresolvedImport # pylint: disable=import-error
-                platformdic['Linux'] = str(distro.linux_distribution())
+                platformdic['Linux'] = str(distro.linux_distribution()) # pyright:ignore[reportUnknownArgumentType]
                 platformdic['Libc'] = str(platform.libc_ver())
             except Exception: # pylint: disable=broad-except
                 pass
-        htmlplatform = '<b>version =</b> ' + __version__ + ' (' + __revision__ + ')<br>'
+        htmlplatform:str = '<b>version =</b> ' + __version__ + ' (' + __revision__ + ')<br>'
         for key in sorted(platformdic):
             htmlplatform += '<b>' + key + ' = </b> <i>' + platformdic[key] + '</i><br>'
         platformEdit = QTextEdit()

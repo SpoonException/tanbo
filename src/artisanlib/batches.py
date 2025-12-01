@@ -17,20 +17,15 @@
 
 from artisanlib.dialogs import ArtisanDialog
 
-from typing import TYPE_CHECKING
+from typing import override, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
     from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
 
-try:
-    from PyQt6.QtCore import Qt, pyqtSlot, QSettings # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtWidgets import (QApplication, QLabel, QHBoxLayout, QVBoxLayout, QCheckBox, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QDialogButtonBox, QGridLayout, QLineEdit, QSpinBox, QLayout) # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import Qt, pyqtSlot, QSettings # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtWidgets import (QApplication, QLabel, QHBoxLayout, QVBoxLayout, QCheckBox, # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-                                 QDialogButtonBox, QGridLayout, QLineEdit, QSpinBox, QLayout) # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import Qt, pyqtSlot, QSettings
+from PyQt6.QtWidgets import (QApplication, QLabel, QHBoxLayout, QVBoxLayout, QCheckBox,
+                             QDialogButtonBox, QGridLayout, QLineEdit, QSpinBox, QLayout)
 
 class batchDlg(ArtisanDialog):
     def __init__(self, parent:'QWidget', aw:'ApplicationWindow') -> None:
@@ -136,6 +131,7 @@ class batchDlg(ArtisanDialog):
         self.close()
 
     @pyqtSlot()
+    @override
     def close(self) -> bool:
         #save window position (only; not size!)
         settings = QSettings()

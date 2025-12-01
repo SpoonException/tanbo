@@ -1,5 +1,5 @@
 [General]
-Delay=800
+Delay=700
 roastertype_setup=Santoker Cube BT
 roasterheating_setup=3
 roastersize_setup=0.1
@@ -12,8 +12,12 @@ santokerSerial=false
 santokerBLE=true
 Controlbuttonflag=true
 
+[Axis]
+resetmaxtime=360
+
 [events]
 markTP=false
+default_etypes_set=1, 0, 0, 1, 0
 
 [Units]
 weight=g

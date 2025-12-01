@@ -18,7 +18,7 @@
 import sys
 import time as libtime
 import logging
-from typing import Final, Optional, Dict, List, Union, cast, TYPE_CHECKING
+from typing import override, Final, cast, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
@@ -27,22 +27,14 @@ if TYPE_CHECKING:
 
 from artisanlib.util import stringfromseconds, stringtoseconds, comma2dot, toInt, toFloat
 from artisanlib.dialogs import ArtisanDialog
-from artisanlib.widgets import MyQComboBox
+from artisanlib.widgets import MyQComboBox, MyQDoubleSpinBox
 
-try:
-    from PyQt6.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings, QTimer # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtWidgets import (QApplication, QWidget, QLabel, QTableWidget, QPushButton, # @UnusedImport @Reimport  @UnresolvedImport
-        QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QGridLayout, QGroupBox, QLineEdit, # @UnusedImport @Reimport  @UnresolvedImport
-        QMessageBox, QRadioButton, QSpinBox, QStatusBar, QTabWidget, QDoubleSpinBox, # @UnusedImport @Reimport  @UnresolvedImport
-        QTimeEdit, QLayout, QSizePolicy, QHeaderView) # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings, QTimer # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtGui import QIntValidator, QRegularExpressionValidator # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QTableWidget, QPushButton, # type:ignore # @UnusedImport @Reimport  @UnresolvedImport
-        QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QGridLayout, QGroupBox, QLineEdit, # @UnusedImport @Reimport  @UnresolvedImport
-        QMessageBox, QRadioButton, QSpinBox, QStatusBar, QTabWidget, QDoubleSpinBox, # @UnusedImport @Reimport  @UnresolvedImport
-        QTimeEdit, QLayout, QSizePolicy, QHeaderView) # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings, QTimer
+from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
+from PyQt6.QtWidgets import (QApplication, QWidget, QLabel, QTableWidget, QPushButton,
+    QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QGridLayout, QGroupBox, QLineEdit,
+    QMessageBox, QRadioButton, QSpinBox, QStatusBar, QTabWidget, QDoubleSpinBox,
+    QTimeEdit, QLayout, QSizePolicy, QHeaderView, QButtonGroup)
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
@@ -472,12 +464,79 @@ class PID_DlgControl(ArtisanDialog):
             # only for the internal PID we support a derative filter setting
             self.derivativeFilterFlag = QCheckBox(QApplication.translate('Label','Derivative Filter'))
             self.derivativeFilterFlag.setChecked(bool(self.aw.pidcontrol.derivative_filter))
+            self.DoERadioButton = QRadioButton(QApplication.translate('Label','DoE'))
+            self.DoERadioButton.setToolTip(QApplication.translate('Tooltip', 'Derivative on Error'))
+            self.DoMRadioButton = QRadioButton(QApplication.translate('Label','DoM'))
+            self.DoMRadioButton.setToolTip(QApplication.translate('Tooltip', 'Derivative on Measurement (preventing the derivative kick)'))
+            if self.aw.pidcontrol.pidDoE:
+                self.DoERadioButton.setChecked(True)
+            else:
+                self.DoMRadioButton.setChecked(True)
+            DoX = QButtonGroup(self)
+            DoX.addButton(self.DoERadioButton)
+            DoX.addButton(self.DoMRadioButton)
+            dTypeBox = QHBoxLayout()
+            dTypeBox.addWidget(self.DoERadioButton)
+            dTypeBox.addWidget(self.DoMRadioButton)
+            dTypeBox.addStretch()
+
+            iLimitLabel = QLabel(QApplication.translate('Label','ILF'))
+            self.iLimitSpinBox = MyQDoubleSpinBox()
+            self.iLimitSpinBox.setAlignment(Qt.AlignmentFlag.AlignRight)
+            self.iLimitSpinBox.setRange(0.0,1.0)
+            self.iLimitSpinBox.setSingleStep(.1)
+            self.iLimitSpinBox.setDecimals(1)
+            self.iLimitSpinBox.setValue(self.aw.pidcontrol.pidIlimitFactor)
+            self.iLimitSpinBox.setToolTip(QApplication.translate('Tooltip', 'Integral limit factor'))
+
+            dLimitLabel = QLabel(QApplication.translate('Label','Dlimit'))
+            self.dLimitSpinBox = QSpinBox()
+            self.dLimitSpinBox.setAlignment(Qt.AlignmentFlag.AlignRight)
+            self.dLimitSpinBox.setRange(0,999)
+            self.dLimitSpinBox.setSingleStep(1)
+            self.dLimitSpinBox.setValue(int(self.aw.pidcontrol.pidDlimit))
+            self.dLimitSpinBox.setToolTip(QApplication.translate('Tooltip', 'Derivative limit'))
+
+            LimitBox = QHBoxLayout()
+            LimitBox.addWidget(iLimitLabel)
+            LimitBox.addWidget(self.iLimitSpinBox)
+            LimitBox.addSpacing(5)
+            LimitBox.addStretch()
+            LimitBox.addWidget(dLimitLabel)
+            LimitBox.addWidget(self.dLimitSpinBox)
+            LimitBox.setSpacing(3)
+
+            self.SPthresholdSpinBox = QSpinBox()
+            self.SPthresholdSpinBox.setToolTip(QApplication.translate('Tooltip', 'Integral reset on target (SP) changes exceeding the limit'))
+            self.SPthresholdSpinBox.setAlignment(Qt.AlignmentFlag.AlignRight)
+            self.SPthresholdSpinBox.setRange(0,100)
+            self.SPthresholdSpinBox.setSingleStep(1)
+            self.SPthresholdSpinBox.setValue(int(self.aw.pidcontrol.pidIRoCthreshold))
+            self.SPthresholdSpinBox.setEnabled(self.aw.pidcontrol.pidIRoC)
+            self.IWPFlag = QCheckBox(QApplication.translate('Label','IWP'))
+            self.IWPFlag.setToolTip(QApplication.translate('Tooltip', 'Integral Windup Prevention'))
+            self.IWPFlag.setChecked(self.aw.pidcontrol.pidIWP)
+            self.IRoCFlag = QCheckBox(QApplication.translate('Label','IRoC'))
+            self.IRoCFlag.setToolTip(QApplication.translate('Tooltip', 'Integral reset on target (SP) changes exceeding the limit'))
+            self.IRoCFlag.stateChanged.connect(self.IRoCFlag_changedSlot)
+            self.IRoCFlag.setChecked(self.aw.pidcontrol.pidIRoC)
+
+            RIoCBox = QHBoxLayout()
+            RIoCBox.addWidget(self.IRoCFlag)
+            RIoCBox.addWidget(self.SPthresholdSpinBox)
+            RIoCBox.addStretch()
+
             filterGrpBox = QVBoxLayout()
             filterGrpBox.addWidget(self.derivativeFilterFlag)
+            filterGrpBox.addLayout(LimitBox)
+            filterGrpBox.addLayout(dTypeBox)
+            filterGrpBox.addLayout(RIoCBox)
+            filterGrpBox.addWidget(self.IWPFlag)
             filterGrpBox.addStretch()
-            filterGrp = QGroupBox(QApplication.translate('GroupBox','Filter'))
+            filterGrpBox.setSpacing(10)
+            filterGrp = QGroupBox(QApplication.translate('Menu','Config'))
             filterGrp.setLayout(filterGrpBox)
-            filterGrp.setContentsMargins(0,15,0,0)
+#            filterGrp.setContentsMargins(0,0,0,0) # left, top, right, bottom
 
             svBox.addWidget(dutyGrp)
             svBox.addWidget(filterGrp)
@@ -486,6 +545,10 @@ class PID_DlgControl(ArtisanDialog):
         self.startPIDonCHARGE = QCheckBox(QApplication.translate('CheckBox', 'Start PID on CHARGE'))
         self.startPIDonCHARGE.setToolTip(QApplication.translate('Tooltip', 'Automatically turn the PID ON on CHARGE'))
         self.startPIDonCHARGE.setChecked(self.aw.pidcontrol.pidOnCHARGE)
+
+        self.stopPIDonDROP = QCheckBox(QApplication.translate('CheckBox', 'Stop PID on DROP'))
+        self.stopPIDonDROP.setToolTip(QApplication.translate('Tooltip', 'Automatically turn the PID OFF on DROP'))
+        self.stopPIDonDROP.setChecked(self.aw.pidcontrol.pidOffDROP)
 
         self.createEvents = QCheckBox(QApplication.translate('CheckBox', 'Create Events'))
         self.createEvents.setChecked(self.aw.pidcontrol.createEvents)
@@ -499,6 +562,8 @@ class PID_DlgControl(ArtisanDialog):
 
         flagsLayout = QHBoxLayout()
         flagsLayout.addWidget(self.startPIDonCHARGE)
+        flagsLayout.addSpacing(10)
+        flagsLayout.addWidget(self.stopPIDonDROP)
         flagsLayout.addSpacing(10)
         flagsLayout.addWidget(self.createEvents)
         flagsLayout.addSpacing(10)
@@ -527,12 +592,12 @@ class PID_DlgControl(ArtisanDialog):
         tab2Layout.addSpacing(15)
         tab2Layout.addLayout(tab2InnerLayout)
         rsGrid = QGridLayout()
-        self.SVWidgets = []
-        self.RampWidgets = []
-        self.SoakWidgets = []
-        self.ActionWidgets = []
-        self.BeepWidgets = []
-        self.DescriptionWidgets = []
+        self.SVWidgets:list[QSpinBox] = []
+        self.RampWidgets:list[QTimeEdit] = []
+        self.SoakWidgets:list[QTimeEdit] = []
+        self.ActionWidgets:list[MyQComboBox] = []
+        self.BeepWidgets:list[QWidget] = []
+        self.DescriptionWidgets:list[QLineEdit] = []
         rsGrid.addWidget(QLabel(QApplication.translate('Table','SV')),0,1)
         rsGrid.addWidget(QLabel(QApplication.translate('Table','Ramp')),0,2)
         rsGrid.addWidget(QLabel(QApplication.translate('Table','Soak')),0,3)
@@ -548,15 +613,15 @@ class PID_DlgControl(ArtisanDialog):
             QApplication.translate('ComboBox','Slider') + ' ' + self.aw.qmc.etypesf(2),
             QApplication.translate('ComboBox','Slider') + ' ' + self.aw.qmc.etypesf(3),
             QApplication.translate('ComboBox','START'),
-            QApplication.translate('ComboBox','DRY'),
-            QApplication.translate('ComboBox','FCs'),
-            QApplication.translate('ComboBox','FCe'),
-            QApplication.translate('ComboBox','SCs'),
-            QApplication.translate('ComboBox','SCe'),
-            QApplication.translate('ComboBox','DROP'),
+            QApplication.translate('Label','DRY END'),
+            QApplication.translate('Label','FC START'),
+            QApplication.translate('Label','FC END'),
+            QApplication.translate('Label','SC START'),
+            QApplication.translate('Label','SC END'),
+            QApplication.translate('Label','DROP'),
             QApplication.translate('ComboBox','COOL END'),
             QApplication.translate('ComboBox','OFF'),
-            QApplication.translate('ComboBox','CHARGE'),
+            QApplication.translate('Label','CHARGE'),
             QApplication.translate('ComboBox','RampSoak ON'),
             QApplication.translate('ComboBox','RampSoak OFF'),
             QApplication.translate('ComboBox','PID ON'),
@@ -671,13 +736,13 @@ class PID_DlgControl(ArtisanDialog):
         ############################
 
         # RSn tabs
-        self.RSnTab_LabelWidgets:List[QLineEdit] = []
-        self.RSnTab_SVWidgets:List[List[QSpinBox]] = []
-        self.RSnTab_RampWidgets:List[List[QTimeEdit]] = []
-        self.RSnTab_SoakWidgets:List[List[QTimeEdit]] = []
-        self.RSnTab_ActionWidgets:List[List[MyQComboBox]] = []
-        self.RSnTab_BeepWidgets:List[List[QWidget]] = []
-        self.RSnTab_DescriptionWidgets:List[List[QLineEdit]] = []
+        self.RSnTab_LabelWidgets:list[QLineEdit] = []
+        self.RSnTab_SVWidgets:list[list[QSpinBox]] = []
+        self.RSnTab_RampWidgets:list[list[QTimeEdit]] = []
+        self.RSnTab_SoakWidgets:list[list[QTimeEdit]] = []
+        self.RSnTab_ActionWidgets:list[list[MyQComboBox]] = []
+        self.RSnTab_BeepWidgets:list[list[QWidget]] = []
+        self.RSnTab_DescriptionWidgets:list[list[QLineEdit]] = []
 
         self.RSnButtons = []
 
@@ -693,12 +758,12 @@ class PID_DlgControl(ArtisanDialog):
             RSnGrid.addWidget(QLabel(QApplication.translate('Table','Action')),0,4)
             RSnGrid.addWidget(QLabel(QApplication.translate('Table','Beep')),0,5)
             RSnGrid.addWidget(QLabel(QApplication.translate('Table','Description')),0,6)
-            SVWidgets:List[QSpinBox] = []
-            RampWidgets:List[QTimeEdit] = []
-            SoakWidgets:List[QTimeEdit] = []
-            ActionWidgets:List[MyQComboBox] = []
-            BeepWidgets:List[QWidget] = []
-            DescriptionWidgets:List[QLineEdit] = []
+            SVWidgets:list[QSpinBox] = []
+            RampWidgets:list[QTimeEdit] = []
+            SoakWidgets:list[QTimeEdit] = []
+            ActionWidgets:list[MyQComboBox] = []
+            BeepWidgets:list[QWidget] = []
+            DescriptionWidgets:list[QLineEdit] = []
             labelLabel = QLabel(QApplication.translate('Label', 'Label'))
             labelEdit = QLineEdit()
             for i in range(self.aw.pidcontrol.svLen):
@@ -833,18 +898,18 @@ class PID_DlgControl(ArtisanDialog):
         self.setrampsoaks()
         self.setRSs()
 
+        mainLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+
         settings = QSettings()
         if settings.contains('PIDPosition'):
             self.move(settings.value('PIDPosition'))
-
-        mainLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
         # we set the active tab with a QTimer after the tabbar has been rendered once, as otherwise
         # some tabs are not rendered at all on Windows using Qt v6.5.1 (https://bugreports.qt.io/projects/QTBUG/issues/QTBUG-114204?filter=allissues)
         QTimer.singleShot(10, self.setActiveTab)
 
     # NOTE: ET/BT inverted as pidSource=1 => BT and pidSource=2 => ET !!
-    def getCurveNames(self) -> List[str]:
+    def getCurveNames(self) -> list[str]:
         curveNames = []
         curveNames.append(self.aw.qmc.device_name_subst(self.aw.ETname))
         curveNames.append(self.aw.qmc.device_name_subst(self.aw.BTname))
@@ -852,6 +917,10 @@ class PID_DlgControl(ArtisanDialog):
             curveNames.append(self.aw.qmc.device_name_subst(self.aw.qmc.extraname1[i]))
             curveNames.append(self.aw.qmc.device_name_subst(self.aw.qmc.extraname2[i]))
         return curveNames
+
+    @pyqtSlot(int)
+    def IRoCFlag_changedSlot(self, flag:int) -> None:
+        self.SPthresholdSpinBox.setEnabled(bool(flag))
 
     @pyqtSlot()
     def setActiveTab(self) -> None:
@@ -959,7 +1028,7 @@ class PID_DlgControl(ArtisanDialog):
     def setRS(self, _:bool = False) -> None:
         try:
             sender = self.sender()
-            assert isinstance(sender, QPushButton)
+            assert isinstance(sender, QPushButton) # pyrefly: ignore[invalid-argument]
             n = self.RSnButtons.index(sender)
             self.aw.pidcontrol.svLabel = self.getRSnSVLabel(n)
             self.aw.pidcontrol.svValues = self.getRSnSVvalues(n)
@@ -976,16 +1045,16 @@ class PID_DlgControl(ArtisanDialog):
 
     def getRSnSVLabel(self, n:int) -> str:
         return self.RSnTab_LabelWidgets[n].text()
-    def getRSnSVvalues(self, n:int) -> List[float]:
+    def getRSnSVvalues(self, n:int) -> list[float]:
         return [w.value() for w in self.RSnTab_SVWidgets[n]]
-    def getRSnSVramps(self, n:int) -> List[int]:
+    def getRSnSVramps(self, n:int) -> list[int]:
         return [int(round(self.aw.QTime2time(w.time()))) for w in self.RSnTab_RampWidgets[n]]
-    def getRSnSVsoaks(self, n:int) -> List[int]:
+    def getRSnSVsoaks(self, n:int) -> list[int]:
         return [int(round(self.aw.QTime2time(w.time()))) for w in self.RSnTab_SoakWidgets[n]]
-    def getRSnSVactions(self, n:int) -> List[int]:
+    def getRSnSVactions(self, n:int) -> list[int]:
         return [int(w.currentIndex()) - 1 for w in self.RSnTab_ActionWidgets[n]]
-    def getRSnSVbeeps(self, n:int) -> List[bool]:
-        res:List[bool] = []
+    def getRSnSVbeeps(self, n:int) -> list[bool]:
+        res:list[bool] = []
         for w in self.RSnTab_BeepWidgets[n]:
             b:bool = False
             l = w.layout()
@@ -997,7 +1066,7 @@ class PID_DlgControl(ArtisanDialog):
                         b = cast(QCheckBox, wid).isChecked()
             res.append(b)
         return res
-    def getRSnSVdescriptions(self, n:int) -> List[str]:
+    def getRSnSVdescriptions(self, n:int) -> list[str]:
         return [w.text() for w in self.RSnTab_DescriptionWidgets[n]]
 
     def setRSnSVLabel(self, n:int) -> None:
@@ -1016,7 +1085,7 @@ class PID_DlgControl(ArtisanDialog):
             self.RSnTab_ActionWidgets[n][i].setCurrentIndex(self.aw.pidcontrol.RS_svActions[n][i] + 1)
     def setRSnSVbeeps(self, n:int) -> None:
         for i in range(self.aw.pidcontrol.svLen):
-            beep:Optional[QCheckBox] = None
+            beep:QCheckBox|None = None
             l = self.RSnTab_BeepWidgets[n][i].layout()
             if l is not None:
                 item = l.itemAt(1)
@@ -1064,7 +1133,7 @@ class PID_DlgControl(ArtisanDialog):
     def exportrampsoaksJSON(self, filename:str) -> bool:
         try:
             self.saverampsoaks()
-            rampsoaks:Dict[str,Union[str,List[float],List[int],List[bool],List[str]]] = {}
+            rampsoaks:dict[str,str|list[float]|list[int]|list[bool]|list[str]] = {}
             rampsoaks['svLabel'] = self.aw.pidcontrol.svLabel
             rampsoaks['svValues'] = self.aw.pidcontrol.svValues
             rampsoaks['svRamps'] = self.aw.pidcontrol.svRamps
@@ -1165,8 +1234,8 @@ class PID_DlgControl(ArtisanDialog):
         kp = self.pidKp.value() # 5.00
         ki = self.pidKi.value() # 0.15
         kd = self.pidKd.value() # 0.00
-        source:Optional[int] = None
-        cycle:Optional[int] = None
+        source:int|None = None
+        cycle:int|None = None
         if self.aw.pidcontrol.externalPIDControl() in {0, 3, 4}: # only Internal PID and TC4/Kaleido
             pidSourceIdx = self.pidSource.currentIndex()
             if pidSourceIdx == 0:
@@ -1189,12 +1258,13 @@ class PID_DlgControl(ArtisanDialog):
         if self.aw.pidcontrol.externalPIDControl() == 0: # only the internal PID allows for duty control
             self.aw.pidcontrol.setDutySteps(self.pidDutySteps.value())
 
+    @override
     def close(self) -> bool:
         kp = self.pidKp.value() # 5.00
         ki = self.pidKi.value() # 0.15
         kd = self.pidKd.value() # 0.00
-        source:Optional[int] = None
-        cycle:Optional[int] = None
+        source:int|None = None
+        cycle:int|None = None
         pid_controller = self.aw.pidcontrol.externalPIDControl()
         if pid_controller in {0, 3, 4}:
             pidSourceIdx = self.pidSource.currentIndex()
@@ -1229,6 +1299,7 @@ class PID_DlgControl(ArtisanDialog):
         self.aw.pidcontrol.setPID(kp,ki,kd,source,cycle)
         #
         self.aw.pidcontrol.pidOnCHARGE = self.startPIDonCHARGE.isChecked()
+        self.aw.pidcontrol.pidOffDROP = self.stopPIDonDROP.isChecked()
 #        self.aw.pidcontrol.RStimeAfterCHARGE = self.radioTimeAfterCHARGE.isChecked()
         self.aw.pidcontrol.loadpidfrombackground = self.loadPIDfromBackground.isChecked()
         self.aw.pidcontrol.createEvents = self.createEvents.isChecked()
@@ -1252,6 +1323,12 @@ class PID_DlgControl(ArtisanDialog):
             self.aw.pidcontrol.dutyMax = max(self.dutyMin.value(),self.dutyMax.value())
             self.aw.pidcontrol.dutySteps = self.pidDutySteps.value()
             self.aw.pidcontrol.derivative_filter = int(self.derivativeFilterFlag.isChecked())
+            self.aw.pidcontrol.pidDoE = self.DoERadioButton.isChecked()
+            self.aw.pidcontrol.pidDlimit = int(self.dLimitSpinBox.value())
+            self.aw.pidcontrol.pidIlimitFactor = self.iLimitSpinBox.value()
+            self.aw.pidcontrol.pidIRoCthreshold = int(self.SPthresholdSpinBox.value())
+            self.aw.pidcontrol.pidIWP = self.IWPFlag.isChecked()
+            self.aw.pidcontrol.pidIRoC = self.IRoCFlag.isChecked()
         self.aw.pidcontrol.svLookahead = self.pidSVLookahead.value()
         #
         self.aw.PID_DlgControl_activeTab = self.tabWidget.currentIndex()
@@ -1263,7 +1340,9 @@ class PID_DlgControl(ArtisanDialog):
         return True
 
     @pyqtSlot('QCloseEvent')
-    def closeEvent(self,_:Optional['QCloseEvent'] = None) -> None:
+    @override
+    def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
+        del a0
         #save window position (only; not size!)
         settings = QSettings()
         settings.setValue('PIDPosition',self.frameGeometry().topLeft())
@@ -1295,7 +1374,7 @@ class PXpidDlgControl(ArtisanDialog):
 
     def setpoint(self, PID:str) -> None:
         if PID == 'ET':
-            slaveID = self.aw.ser.controlETpid[1]
+            deviceID = self.aw.ser.controlETpid[1]
             if self.aw.ser.controlETpid[0] == 0:
                 reg_dict = self.aw.fujipid.PXG4
             elif self.aw.ser.controlETpid[0] == 1:
@@ -1303,7 +1382,7 @@ class PXpidDlgControl(ArtisanDialog):
             else:
                 reg_dict = self.aw.fujipid.PXF
         else: # "BT"
-            slaveID = self.aw.ser.readBTpid[1]
+            deviceID = self.aw.ser.readBTpid[1]
             if self.aw.ser.readBTpid[0] == 0:
                 reg_dict = self.aw.fujipid.PXG4
             elif self.aw.ser.readBTpid[0] == 1:
@@ -1317,10 +1396,10 @@ class PXpidDlgControl(ArtisanDialog):
             if self.aw.ser.useModbusPort:
                 reg = self.aw.modbus.address2register(reg_dict['decimalposition'][1],6)
                 if reg:
-                    self.aw.modbus.writeSingleRegister(slaveID,reg,1)
+                    self.aw.modbus.writeSingleRegister(deviceID, reg, 1)
                 r = command
             else:
-                command = self.aw.fujipid.message2send(slaveID,6,reg_dict['decimalposition'][1],1)
+                command = self.aw.fujipid.message2send(deviceID, 6, reg_dict['decimalposition'][1], 1)
                 r = self.aw.ser.sendFUJIcommand(command,8)
             #check response from pid and update message on main window
             if r == command:
@@ -1342,7 +1421,7 @@ class PXpidDlgControl(ArtisanDialog):
 
     def setthermocoupletype(self, PID:str) -> None:
         if PID == 'ET':
-            slaveID = self.aw.ser.controlETpid[1]
+            deviceID = self.aw.ser.controlETpid[1]
             index = self.ETthermocombobox.currentIndex()
             if self.aw.ser.controlETpid[0] == 0:
                 reg_dict = self.aw.fujipid.PXG4
@@ -1354,7 +1433,7 @@ class PXpidDlgControl(ArtisanDialog):
                 reg_dict = self.aw.fujipid.PXF
                 conversiontoindex = self.aw.fujipid.PXFconversiontoindex
         else: # "BT"
-            slaveID = self.aw.ser.readBTpid[1]
+            deviceID = self.aw.ser.readBTpid[1]
             index = self.BTthermocombobox.currentIndex()
             if self.aw.ser.readBTpid[0] == 0:
                 reg_dict = self.aw.fujipid.PXG4
@@ -1372,11 +1451,11 @@ class PXpidDlgControl(ArtisanDialog):
                 value = conversiontoindex[index]
                 reg = self.aw.modbus.address2register(reg_dict['pvinputtype'][1],6)
                 if reg:
-                    self.aw.modbus.writeSingleRegister(slaveID,reg,value)
+                    self.aw.modbus.writeSingleRegister(deviceID, reg, value)
                 r = command
             else:
                 value = conversiontoindex[index]
-                command = self.aw.fujipid.message2send(slaveID,6,reg_dict['pvinputtype'][1],value)
+                command = self.aw.fujipid.message2send(deviceID, 6, reg_dict['pvinputtype'][1], value)
                 r = self.aw.ser.sendFUJIcommand(command,8)
             #check response from pid and update message on main window
             if r == command:
@@ -2216,7 +2295,7 @@ class PXRpidDlgControl(PXpidDlgControl):
         self.segmenttable.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.segmenttable.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.segmenttable.setShowGrid(True)
-        vheader: Optional[QHeaderView] = self.segmenttable.verticalHeader()
+        vheader: QHeaderView|None = self.segmenttable.verticalHeader()
         if vheader is not None:
             vheader.setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
         regextime = QRegularExpression(r'^-?[0-9]?[0-9]?[0-9]:[0-5][0-9]$')
@@ -3022,7 +3101,10 @@ class PXG4pidDlgControl(PXpidDlgControl):
     @pyqtSlot(bool)
     def writeRSValues(self, _:bool = False) -> None:
         for i in range(16):
-            self.setsegment_i(i)
+            try:
+                self.setsegment_i(i)
+            except Exception: # pylint: disable=broad-exception-caught
+                self.aw.qmc.adderror(QApplication.translate('Message','Error writing PID RS value {0}').format(str(i)))
 
     @pyqtSlot(bool)
     def writeAll(self, _:bool = False) -> None:
@@ -3054,7 +3136,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
                 pidvalues[dkey] = self.aw.fujipid.PXG4[dkey][0]
             pids['pidvalues'] = pidvalues
             # store ramp-soak segments
-            segments:Dict[str,Union[float,int]] = {}
+            segments:dict[str,float|int] = {}
             for i in range(16):
                 svkey = 'segment' + str(i+1) + 'sv'
                 rampkey = 'segment' + str(i+1) + 'ramp'
@@ -3794,7 +3876,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
             reg_dict = self.aw.fujipid.PXF
         for i in reversed(list(range(1,8))):
             svkey = 'sv' + str(i)
-            sv:Optional[float]
+            sv:float|None
             if self.aw.ser.useModbusPort:
                 reg = self.aw.modbus.address2register(reg_dict[svkey][1],3)
                 svr = self.aw.modbus.readSingleRegister(self.aw.ser.controlETpid[1],reg,3)
@@ -4164,6 +4246,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
                 self.status.showMessage(QApplication.translate('StatusBar','UNABLE to set Autotune',None),5000)
 
     @pyqtSlot(bool)
+    @override
     def accept(self, _:bool = False) -> None:
         # store set values
         self.aw.fujipid.PXG4['sv1'][0] = toFloat(comma2dot(self.sv1edit.text()))
@@ -4230,7 +4313,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
         self.segmenttable.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.segmenttable.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.segmenttable.setShowGrid(True)
-        vheader: Optional[QHeaderView] = self.segmenttable.verticalHeader()
+        vheader: QHeaderView|None = self.segmenttable.verticalHeader()
         if vheader is not None:
             vheader.setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
         regextime = QRegularExpression(r'^-?[0-9]?[0-9]?[0-9]:[0-5][0-9]$')

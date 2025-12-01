@@ -3,10 +3,7 @@
 # then execute artisan/doc/help_dialogs/Script/xlsx_to_artisan_help.py
 import prettytable
 import re
-try:
-    from PyQt6.QtWidgets import QApplication # @Reimport @UnresolvedImport @UnusedImport # pylint: disable=import-error
-except Exception: # pylint: disable=broad-except
-    from PyQt5.QtWidgets import QApplication # type: ignore # @Reimport @UnresolvedImport @UnusedImport
+from PyQt6.QtWidgets import QApplication
 
 def content() -> str:
     strlist = []
@@ -107,22 +104,22 @@ def content() -> str:
     tbl_Commands.add_row(['&#160;','button(i,b)',QApplication.translate('HelpDlg','sets button i to pressed if value b is yes, true, t, or 1, otherwise to normal')])
     tbl_Commands.add_row(['&#160;','button(<bool>)',QApplication.translate('HelpDlg','sets calling button to “pressed” if argument is 1 or True')])
     tbl_Commands.add_row(['&#160;','button()',QApplication.translate('HelpDlg','toggles the state of the button')])
-    tbl_Commands.add_row(['&#160;','read(slaveID,register)',QApplication.translate('HelpDlg','reads 1 16bit register from slave slaveID using function 3 (Read Multiple Holding Registers) interpreted as unsigned integer. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
-    tbl_Commands.add_row(['&#160;','readSigned(slaveId,register)',QApplication.translate('HelpDlg','reads 1 16bit register from slave slaveID using function 3 (Read Multiple Holding Registers) interpreted as signed integer. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
-    tbl_Commands.add_row(['&#160;','readBCD(slaveID,register)',QApplication.translate('HelpDlg','reads 1 16bit register from slave slaveID using function 3 (Read Multiple Holding Registers) interpreted as BCD. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
-    tbl_Commands.add_row(['&#160;','read32(slaveID,register)',QApplication.translate('HelpDlg','reads 2 16bit registers from slave slaveID using function 3 (Read Multiple Holding Registers) interpreted as unsigned integer. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
-    tbl_Commands.add_row(['&#160;','read32Signed(slaveID,register)',QApplication.translate('HelpDlg','reads 2 16bit registers from slave slaveID using function 3 (Read Multiple Holding Registers) interpreted as signed integer. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
-    tbl_Commands.add_row(['&#160;','read32BCD(slaveID,register)',QApplication.translate('HelpDlg','reads 2 16bit register from slave slaveID using function 3 (Read Multiple Holding Registers) interpreted as BCD. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
-    tbl_Commands.add_row(['&#160;','readFloat(slaveID,register)',QApplication.translate('HelpDlg','reads 2 16bit registers from slave slaveID using function 3 (Read Multiple Holding Registers) interpreted as float. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
-    tbl_Commands.add_row(['&#160;','write(slaveId,register,value) or write([slaveId,register,value],..,[slaveId,register,value])',QApplication.translate('HelpDlg','deprecated: use writeSingle for MODBUS function 6 (int) or writeWord for function 16 (float)')])
-    tbl_Commands.add_row(['&#160;','wcoil(slaveId,register,<bool>)',QApplication.translate('HelpDlg','write coil: MODBUS function 5')])
-    tbl_Commands.add_row(['&#160;','wcoils(slaveId,register,[<bool>,..,<bool>])',QApplication.translate('HelpDlg','write coils: MODBUS function 15')])
-    tbl_Commands.add_row(['&#160;','mwrite(slaveId,register,andMask,orMask) or mwrite(s,r,am,om,v)',QApplication.translate('HelpDlg','mask write register: MODBUS function 22 or simulates function 22 with function 6 and the given value v')])
-    tbl_Commands.add_row(['&#160;','writem(slaveId,register,value) or writem(slaveId,register,[<int>,..,<int>])',QApplication.translate('HelpDlg','write registers: MODBUS function 16')])
-    tbl_Commands.add_row(['&#160;','writeBCD(s,r,v) or writeBCD([s,r,v],..,[s,r,v])',QApplication.translate('HelpDlg','write 16bit BCD encoded value v to register r of slave s ')])
-    tbl_Commands.add_row(['&#160;','writeWord(slaveId,register,value) or writeWord([slaveId,register,value],..,[slaveId,register,value])',QApplication.translate('HelpDlg','write 32bit float to two 16bit int registers: MODBUS function 16')])
-    tbl_Commands.add_row(['&#160;','writeLong(slaveId,register,value) or writeLong([slaveId,register,value],..,[slaveId,register,value])',QApplication.translate('HelpDlg','write 32bit integer to two 16bit int registers: MODBUS function 16')])
-    tbl_Commands.add_row(['&#160;','writeSingle(slaveId,register,value) or writeSingle([slaveId,register,value],..,[slaveId,register,value])',QApplication.translate('HelpDlg','write 16bit integer to a single 16bit register: MODBUS function 6 (int)')])
+    tbl_Commands.add_row(['&#160;','read(deviceID,register)',QApplication.translate('HelpDlg','reads 1 16bit register from device deviceID using function 3 (Read Multiple Holding Registers) interpreted as unsigned integer. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
+    tbl_Commands.add_row(['&#160;','readSigned(deviceID,register)',QApplication.translate('HelpDlg','reads 1 16bit register from device deviceID using function 3 (Read Multiple Holding Registers) interpreted as signed integer. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
+    tbl_Commands.add_row(['&#160;','readBCD(deviceID,register)',QApplication.translate('HelpDlg','reads 1 16bit register from device deviceID using function 3 (Read Multiple Holding Registers) interpreted as BCD. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
+    tbl_Commands.add_row(['&#160;','read32(deviceID,register)',QApplication.translate('HelpDlg','reads 2 16bit registers from device deviceID using function 3 (Read Multiple Holding Registers) interpreted as unsigned integer. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
+    tbl_Commands.add_row(['&#160;','read32Signed(deviceID,register)',QApplication.translate('HelpDlg','reads 2 16bit registers from device deviceID using function 3 (Read Multiple Holding Registers) interpreted as signed integer. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
+    tbl_Commands.add_row(['&#160;','read32BCD(deviceID,register)',QApplication.translate('HelpDlg','reads 2 16bit register from device deviceID using function 3 (Read Multiple Holding Registers) interpreted as BCD. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
+    tbl_Commands.add_row(['&#160;','readFloat(deviceID,register)',QApplication.translate('HelpDlg','reads 2 16bit registers from device deviceID using function 3 (Read Multiple Holding Registers) interpreted as float. The result is bound to the placeholder `_` and thus can be accessed in later commands.')])
+    tbl_Commands.add_row(['&#160;','write(deviceID,register,value) or write([deviceID,register,value],..,[deviceID,register,value])',QApplication.translate('HelpDlg','DEPRECATED: use writeSingle for MODBUS function 6 (int) or writeWord for function 16 (float)')])
+    tbl_Commands.add_row(['&#160;','wcoil(deviceID,register,<bool>)',QApplication.translate('HelpDlg','write coil: MODBUS function 5')])
+    tbl_Commands.add_row(['&#160;','wcoils(deviceID,register,[<bool>,..,<bool>])',QApplication.translate('HelpDlg','write coils: MODBUS function 15')])
+    tbl_Commands.add_row(['&#160;','mwrite(deviceID,register,andMask,orMask) or mwrite(deviceID,register,andMask,orMask,value)',QApplication.translate('HelpDlg','mask write register: MODBUS function 22 or simulates function 22 with function 6 and the given value value')])
+    tbl_Commands.add_row(['&#160;','writem(deviceID,register,value) or writem(deviceID,register,[<int>,..,<int>])',QApplication.translate('HelpDlg','write registers: MODBUS function 16')])
+    tbl_Commands.add_row(['&#160;','writeBCD(deviceID,register,value) or writeBCD([deviceID,register,value],..,[deviceID,register,value])',QApplication.translate('HelpDlg','write 16bit BCD encoded value to register of device with DeviceID ')])
+    tbl_Commands.add_row(['&#160;','writeWord(deviceID,register,value) or writeWord([deviceID,register,value],..,[deviceID,register,value])',QApplication.translate('HelpDlg','write 32bit float to two 16bit int registers: MODBUS function 16')])
+    tbl_Commands.add_row(['&#160;','writeLong(deviceID,register,value) or writeLong([deviceID,register,value],..,[deviceID,register,value])',QApplication.translate('HelpDlg','write 32bit integer to two 16bit int registers: MODBUS function 16')])
+    tbl_Commands.add_row(['&#160;','writeSingle(deviceID,register,value) or writeSingle([deviceID,register,value],..,[deviceID,register,value])',QApplication.translate('HelpDlg','write 16bit integer to a single 16bit register: MODBUS function 6 (int)')])
     tbl_Commands.add_row([QApplication.translate('HelpDlg','DTA Command'),QApplication.translate('HelpDlg','Insert Data address : value, ex. 4701:1000 and sv is 100. \nAlways multiply with 10 if value Unit: 0.1 / ex. 4719:0 stops heating'),'&#160;'])
     tbl_Commands.add_row([QApplication.translate('HelpDlg','IO Command'),'_',QApplication.translate('HelpDlg','variable holding the last result value')])
     tbl_Commands.add_row(['&#160;','$',QApplication.translate('HelpDlg','variable holding the last state of the button pressed (1 or 0)')])
@@ -147,6 +144,7 @@ def content() -> str:
     tbl_Commands.add_row(['&#160;','sleep(<float>)',QApplication.translate('HelpDlg','sleep: add a delay of <float> seconds')])
     tbl_Commands.add_row(['&#160;','santoker(<target>,<value>)',QApplication.translate('HelpDlg','sends integer <value> to <target> register specified by as byte in hex notation like “fa” via the Santoker Network protocol')])
     tbl_Commands.add_row(['&#160;','kaleido(<target>,<value>)',QApplication.translate('HelpDlg','sends <value> to <target> via the Kaleido Serial or Network protocol')])
+    tbl_Commands.add_row(['&#160;','shellyrelay(n,b)',QApplication.translate('HelpDlg','switches Shelly plug number <n> ON if b is true or 1, and OFF otherwise')])
     tbl_Commands.add_row([QApplication.translate('HelpDlg','Hottop Heater'),'&#160;',QApplication.translate('HelpDlg','sets heater to value')])
     tbl_Commands.add_row([QApplication.translate('HelpDlg','Hottop Fan'),'&#160;',QApplication.translate('HelpDlg','sets fan to value')])
     tbl_Commands.add_row([QApplication.translate('HelpDlg','Hottop Command'),'motor(n),solenoid(n),stirrer(n),heater(h),fan(f) ',QApplication.translate('HelpDlg','with n={0 ,1},h={0,..100},f={0,..10}')])
@@ -202,7 +200,8 @@ def content() -> str:
     tbl_Commands.add_row(['&#160;','pidSVC(<float>)',QApplication.translate('HelpDlg','sets the PID target set value SV given in C')])
     tbl_Commands.add_row(['&#160;','pidRS(<rs>)',QApplication.translate('HelpDlg','activates the PID Ramp-Soak pattern number <rs> (1-based!) or the one labeled <rs>')])
     tbl_Commands.add_row(['&#160;','pidSource(<int>)',QApplication.translate('HelpDlg','selects the PID input source with <n> 0: BT, 1: ET (Software PID); <n> in {0,..,3} (Arduino PID)')])
-    tbl_Commands.add_row(['&#160;','pidLookahead(<int>)',QApplication.translate('HelpDlg','sets the PID lookahead')])
+    tbl_Commands.add_row(['&#160;','pidLookahead(<int>)',QApplication.translate('HelpDlg','sets the PID lookahead in seconds')])
+    tbl_Commands.add_row(['&#160;','replayLookahead(<int>)',QApplication.translate('HelpDlg','sets the Ramping Event Replay lookahead in seconds')])
     tbl_Commands.add_row(['&#160;','popup(<msg>[,<int>])',QApplication.translate('HelpDlg','shows popup with message <msg> which optionally automatically closes after <int> seconds')])
     tbl_Commands.add_row(['&#160;','message(<msg>)',QApplication.translate('HelpDlg','shows message <msg> in the message line')])
     tbl_Commands.add_row(['&#160;','notifications(<bool>)',QApplication.translate('HelpDlg','enables/disables notifications; while disabled issued notifications are ignored')])
@@ -218,6 +217,7 @@ def content() -> str:
     tbl_Commands.add_row(['&#160;','playbackdropmode(<int>)',QApplication.translate('HelpDlg','sets playback DROP mode to 0: off, 1: time, 2: BT, 3: ET')])
     tbl_Commands.add_row(['&#160;','playback(n,<bool>)',QApplication.translate('HelpDlg','toggles playback per event type n from {1,2,3,4}')])
     tbl_Commands.add_row(['&#160;','ramp(n,<bool>)',QApplication.translate('HelpDlg','toggles playback ramping per event type n from {1,2,3,4}')])
+    tbl_Commands.add_row(['&#160;','slider(n,<bool>)',QApplication.translate('HelpDlg','show/hide slider per event type n from {1,2,3,4}')])
     tbl_Commands.add_row(['&#160;','quantifier(n,<bool>)',QApplication.translate('HelpDlg','activate/deactivate quantification per event type n from {1,2,3,4}')])
     tbl_Commands.add_row(['&#160;','setBatchSize(<float>)',QApplication.translate('HelpDlg','set the batch size to the given value. If the value is negative, the batch size is taken from the background profile, if any is loaded')])
     tbl_Commands.add_row(['&#160;','openProperties',QApplication.translate('HelpDlg','opens the Roast Properties dialog')])

@@ -8,34 +8,33 @@ import csv
 import re
 import time as libtime
 import logging
-from typing import Final, List, Optional, TYPE_CHECKING
+from collections.abc import Callable
+from typing import Final
 
-if TYPE_CHECKING:
-    from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from artisanlib.atypes import ProfileData # pylint: disable=unused-import
-from artisanlib.util import replace_duplicates, encodeLocal
 
-try:
-    from PyQt6.QtCore import QDateTime, QDate, QTime, Qt # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtWidgets import QApplication # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import QDateTime, QDate, QTime, Qt # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtWidgets import QApplication # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import QDateTime, QDate, QTime, Qt
 
+
+from artisanlib.util import replace_duplicates, encodeLocal, encodeLocalStrict
+from artisanlib.atypes import ProfileData
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
-# returns a dict containing all profile information contained in the given IKAWA CSV file
-def extractProfilePetronciniCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
-    res:ProfileData = {}
+# returns a dict containing all profile information contained in the given Petroncini CSV file
+def extractProfilePetronciniCSV(file:str,
+        etypesdefault:list[str],
+        _alt_etypesdefault:list[str],
+        _artisanflavordefaultlabels:list[str],
+        eventsExternal2InternalValue:Callable[[int],float]) -> ProfileData:
+    res:ProfileData = ProfileData()
 
     res['samplinginterval'] = 1.0
 
     res['roastertype'] = 'Petroncini'
 
-    roastdate:Optional[str]
-    roastisodate:Optional[str]
-    roasttime:Optional[str]
+    roastdate:str|None
+    roastisodate:str|None
+    roasttime:str|None
 
     # set profile date from the file name if it has the format "yyyy_mm_dd_hh_mm_ss.csv"
     try:
@@ -65,27 +64,27 @@ def extractProfilePetronciniCSV(file:str, aw:'ApplicationWindow') -> 'ProfileDat
         next(data) # skip path
         header = [i.strip() for i in next(data)]
 
-        roast_date = None
+        roast_date:QDateTime|None = None
         power = None # holds last processed heater event value
         power_last = None # holds the heater event value before the last one
         power_event = False # set to True if a heater event exists
-        specialevents:List[int] = []
-        specialeventstype:List[int] = []
-        specialeventsvalue:List[float] = []
-        specialeventsStrings:List[str] = []
-        timex:List[float] = []
-        temp1:List[float] = [] # outlet temperature as ET
-        temp2:List[float] = [] # bean temperature
-        extra1:List[float] = [] # inlet temperature
-        extra2:List[float] = [] # burner percentage
-        timeindex:List[int] = [-1,0,0,0,0,0,0,0] #CHARGE index init set to -1 as 0 could be an actual index used
+        specialevents:list[int] = []
+        specialeventstype:list[int] = []
+        specialeventsvalue:list[float] = []
+        specialeventsStrings:list[str] = []
+        timex:list[float] = []
+        temp1:list[float] = [] # outlet temperature as ET
+        temp2:list[float] = [] # bean temperature
+        extra1:list[float] = [] # inlet temperature
+        extra2:list[float] = [] # burner percentage
+        timeindex:list[int] = [-1,0,0,0,0,0,0,0] #CHARGE index init set to -1 as 0 could be an actual index used
         i = 0
         for row in data:
             if row == []:
                 continue
             i = i + 1
-            items = list(zip(header, row))
-            item = {}
+            items:list[tuple[str,str]] = list(zip(header, row, strict=True)) # ty:ignore
+            item:dict[str,str] = {}
             for (name, value) in items:
                 item[name] = value.strip()
             # take i as time in seconds
@@ -95,7 +94,7 @@ def extractProfilePetronciniCSV(file:str, aw:'ApplicationWindow') -> 'ProfileDat
                 try:
                     date:QDate = QDate(int(item['Year']),int(item['Month']),int(item['Day']))
                     time = QTime(int(item['Hour']),int(item['Minute']),int(item['Second']))
-                    roast_date = QDateTime(date,time)
+                    roast_date = QDateTime(date, time)
                 except Exception:  # pylint: disable=broad-except
                     pass
             #
@@ -141,8 +140,7 @@ def extractProfilePetronciniCSV(file:str, aw:'ApplicationWindow') -> 'ProfileDat
                             power_last = power
                             power = v
                             power_event = True
-                            v = v/10. + 1
-                            specialeventsvalue.append(v)
+                            specialeventsvalue.append(eventsExternal2InternalValue(int(round(v))))
                             specialevents.append(i)
                             specialeventstype.append(3)
                             specialeventsStrings.append(f'{power:.0f}%')
@@ -152,12 +150,8 @@ def extractProfilePetronciniCSV(file:str, aw:'ApplicationWindow') -> 'ProfileDat
                     _log.exception(e)
 
     res['timex'] = timex
-    if aw.qmc.dropDuplicates:
-        res['temp1'] = replace_duplicates(temp1)
-        res['temp2'] = replace_duplicates(temp2)
-    else:
-        res['temp1'] = temp1
-        res['temp2'] = temp2
+    res['temp1'] = replace_duplicates(temp1)
+    res['temp2'] = replace_duplicates(temp2)
     res['timeindex'] = timeindex
 
     res['extradevices'] = [33]
@@ -168,10 +162,7 @@ def extractProfilePetronciniCSV(file:str, aw:'ApplicationWindow') -> 'ProfileDat
     res['extramathexpression1'] = ['']
 
     res['extraname2'] = ['IT']
-    if aw.qmc.dropDuplicates:
-        res['extratemp2'] = [replace_duplicates(extra1)]
-    else:
-        res['extratemp2'] = [extra1]
+    res['extratemp2'] = [replace_duplicates(extra1)]
     res['extramathexpression2'] = ['']
 
 
@@ -196,10 +187,6 @@ def extractProfilePetronciniCSV(file:str, aw:'ApplicationWindow') -> 'ProfileDat
         res['specialeventsStrings'] = specialeventsStrings
         if power_event:
             # first set etypes to defaults
-            res['etypes'] = [QApplication.translate('ComboBox', 'Air'),
-                             QApplication.translate('ComboBox', 'Drum'),
-                             QApplication.translate('ComboBox', 'Damper'),
-                             QApplication.translate('ComboBox', 'Burner'),
-                             '--']
-    res['title'] = Path(file).stem
+            res['etypes'] = etypesdefault
+    res['title'] = encodeLocalStrict(Path(file).stem)
     return res

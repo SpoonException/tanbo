@@ -6,26 +6,23 @@ from pathlib import Path
 import time as libtime
 import csv
 import logging
-from typing import Final, List, Optional, TYPE_CHECKING
+from collections.abc import Callable
+from typing import Final
 
-if TYPE_CHECKING:
-    from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from artisanlib.atypes import ProfileData # pylint: disable=unused-import
+from PyQt6.QtCore import QDateTime, Qt
 
-try:
-    from PyQt6.QtWidgets import QApplication # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtCore import QDateTime, Qt # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtWidgets import QApplication # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtCore import QDateTime, Qt # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-
-from artisanlib.util import replace_duplicates, fromFtoCstrict, RoRfromFtoCstrict, encodeLocal
+from artisanlib.util import replace_duplicates, fromFtoCstrict, RoRfromFtoCstrict, encodeLocal, encodeLocalStrict
+from artisanlib.atypes import ProfileData
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
-# returns a dict containing all profile information contained in the given IKAWA CSV file
-def extractProfileLoringCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
-    res:ProfileData = {} # the interpreted data set
+# returns a dict containing all profile information contained in the given Loring CSV file
+def extractProfileLoringCSV(file:str,
+        etypesdefault:list[str],
+        _alt_etypesdefault:list[str],
+        _artisanflavordefaultlabels:list[str],
+        eventsExternal2InternalValue:Callable[[int],float]) -> ProfileData:
+    res:ProfileData = ProfileData() # the interpreted data set
 
     with open(file, newline='',encoding='utf-8') as csvFile:
         data = csv.reader(csvFile,delimiter=',')
@@ -37,23 +34,23 @@ def extractProfileLoringCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
 
         power = None # holds last processed heater event value
         power_last = None # holds the heater event value before the last one
-        specialevents:List[int] = []
-        specialeventstype:List[int] = []
-        specialeventsvalue:List[float] = []
-        specialeventsStrings:List[str] = []
-        timex:List[float] = []
-        temp1:List[float] = []
-        temp2:List[float] = []
-        extra1:List[float] = [] # burner
-        extra2:List[float] = [] # inlet
-        extra3:List[float] = [] # stack
-        extra4:List[float] = [] # ror
-        timeindex:List[int] = [-1,0,0,0,0,0,0,0] #CHARGE index init set to -1 as 0 could be an actual index used
+        specialevents:list[int] = []
+        specialeventstype:list[int] = []
+        specialeventsvalue:list[float] = []
+        specialeventsStrings:list[str] = []
+        timex:list[float] = []
+        temp1:list[float] = []
+        temp2:list[float] = []
+        extra1:list[float] = [] # burner
+        extra2:list[float] = [] # inlet
+        extra3:list[float] = [] # stack
+        extra4:list[float] = [] # ror
+        timeindex:list[int] = [-1,0,0,0,0,0,0,0] #CHARGE index init set to -1 as 0 could be an actual index used
 
         power_event:bool = False
 
-        start_datetime:Optional[QDateTime] = None
-        last_sampling:Optional[float] = None
+        start_datetime:QDateTime|None = None
+        last_sampling:float|None = None
         sampling_interval:float = 6
         roasting:int = 0
 
@@ -61,8 +58,8 @@ def extractProfileLoringCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
 
         i = 0
         for row in data:
-            items = list(zip(header, row))
-            item = {}
+            items = list(zip(header, row, strict=True)) # ty:ignore
+            item:dict[str,str] = {}
             for (name, value) in items:
                 item[name] = value.strip()
 
@@ -76,13 +73,13 @@ def extractProfileLoringCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
                     if start_datetime is None:
                         start_datetime = datetime
                         time:float = 0
-                        roastdate:Optional[str] = encodeLocal(start_datetime.date().toString())
+                        roastdate:str|None = encodeLocal(start_datetime.date().toString())
                         if roastdate is not None:
                             res['roastdate'] = roastdate
-                        roastisodate:Optional[str] = encodeLocal(start_datetime.date().toString(Qt.DateFormat.ISODate))
+                        roastisodate:str|None = encodeLocal(start_datetime.date().toString(Qt.DateFormat.ISODate))
                         if roastisodate is not None:
                             res['roastisodate'] = roastisodate
-                        roasttime:Optional[str] = encodeLocal(start_datetime.time().toString())
+                        roasttime:str|None = encodeLocal(start_datetime.time().toString())
                         if roasttime is not None:
                             res['roasttime'] = roasttime
                         res['roastepoch'] = int(start_datetime.toSecsSinceEpoch())
@@ -190,8 +187,7 @@ def extractProfileLoringCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
                                     power_last = power
                                     power = v
                                     power_event = True
-                                    v = v/10. + 1
-                                    specialeventsvalue.append(v)
+                                    specialeventsvalue.append(eventsExternal2InternalValue(int(round(v))))
                                     specialevents.append(i)
                                     specialeventstype.append(3)
                                     specialeventsStrings.append(f'{X1:.1f}%')
@@ -240,29 +236,19 @@ def extractProfileLoringCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
     res['samplinginterval'] = int(round(sampling_interval))
 
     res['timex'] = timex
-    if aw.qmc.dropDuplicates:
-        res['temp1'] = replace_duplicates(temp1)
-        res['temp2'] = replace_duplicates(temp2)
-    else:
-        res['temp1'] = temp1
-        res['temp2'] = temp2
+    res['temp1'] = replace_duplicates(temp1)
+    res['temp2'] = replace_duplicates(temp2)
     res['timeindex'] = timeindex
 
     res['extradevices'] = [33, 55]
     res['extratimex'] = [timex[:],timex[:]]
 
     res['extraname1'] = ['{3}','Stack']
-    if aw.qmc.dropDuplicates:
-        res['extratemp1'] = [replace_duplicates(extra1), replace_duplicates(extra3)]
-    else:
-        res['extratemp1'] = [extra1, extra3]
+    res['extratemp1'] = [replace_duplicates(extra1), replace_duplicates(extra3)]
     res['extramathexpression1'] = ['','']
 
     res['extraname2'] = ['Inlet','RoR']
-    if aw.qmc.dropDuplicates:
-        res['extratemp2'] = [replace_duplicates(extra2), replace_duplicates(extra4)]
-    else:
-        res['extratemp2'] = [extra2, extra4]
+    res['extratemp2'] = [replace_duplicates(extra2), replace_duplicates(extra4)]
     res['extramathexpression2'] = ['','']
 
     if len(specialevents) > 0:
@@ -272,12 +258,7 @@ def extractProfileLoringCSV(file:str, aw:'ApplicationWindow') -> 'ProfileData':
         res['specialeventsStrings'] = specialeventsStrings
         if power_event:
             # first set etypes to defaults
-            res['etypes'] = [QApplication.translate('ComboBox', 'Air'),
-                             QApplication.translate('ComboBox', 'Drum'),
-                             QApplication.translate('ComboBox', 'Damper'),
-                             QApplication.translate('ComboBox', 'Burner'),
-                             '--']
+            res['etypes'] = etypesdefault
 
-
-    res['title'] = Path(file).stem
+    res['title'] = encodeLocalStrict(Path(file).stem)
     return res

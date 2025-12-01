@@ -3,39 +3,36 @@
 # Cropster XLS Roast Profile importer for Artisan
 
 import time as libtime
-import xlrd # type: ignore
+import xlrd
 import logging
-from typing import Final, Union, List, Set, Sequence, Dict, Optional, TYPE_CHECKING
+from collections.abc import Callable
+from typing import Final
 
-if TYPE_CHECKING:
-    from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from artisanlib.atypes import ProfileData # pylint: disable=unused-import
+from PyQt6.QtCore import QDateTime, Qt
 
-try:
-    from PyQt6.QtCore import QDateTime, Qt # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtWidgets import QApplication # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import QDateTime, Qt # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtWidgets import QApplication # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-
-from artisanlib.util import encodeLocal
+from artisanlib.util import encodeLocal, encodeLocalStrict
+from artisanlib.atypes import ProfileData
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
 # returns a dict containing all profile information contained in the given Cropster XLS file
-def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData':
+def extractProfileCropsterXLS(file:str,
+        etypesdefault:list[str],
+        _alt_etypesdefault:list[str],
+        artisanflavordefaultlabels:list[str],
+        eventsExternal2InternalValue:Callable[[int],float]) -> ProfileData:
 
-    def takeClosest(num:float, collection:List[float]) -> float:
+    def takeClosest(num:float, collection:list[float]) -> float:
         return min(collection, key=lambda x:abs(x-num))
 
-    res:ProfileData = {} # the interpreted data set
+    res:ProfileData = ProfileData() # the interpreted data set
 
     book = xlrd.open_workbook(file)
 
-    sheet_names:List[str] = book.sheet_names()
+    sheet_names:list[str] = book.sheet_names()
 
-    id_tag_trans:List[str] = [
+    id_tag_trans:list[str] = [
         'Id-Tag',  # EN
         'ID-Tag',  # DE
         'Etiqueta de identificaci\u00f3n', # ES
@@ -48,7 +45,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         'ID\uff0d\u6807\u7b7e', # CN simplified
         '\u7de8\u865f\u0020\u002d\u0020\u6a19\u7c64'] # CN traditional
 
-    date_trans:List[str] = [
+    date_trans:list[str] = [
         'Date',  # EN
         'Datum', # DE
         'Fecha', # ES
@@ -61,7 +58,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u65e5\u671f', # CN traditional
     ]
 
-    sensory_score_tag_trans = [ # 16
+    sensory_score_tag_trans:list[str] = [ # 16
         'Sensorial score',  # EN
         'Sensorisches Ergebnis', # DE
         'Resultados del análisis sensorial', # ES
@@ -76,7 +73,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
     ]
 
     # list of Artisan tags for integers associated to tuple of (fixed) column nr (or Null) and list of tag translations
-    int_tag_labels_trans = [
+    float_tag_labels_trans:list[tuple[str,int,list[str]]] = [
         ('whole_color', 26, [
             'Roast value',              # EN
             'Röstwert',                 # DE
@@ -105,7 +102,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
             ])]
 
     # list of Artisan tags for strings associated to tuple of (fixed) column nr (or Null) and list of tag translations
-    string_tag_labels_trans = [
+    string_tag_labels_trans:list[tuple[str,int|None,list[str]]] = [
         ('beans', 1, [
             'Lot name',                 # EN
             'Chargenname',              # DE
@@ -183,7 +180,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
             ])
     ]
 
-    ambient_temp_trans = [
+    ambient_temp_trans:list[str] = [
         'Ambient temp.', # EN
         'Raumtemp.',     # DE
         'Temperatura ambiente', # ES
@@ -194,7 +191,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u5ba4\u5185\u6e29\u5ea6', # CN Simplified
         '\u5ba4\u5167\u6eab\u5ea6', # CN Traditional
     ]
-    start_weight_trans = [
+    start_weight_trans:list[str] = [
         'Start weight',  # EN
         'Startgewicht',  # DE
         'Peso inicial',  # ES, PT
@@ -206,7 +203,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u5f00\u59cb\u91cd\u91cf', # CN Simplified
         '\u958b\u59cb\u91cd\u91cf', # CN Traditional
     ]
-    start_weight_unit_trans = [
+    start_weight_unit_trans:list[str] = [
         'Start weight unit',        # EN
         'Einheit Startgewicht',     # DE
         'Unidad de peso inicial',   # ES
@@ -219,7 +216,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u5f00\u59cb\u91cd\u91cf\u5355\u4f4d', # CN Simplified
         '\u958b\u59cb\u91cd\u91cf\u55ae\u4f4d', # CN Traditional
     ]
-    end_weight_trans = [
+    end_weight_trans:list[str] = [
         'End weight',  # EN
         'Endgewicht',  # DE
         'Peso final',  # ES, PT
@@ -231,7 +228,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u7ed3\u675f\u91cd\u91cf', # CN Simplified
         '\u7d50\u675f\u91cd\u91cf', # CN Traditional
     ]
-    end_weight_unit_trans = [
+    end_weight_unit_trans:list[str] = [
         'End weight unit',        # EN
         'Einheit Endgewicht',     # DE
         'Unidad de peso final',   # ES
@@ -245,7 +242,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u7d50\u675f\u91cd\u91cf\u55ae\u4f4d', # CN Traditional
     ]
 
-    turning_point_trans = [
+    turning_point_trans:list[str] = [
         'Turning point', # EN
         'Wendepunkt', # DE
         'Temperatura de fondo', # ES
@@ -259,7 +256,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u56de\u6e29\u9ede', # CN Traditional
     ]
 
-    color_change_trans = [
+    color_change_trans:list[str] = [
         'Color change', # EN
         'Farb\u00e4nderung', # DE
         'Cambio de color', # ES
@@ -272,7 +269,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u989c\u8272\u53d8\u5316', # CN Simplified
         '\u984f\u8272\u8b8a\u5316', # CN Traditional
     ]
-    first_crack_trans = [
+    first_crack_trans:list[str] = [
         'First crack', # EN
         '1. Crack', # DE
         'Primer crac', # ES
@@ -284,7 +281,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\uff11\u30cf\u30bc', # JP
         '\u4e00\u7206', # CN Simplified, Traditional
     ]
-    second_crack_trans = [
+    second_crack_trans:list[str] = [
         'Second crack', # EN, FR
         '2. Crack', # DE
         'Segundo crac', # ES
@@ -295,7 +292,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\uff12\u30cf\u30bc', # JP
         '\u4e8c\u7206', # CN Simplified, Traditional
     ]
-    gas_trans = [
+    gas_trans:list[str] = [
         'Gas', # EN, DE, ES, IT
         'Gaz', # FR
         'G\u00e1s', # PT
@@ -304,7 +301,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u30ac\u30b9', # JP
         '\u706b\u529b', # CN Timplified, Traditional
     ]
-    airflow_trans = [
+    airflow_trans:list[str] = [
         'Airflow', # EN, DE
         'Flujo de aire', # ES
         "Arriv\u00e9e d'air", # FR
@@ -316,7 +313,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u98ce\u95e8', # CN Simplified
         '\u98a8\u9580', # CN Traditional
     ]
-    comment_trans = [
+    comment_trans:list[str] = [
         'Comment', # EN
         'Kommentar', # DE
         'Comentar', # ES
@@ -331,7 +328,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
     ]
 
     # standard curves
-    curve_bt_trans = [
+    curve_bt_trans:list[str] = [
         'Curve - Bean temp.', # EN
         'Curve - Bean temperature', # EN new
         'Kurve - Bohnentemp.', # DE
@@ -353,7 +350,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u8c46\u6e29', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u8c46\u6eab', # CH Traditional
     ]
-    curve_et_trans = [ # note that we map Exhaust to ET and not Env. Temp. as it is available more often; Env. Temp. is mapped to an extra device curve if available
+    curve_et_trans:list[str] = [ # note that we map Exhaust to ET and not Env. Temp. as it is available more often; Env. Temp. is mapped to an extra device curve if available
         'Curve - Exhaust temp.', # EN
         'Curve - Exhaust temperature', # EN new
         'Kurve - Ablufttemp.', # DE
@@ -375,7 +372,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
 
     # extra temperature curves (C-F conversion applicable)
 
-    curve_env_temp_trans = [
+    curve_env_temp_trans:list[str] = [
         'Curve - Env. temp.', # EN
         'Curve - Env. temperature', # EN new
         'Kurve - Umgebungstemp.', # DE
@@ -394,7 +391,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u7089\u6e29', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u7210\u6eab', # CN Traditional
     ]
-    curve_burner_temp_trans = [
+    curve_burner_temp_trans:list[str] = [
         'Curve - Burner temp.', # EN
         'Curve - Burner temperature', # EN new
         'Kurve - Brennertemp.', # DE
@@ -415,7 +412,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u71c3\u70df\u5668\u6e29\u5ea6', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u71c3\u7159\u5668\u6eab\u5ea6', # CN Traditional
     ]
-    curve_other_temp_trans = [
+    curve_other_temp_trans:list[str] = [
         'Curve - Other temp.', # EN
         'Curve - Other temperature', # EN new
         'Kurve - Andere Temp.', # DE
@@ -434,7 +431,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u5176\u5b83\u6e29\u5ea6', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u5176\u5b83\u6eab\u5ea6', # CN Traditional
     ]
-    curve_stack_temp_trans = [
+    curve_stack_temp_trans:list[str] = [
         'Curve - Stack temp.', # EN
         'Curve - Stack temperatur', # EN new
         'Kurve - Schornsteintemp.', # DE
@@ -453,7 +450,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u70df\u56f1\u6e29\u5ea6', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u7159\u56ea\u6eab\u5ea6', # CN Traditional
     ]
-    curve_return_temp_trans = [
+    curve_return_temp_trans:list[str] = [
         'Curve - Return temp.', # EN
         'Curve - Return temperature', # EN new
         'Kurve - R\u00fccklauftemp.', # DE
@@ -471,7 +468,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u7a7a\u6c14\u56de\u7089\u6e29\u5ea6', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u7a7a\u6c23\u56de\u7210\u6eab\u5ea6', # CN Traditional
     ]
-    curve_inlet_temp_trans = [
+    curve_inlet_temp_trans:list[str] = [
         'Curve - Inlet temp.', # EN
         'Curve - Inlet temperature', # EN new
         'Kurve - Einlasstemp.', # DE
@@ -492,7 +489,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7dda\u0020\u002d\u0020\u9032\u98a8\u6eab', # CN Traditional
         '\u66f2\u7dda\u0020\u002d\u0020\u9032\u98a8\u6eab\u5ea6', # CN Traditional new
     ]
-    curve_afterburner_temp_trans = [
+    curve_afterburner_temp_trans:list[str] = [
         'Curve - Afterburner temp.', # EN
         'Curve - Afterburner temperature', # EN new
         'Kurve - Nachbrennertemp.', # DE
@@ -512,7 +509,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u540e\u7f6e\u71c3\u70df\u5668\u6e29\u5ea6', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u5f8c\u7f6e\u71c3\u7159\u5668\u6eab\u5ea6', # CN Traditional
     ]
-    curve_drum_temp_trans = [
+    curve_drum_temp_trans:list[str] = [
         'Curve - Drum temp.', # EN
         'Curve - Drum temperature', # EN new
         'Kurve - Trommeltemp.', # DE
@@ -536,7 +533,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
     # extra non-temperature curves (no temperature conversion)
 
 
-    curve_gas_control_trans = [
+    curve_gas_control_trans:list[str] = [
         'Curve - Gas control', # EN
         'Kurve - Gas-Kontrolle', # DE
         'Curva - Control del gas', # ES
@@ -550,7 +547,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u706b\u529b\u63a7\u5236', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u706b\u529b\u63a7\u5236', # CN Traditional
     ]
-    curve_drum_speed_trans = [
+    curve_drum_speed_trans:list[str] = [
         'Curve - Drum speed', # EN
         'Kurve - Trommelgeschw.', # DE
         'Curva - Velocidad del tambor', # ES
@@ -564,7 +561,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u8f6c\u901f', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u8f49\u901f', # CN Traditional
     ]
-    curve_airflow_trans = [
+    curve_airflow_trans:list[str] = [
         'Curve - Airflow', # EN
         'Kurve - Airflow', # DE
         'Curva - Flujo de aire', # ES
@@ -580,7 +577,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u98ce\u95e8', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u98a8\u9580', # CN Traditional
     ]
-    curve_gas_trans = [
+    curve_gas_trans:list[str] = [
         'Curve - Gas', # EN
         'Kurve - Gas', # DE
         'Curva - Gas', # ES
@@ -594,7 +591,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u706b\u529b', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u706b\u529b', # CN Traditional
     ]
-#    curve_gas_comments_trans = [
+#    curve_gas_comments_trans:list[str] = [
 #        "Curve - Gas comments", # EN
 #        "Kurve - Kommentare Gas", # DE
 #        "Curva - Comentarios sobre el gas", # ES
@@ -607,7 +604,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
 #        "\u66f2\u7ebf\u0020\u002d\u0020\u706b\u529b\u5907\u6ce8", # CN Simplified
 #        "\u66f2\u7dda\u0020\u002d\u0020\u706b\u529b\u5099\u8a3b", # CN Traditional
 #    ]
-    curve_drum_pressure_trans = [
+    curve_drum_pressure_trans:list[str] = [
         'Curve - Drum pressure', # EN
         'Kurve - Trommeldruck', # DE
         'Curva - Presi\u00f3n del tambor', # ES
@@ -621,7 +618,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7ebf\u0020\u002d\u0020\u7089\u538b', # CN Simplified
         '\u66f2\u7dda\u0020\u002d\u0020\u7210\u58d3', # CN Traditional
     ]
-    curve_airflow_control_trans = [
+    curve_airflow_control_trans:list[str] = [
         'Curve - Airflow control', # EN
         'Kurve - Airflow-Steuerung', # DE
         'Curva - Regulaci\u00f3n del caudal de aire', # ES
@@ -639,7 +636,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7dda\u0020\u002d\u0020\u0041\u0069\u0072\u0066\u006c\u006f\u0077\u0020\u0063\u006f\u006e\u0074\u0072\u006f\u006c', # SN Traditional
         '\u66f2\u7dda\u0020\u002d\u0020\u98a8\u9580\u63a7\u5236', # SN Traditional
     ]
-    curve_fan_speed_trans = [
+    curve_fan_speed_trans:list[str] = [
         'Curve - fanSpeed', # EN
         'Kurve - fanSpeed', # DE
         'Curva - Velocidad del ventilador', # ES
@@ -655,7 +652,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
     ]
 
     # Drum speed control
-    curve_drum_speed_control_trans = [
+    curve_drum_speed_control_trans:list[str] = [
         'Curve - drumSpeedControl', # EN
         'Kurve - drumSpeedControl', # DE
         'Curva  drumSpeedControl', # ES
@@ -670,7 +667,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
     ]
 
     # Set temperature
-    curve_set_temperature_control_trans = [
+    curve_set_temperature_control_trans:list[str] = [
         'Curve - setTemperatureControl', # EN
         'Kurve - setTemperatureControl', # DE
         'Curva  setTemperatureControl', # ES
@@ -684,7 +681,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7dda - setTemperatureControl', # CN Traditional
     ]
 
-    curve_custom_trans = [
+    curve_custom_trans:list[str] = [
         'Curve - custom', # EN
         'Kurve - custom', # DE
         'Curva  custom', # ES
@@ -698,29 +695,29 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7dda - custom', # CN Traditional
     ]
 
-    # just guessing
-    curve_custom_control_trans = [
-        'Curve - custom control', # EN
-        'Curve - customControl', # EN2
-        'Kurve - custom-Steuerung', # DE
-        'Kurve - custom Steuerung', # DE2
-        'Kurve - customControl', # DE3
-        'Curva  customControl', # ES
-        'Courbe customControl', # FR
-        'Curva - customControl', # IT
-        'Curva - customControl', # PT
-        '\u041a\u0440\u0438\u0432\u0430\u044f - customControl', # RU
-        '\ucee4\ube0c - customContrl', # KO
-        '\u30ab\u30fc\u30d6 - customControl', # JP
-        '\u66f2\u7ebf - customControl', # CN Simplified
-        '\u66f2\u7dda - customControl', # CN Traditional
-    ]
+#    # just guessing
+#    curve_custom_control_trans:list[str] = [
+#        'Curve - custom control', # EN
+#        'Curve - customControl', # EN2
+#        'Kurve - custom-Steuerung', # DE
+#        'Kurve - custom Steuerung', # DE2
+#        'Kurve - customControl', # DE3
+#        'Curva  customControl', # ES
+#        'Courbe customControl', # FR
+#        'Curva - customControl', # IT
+#        'Curva - customControl', # PT
+#        '\u041a\u0440\u0438\u0432\u0430\u044f - customControl', # RU
+#        '\ucee4\ube0c - customContrl', # KO
+#        '\u30ab\u30fc\u30d6 - customControl', # JP
+#        '\u66f2\u7ebf - customControl', # CN Simplified
+#        '\u66f2\u7dda - customControl', # CN Traditional
+#    ]
 
 
 
 ####
 
-    extra_temp_curve_trans = \
+    extra_temp_curve_trans:list[str] = \
         curve_env_temp_trans + \
         curve_burner_temp_trans + \
         curve_other_temp_trans + \
@@ -731,7 +728,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         curve_drum_temp_trans + \
         curve_set_temperature_control_trans
 
-    extra_nontemp_curve_trans = \
+    extra_nontemp_curve_trans:list[str] = \
         curve_gas_control_trans + \
         curve_drum_speed_trans + \
         curve_airflow_trans + \
@@ -744,7 +741,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         #curve_gas_comments_trans
 
 
-    curve_prefixa = [
+    curve_prefixa:list[str] = [
         # Curve + Temp
         'Curva - Temp.', # ES (potentially wrong)
         'Courbe Temp.', # FR
@@ -763,7 +760,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         '\u66f2\u7dda -', # CN Traditional
     ]
 
-    curve_postfixa = [
+    curve_postfixa:list[str] = [
         'temp.', # EN
         'temperature', # EN new
         'temp.', # DE
@@ -778,21 +775,21 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
     general_sh = book.sheet_by_index(0)
     if general_sh.nrows >= 1:
         row1 = general_sh.row(1)
-        general_data = dict(zip([x.value for x in general_sh.row(0)],row1))
+        general_data = dict(zip([x.value for x in general_sh.row(0)], row1, strict=True)) # ty:ignore
 
         res['samplinginterval'] = 1.0
 
         try:
-            id_tag_value = None
+            id_tag_value:str|None = None
             # try to find the "Id-Tag" value
             # 1. test the column name in all known translations
             for tag in id_tag_trans:
                 if tag in general_data:
-                    id_tag_value = general_data[tag].value
+                    id_tag_value = str(general_data[tag].value)
                     break
             # 2. take the first value of row1
             if id_tag_value is None and len(row1)>0:
-                id_tag_value = row1[0].value
+                id_tag_value = str(row1[0].value)
             if id_tag_value is not None:
                 batch_prefix = id_tag_value.rstrip('0123456789')
                 batch_number = int(id_tag_value[len(batch_prefix):])
@@ -801,7 +798,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
         except Exception: # pylint: disable=broad-except
             pass
 
-        for (itag,ipos,itrans) in int_tag_labels_trans:
+        for (itag,ipos,itrans) in float_tag_labels_trans:
             value = None
             try:
                 # 1. test the column name in all known translations
@@ -810,10 +807,10 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
                         value = general_data[tr].value
                         break
                 # 2. take the ipos column value of row1
-                if value is None and ipos is not None and len(row1)>ipos:
+                if value is None and len(row1)>ipos:
                     value = row1[ipos].value
                 if value is not None:
-                    res[itag] = int(round(float(value))) # type: ignore # mypy cannot check generic labels accessing the res of type TypedDict
+                    res[itag] = float(value) # type: ignore[literal-required] # mypy cannot check generic labels accessing the res of type TypedDict
             except Exception: # pylint: disable=broad-except
                 pass
 
@@ -829,12 +826,12 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
                 if value is None and pos is not None and len(row1)>pos:
                     value = row1[pos].value
                 if value is not None:
-                    res[tag] = encodeLocal(value) # type: ignore # mypy cannot check generic labels accessing the res of type TypedDict
+                    res[tag] = encodeLocalStrict(value) # type: ignore[literal-required] # mypy cannot check generic labels accessing the res of type TypedDict
             except Exception: # pylint: disable=broad-except
                 pass
 
         try:
-            date_tag_value:Optional[float] = None
+            date_tag_value:float|None = None
             # try to find the "Date" value
             # 1. test the column name in all known translations
             for tag in date_trans:
@@ -844,21 +841,20 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
             # 2. take the first value of row1
             if date_tag_value is None:
                 date_tag_value = float(row1[7].value)
-            if date_tag_value is not None:
-                date_tuple = xlrd.xldate_as_tuple(date_tag_value, book.datemode)
-                date = QDateTime(*date_tuple)
-                if date.isValid():
-                    roastdate:Optional[str] = encodeLocal(date.date().toString())
-                    if roastdate is not None:
-                        res['roastdate'] = roastdate
-                    roastisodate:Optional[str] = encodeLocal(date.date().toString(Qt.DateFormat.ISODate))
-                    if roastisodate is not None:
-                        res['roastisodate'] = roastisodate
-                    roasttime:Optional[str] = encodeLocal(date.time().toString())
-                    if roasttime is not None:
-                        res['roasttime'] = roasttime
-                    res['roastepoch'] = int(date.toSecsSinceEpoch())
-                    res['roasttzoffset'] = libtime.timezone
+            date_tuple = xlrd.xldate_as_tuple(date_tag_value, book.datemode)
+            date = QDateTime(*date_tuple)
+            if date.isValid():
+                roastdate:str|None = encodeLocal(date.date().toString())
+                if roastdate is not None:
+                    res['roastdate'] = roastdate
+                roastisodate:str|None = encodeLocal(date.date().toString(Qt.DateFormat.ISODate))
+                if roastisodate is not None:
+                    res['roastisodate'] = roastisodate
+                roasttime:str|None = encodeLocal(date.time().toString())
+                if roasttime is not None:
+                    res['roasttime'] = roasttime
+                res['roastepoch'] = int(date.toSecsSinceEpoch())
+                res['roasttzoffset'] = libtime.timezone
         except Exception: # pylint: disable=broad-except
             pass
 
@@ -901,23 +897,23 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
                 else:
                     correction = 0
                     valid_score = score
-                res['flavorlabels'] = aw.qmc.flavorlabels
+                res['flavorlabels'] = artisanflavordefaultlabels
                 res['flavors_total_correction'] = correction
-                res['flavors'] = [valid_score/10]*len(aw.qmc.flavorlabels)
+                res['flavors'] = [valid_score/10]*len(artisanflavordefaultlabels)
         except Exception: # pylint: disable=broad-except
             pass
 
         try:
-            start_weight_tag_value = None
-            start_weight_unit_tag_value = None
-            end_weight_tag_value = None
-            end_weight_unit_tag_value = None
+            start_weight_unit_tag_value:str|None = None
+            end_weight_unit_tag_value:str|None = None
+            start_weight_tag_value:float|None = None
+            end_weight_tag_value:float|None = None
 
             # try to find the "Start weight" value
             # test the column name in all known translations
             for tag in start_weight_trans:
                 if tag in general_data:
-                    start_weight_tag_value = general_data[tag].value
+                    start_weight_tag_value = float(general_data[tag].value)
                     break
 #            if start_weight_tag_value is None and len(row1)>9:
 #                start_weight_tag_value = row1[9]
@@ -925,7 +921,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
             # test the column name in all known translations
             for tag in start_weight_unit_trans:
                 if tag in general_data:
-                    start_weight_unit_tag_value = general_data[tag].value
+                    start_weight_unit_tag_value = str(general_data[tag].value)
                     break
 #            if start_weight_unit_tag_value is None and len(row1)>10:
 #                start_weight_unit_tag_value = row1[10]
@@ -933,7 +929,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
             # test the column name in all known translations
             for tag in end_weight_trans:
                 if tag in general_data:
-                    end_weight_tag_value = general_data[tag].value
+                    end_weight_tag_value = float(general_data[tag].value)
                     break
 #            if end_weight_tag_value is None and len(row1)>11:
 #                end_weight_tag_value = row1[11]
@@ -941,7 +937,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
             # test the column name in all known translations
             for tag in end_weight_unit_trans:
                 if tag in general_data:
-                    end_weight_unit_tag_value = general_data[tag].value
+                    end_weight_unit_tag_value = str(general_data[tag].value)
                     break
 #            if end_weight_unit_tag_value is None and len(row1)>12:
 #                end_weight_unit_tag_value = row1[12]
@@ -949,7 +945,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
             if start_weight_tag_value is not None and end_weight_tag_value is not None:
                 cropster_weight_units = ['G','KG','LBS','OZ']
                 artisan_weight_units = ['g','Kg','lb','oz']
-                weight:List[Union[float,str]] = [0,0,artisan_weight_units[0]]
+                weight:list[float|str] = [0,0,artisan_weight_units[0]]
                 try:
                     if end_weight_unit_tag_value is not None:
                         idx = cropster_weight_units.index(end_weight_unit_tag_value)
@@ -963,13 +959,11 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
                 except Exception: # pylint: disable=broad-except
                     pass
                 try:
-                    if start_weight_tag_value is not None:
-                        weight[0] = start_weight_tag_value
+                    weight[0] = start_weight_tag_value
                 except Exception: # pylint: disable=broad-except
                     pass
                 try:
-                    if end_weight_tag_value is not None:
-                        weight[1] = end_weight_tag_value
+                    weight[1] = end_weight_tag_value
                 except Exception: # pylint: disable=broad-except
                     pass
                 res['weight'] = weight
@@ -998,7 +992,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
                             res['mode'] = 'C'
                         res['timex'] = [float(t.value) for t in time[1:]]
                         res['temp2'] = [float(t.value) for t in temp[1:]]
-                        res['temp1'] = [-1]*len(res['timex'])
+                        res['temp1'] = [-1.0]*len(res['timex'])
                         charge_idx = 0
                         try:
                             charge_idx = res['timex'].index(0)
@@ -1028,7 +1022,7 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
                             if len(res['timex']) != len(res['temp1']):
                                 res['timex'] = [float(t.value) for t in time[1:]]
                             if 'temp2' not in res or len(res['temp2']) != len(res['timex']):
-                                res['temp2'] = [-1]*len(res['timex'])
+                                res['temp2'] = [-1.0]*len(res['timex'])
                             charge_idx = 0
                             try:
                                 charge_idx = res['timex'].index(0)
@@ -1041,62 +1035,19 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
     except Exception: # pylint: disable=broad-except
         pass
 
-    ordered_sheet_names:Sequence[Optional[str]]
+#    ordered_sheet_names:Sequence[str|None]
 
-    use_existing_extra_curve_names_and_visibility:bool = False # if True the curve names of the current setup are reused as far as possible
-
-    # we resort the channels to better fit the IMF setups
-    if aw.qmc.roastertype_setup.startswith('IMF'):
-        # re-order sheets to realiz the standard IMF config order of extra devices
-        imf_sheets = [
-            curve_burner_temp_trans, curve_set_temperature_control_trans,
-            curve_custom_control_trans, curve_custom_trans,
-            curve_drum_speed_control_trans, curve_drum_speed_trans,
-            curve_airflow_control_trans, curve_airflow_trans]
-        # IMF curves not found will be set to None generating an empty curve
-        idx = 0
-        ordered_sheet_names = []
-        assigned_idx:Set[int] = set()
-        if BT_idx is not None:
-            assigned_idx.add(BT_idx)
-        if ET_idx is not None:
-            assigned_idx.add(ET_idx)
-        for imf_sheet in imf_sheets:
-            # find a sn in sheet_names that matches
-            found:bool = False
-            for i, sn in enumerate(sheet_names):
-                if i not in assigned_idx and sn.strip() in imf_sheet:
-                    assigned_idx.add(i)
-                    ordered_sheet_names.append(sn)
-                    found = True
-                    break
-            if not found:
-                ordered_sheet_names.append(None)
-        # add remaining sheet names
-        for i, sn in enumerate(sheet_names):
-            if i not in assigned_idx:
-                assigned_idx.add(i)
-                ordered_sheet_names.append(sn)
-        use_existing_extra_curve_names_and_visibility = True
-    else:
-        ordered_sheet_names = sheet_names
+    ordered_sheet_names:list[str] = sheet_names
 
     # sheet names to indexes in the original table order (note the ordered_sheet_names now are in a different order!)
-    sheet_idx:Dict[str,int] = {n:i for i,n in enumerate(sheet_names)}
-
-
-    # set extra lcd/curve visibility from current setup as default
-    res['extraLCDvisibility1'] = aw.extraLCDvisibility1
-    res['extraLCDvisibility2'] = aw.extraLCDvisibility2
-    res['extraCurveVisibility1'] = aw.extraCurveVisibility1
-    res['extraCurveVisibility2'] = aw.extraCurveVisibility2
+    sheet_idx:dict[str,int] = {n:i for i,n in enumerate(sheet_names)}
 
     # extra temperature curves (only if ET or BT and its corresponding timex was already parsed successfully)
     if len(res['timex']) > 0:
         channel = 1 # toggle between channel 1 and 2 to be filled with extra temperature curve data
-        for sno in ordered_sheet_names[:(2 * aw.nLCDS)]:  # Artisan supports a maximum of aw.nLCDS=10 extra devices for now (= 2x aw.nLCDS extra curves)
-            snn:Optional[str] = (None if sno is None else sno.strip())
-            if snn is None or snn in extra_temp_curve_trans:
+        for sno in ordered_sheet_names:
+            snn:str = sno.strip()
+            if snn in extra_temp_curve_trans:
                 temp_curve = True
             elif snn in extra_nontemp_curve_trans:
                 temp_curve = False
@@ -1124,116 +1075,67 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
                 if 'extraNoneTempHint2' not in res:
                     res['extraNoneTempHint2'] = []
 
-                # add empty curve for snn == None
-                if snn is None:
-                    if channel == 1:
-                        channel = 2
-                        # we add an empty first extra channel if needed
-                        res['extradevices'].append(25) # Virtual Device
-                        if use_existing_extra_curve_names_and_visibility and len(aw.qmc.extraname1)>len(res['extraname1']):
-                            res['extraname1'].append(aw.qmc.extraname1[len(res['extraname1'])])
-                        else:
-                            # we turn all empt extra LCDs/curves OFF by default
-                            if len(res['extraLCDvisibility1'])>len(res['extraname1']):
-                                res['extraLCDvisibility1'][len(res['extraname1'])] = False
-                                res['extraCurveVisibility1'][len(res['extraname1'])] = False
-                            res['extraname1'].append('Extra 1')
-                        res['extratemp1'].append([-1]*len(res['timex']))
-                        res['extraNoneTempHint1'].append(True)
-                        res['extramathexpression1'].append('')
-                    else:
-                        channel = 1
-                        # we add an empty second extra channel if needed
-                        if use_existing_extra_curve_names_and_visibility and len(aw.qmc.extraname2)>len(res['extraname2']):
-                            res['extraname2'].append(aw.qmc.extraname2[len(res['extraname2'])])
-                        else:
-                            # we turn all empt extra LCDs/curves OFF by default
-                            if len(res['extraLCDvisibility2'])>len(res['extraname2']):
-                                res['extraLCDvisibility2'][len(res['extraname2'])] = False
-                                res['extraCurveVisibility2'][len(res['extraname2'])] = False
-                            res['extraname2'].append('Extra 2')
-                        res['extratemp2'].append([-1]*len(res['timex']))
-                        res['extraNoneTempHint2'].append(True)
-                        res['extramathexpression2'].append('')
-                else:
+                CT_idx = sheet_idx[snn]
+                CT_sh = book.sheet_by_index(CT_idx)
+                if CT_sh.ncols >= 1:
+                    time = CT_sh.col(0)
+                    temp = CT_sh.col(1)
+                    if len(time) > 0 and len(temp) > 0 and len(time) == len(temp):
+                        extra_curve_name = snn
+                        # we split of the "Curve -" prefix
+                        for px in curve_prefixa:
+                            if extra_curve_name.startswith(px):
+                                sp = extra_curve_name.split(px)
+                                extra_curve_name = sp[1] if len(sp) > 1 else sp[0]
+                                extra_curve_name = extra_curve_name.strip()
+                                break
 
-                    CT_idx = sheet_idx[snn]
-                    CT_sh = book.sheet_by_index(CT_idx)
-                    if CT_sh.ncols >= 1:
-                        time = CT_sh.col(0)
-                        temp = CT_sh.col(1)
-                        if len(time) > 0 and len(temp) > 0 and len(time) == len(temp):
-                            extra_curve_name = snn
-                            # we split of the "Curve -" prefix
-                            for px in curve_prefixa:
-                                if extra_curve_name.startswith(px):
-                                    sp = extra_curve_name.split(px)
-                                    extra_curve_name = sp[1] if len(sp) > 1 else sp[0]
-                                    extra_curve_name = extra_curve_name.strip()
-                                    break
+                        # we split of also the "temp." postfix
+                        for px in curve_postfixa:
+                            if extra_curve_name.endswith(px):
+                                extra_curve_name = extra_curve_name.split(px)[0].strip()
+                                break
+                        if channel == 1:
+                            channel = 2
+                            if temp_curve:
+                                # apply temp conversion
+                                res['extraNoneTempHint1'].append(False)
+                            else:
+                                # no temp conversion
+                                res['extraNoneTempHint1'].append(True)
+                            res['extradevices'].append(25) # Virtual Device
 
-                            # we split of also the "temp." postfix
-                            for px in curve_postfixa:
-                                if extra_curve_name.endswith(px):
-                                    extra_curve_name = extra_curve_name.split(px)[0].strip()
-                                    break
-                            if channel == 1:
-                                channel = 2
-                                if temp_curve:
-                                    # apply temp conversion
-                                    res['extraNoneTempHint1'].append(False)
-                                else:
-                                    # no temp conversion
-                                    res['extraNoneTempHint1'].append(True)
-                                res['extradevices'].append(25) # Virtual Device
-                                if use_existing_extra_curve_names_and_visibility and len(aw.qmc.extraname1)>len(res['extraname1']):
-                                    res['extraname1'].append(aw.qmc.extraname1[len(res['extraname1'])])
-                                else:
-                                    # we turn all extra LCDs/curves ON by default
-                                    if len(res['extraLCDvisibility1'])>len(res['extraname1']):
-                                        res['extraLCDvisibility1'][len(res['extraname1'])] = True
-                                        res['extraCurveVisibility1'][len(res['extraname1'])] = True
-                                    name1:Optional[str] = encodeLocal(extra_curve_name)
-                                    if name1 is None:
-                                        name1 = 'extra1'
-                                    res['extraname1'].append(name1)
-                                res['extratimex'].append([float(t.value) for t in time[1:]])
-                                res['extratemp1'].append([float(t.value) for t in temp[1:]])
-                                res['extramathexpression1'].append('')
-                            elif (len(time) -1) == len(res['extratimex'][-1]): # only if time lengths is same as of channel 1
-                                channel = 1
-                                if temp_curve:
-                                    # apply temp conversion
-                                    res['extraNoneTempHint2'].append(False)
-                                else:
-                                    # no temp conversion
-                                    res['extraNoneTempHint2'].append(True)
-                                if use_existing_extra_curve_names_and_visibility and len(aw.qmc.extraname2)>len(res['extraname2']):
-                                    res['extraname2'].append(aw.qmc.extraname2[len(res['extraname2'])])
-                                else:
-                                    # we turn all extra LCDs/curves ON by default
-                                    if len(res['extraLCDvisibility2'])>len(res['extraname2']):
-                                        res['extraLCDvisibility2'][len(res['extraname2'])] = True
-                                        res['extraCurveVisibility2'][len(res['extraname2'])] = True
-                                    name2:Optional[str] = encodeLocal(extra_curve_name)
-                                    if name2 is None:
-                                        name2 = 'extra2'
-                                    res['extraname2'].append(name2)
-                                res['extratemp2'].append([float(t.value) for t in temp[1:]])
-                                res['extramathexpression2'].append('')
+                            name1:str = 'extra1'
+                            name1 = encodeLocalStrict(extra_curve_name)
+                            res['extraname1'].append(name1)
+
+                            res['extratimex'].append([float(t.value) for t in time[1:]])
+                            res['extratemp1'].append([float(t.value) for t in temp[1:]])
+                            res['extramathexpression1'].append('')
+                        elif (len(time) -1) == len(res['extratimex'][-1]): # only if time lengths is same as of channel 1
+                            channel = 1
+                            if temp_curve:
+                                # apply temp conversion
+                                res['extraNoneTempHint2'].append(False)
+                            else:
+                                # no temp conversion
+                                res['extraNoneTempHint2'].append(True)
+
+                            name2:str = 'extra2'
+                            name2 = encodeLocalStrict(extra_curve_name)
+                            res['extraname2'].append(name2)
+
+                            res['extratemp2'].append([float(t.value) for t in temp[1:]])
+                            res['extramathexpression2'].append('')
             except Exception: # pylint: disable=broad-except
                 pass
+
+
         if 'extratemp1' in res and 'extratemp2' in res and 'extraNoneTempHint2' in res and 'extramathexpression2' in res and 'extraname1' in res and 'extraname2' in res and len(res['extraname1']) != len(res['extraname2']):
-            # we add an empty second extra channel if needed
-            if use_existing_extra_curve_names_and_visibility and len(aw.qmc.extraname2)>len(res['extraname2']):
-                res['extraname2'].append(aw.qmc.extraname2[len(res['extraname2'])])
-            else:
-                # we turn all empty extra LCDs/curves OFF by default
-                if len(res['extraLCDvisibility2'])>len(res['extraname2']):
-                    res['extraLCDvisibility2'][len(res['extraname2'])] = False
-                    res['extraCurveVisibility2'][len(res['extraname2'])] = False
-                res['extraname2'].append('Extra 2')
-            res['extratemp2'].append([-1]*len(res['extratemp1'][-1]))
+
+            res['extraname2'].append('Extra 2')
+
+            res['extratemp2'].append([-1.0]*len(res['extratemp1'][-1]))
             res['extraNoneTempHint2'].append(True)
             res['extramathexpression2'].append('')
 
@@ -1247,19 +1149,19 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
             COMMENTS_sh = book.sheet_by_index(COMMENTS_idx)
             gas_event = False # set to True if a Gas event exists
             airflow_event = False # set to True if an Airflow event exists
-            specialevents:List[int] = []
-            specialeventstype:List[int] = []
-            specialeventsvalue:List[float] = []
-            specialeventsStrings:List[str] = []
+            specialevents:list[int] = []
+            specialeventstype:list[int] = []
+            specialeventsvalue:list[float] = []
+            specialeventsStrings:list[str] = []
             if COMMENTS_sh.ncols >= 4:
                 for r in range(COMMENTS_sh.nrows):
                     if r>0:
                         try:
-                            time = float(COMMENTS_sh.cell(r, 0).value)
-                            comment_type = COMMENTS_sh.cell(r, 2).value.strip()
+                            time_epoc = float(COMMENTS_sh.cell(r, 0).value)
+                            comment_type = str(COMMENTS_sh.cell(r, 2).value).strip()
                             if comment_type not in turning_point_trans: # TP is ignored as it is automatically assigned
                                 comment_value = COMMENTS_sh.cell(r, 3).value
-                                c = takeClosest(time,res['timex'])
+                                c = takeClosest(time_epoc,res['timex'])
                                 timex_idx = res['timex'].index(c)
                                 if comment_type in color_change_trans:
                                     res['timeindex'][1] = max(0,timex_idx) # pyright:ignore[reportTypedDictNotRequiredAccess]
@@ -1289,17 +1191,16 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
                                         specialeventstype.append(4)
                                     try:
                                         v = float(comment_value)
-                                        v = v/10. + 1
-                                        specialeventsvalue.append(v)
+                                        specialeventsvalue.append(eventsExternal2InternalValue(int(round(v))))
                                     except Exception: # pylint: disable=broad-except
                                         specialeventsvalue.append(0)
                                     if not ae and not ge and comment_type not in comment_trans:
-                                        event_type_str:Optional[str] = encodeLocal(comment_type)
+                                        event_type_str:str|None = encodeLocal(comment_type)
                                         if event_type_str is None:
                                             event_type_str = 'event'
                                         specialeventsStrings.append(event_type_str)
                                     else:
-                                        event_value_str:Optional[str] = encodeLocal(comment_value)
+                                        event_value_str:str|None = encodeLocal(comment_value)
                                         if event_value_str is None:
                                             event_value_str = 'event'
                                         specialeventsStrings.append(event_value_str)
@@ -1312,16 +1213,28 @@ def extractProfileCropsterXLS(file:str, aw:'ApplicationWindow') -> 'ProfileData'
                 res['specialeventsStrings'] = specialeventsStrings
                 if gas_event or airflow_event:
                     # first set etypes to defaults
-                    res['etypes'] = [QApplication.translate('ComboBox', 'Air'),
-                                     QApplication.translate('ComboBox', 'Drum'),
-                                     QApplication.translate('ComboBox', 'Damper'),
-                                     QApplication.translate('ComboBox', 'Burner'),
-                                     '--']
-                    # update
-                    if airflow_event:
-                        res['etypes'][0] = 'Airflow'
-                    if gas_event:
-                        res['etypes'][3] = 'Gas'
+                    res['etypes'] = etypesdefault
         except Exception as e: # pylint: disable=broad-except
-            _log.debug(e)
+            _log.error(e)
+
+    # extra device data can be shorter, make them all equal in length to main device
+    if 'timex' in res and 'extradevices' in res and 'samplinginterval' in res:
+        main_data_len = len(res['timex'])
+        sampling_interval = int(round(res['samplinginterval']))
+        for i,_ in enumerate(res['extradevices']):
+            if 'extratimex' in res and len(res['extratimex'])>i:
+                missing_timex = [float(tx) for tx in range(int(round(res['extratimex'][i][-1]))+sampling_interval,
+                        int(round(res['extratimex'][i][-1])) + (main_data_len - len(res['extratimex'][i]))+sampling_interval,
+                        sampling_interval)]
+                res['extratimex'][i].extend(missing_timex)
+                res['extratimex'][i] = res['extratimex'][i][:main_data_len] # ensure that the list is not too long
+            if 'extratemp1' in res and len(res['extratemp1'])>i:
+                missing_temp1 = [-1]*(main_data_len - len(res['extratemp1'][i]))
+                res['extratemp1'][i].extend(missing_temp1)
+                res['extratemp1'][i] = res['extratemp1'][i][:main_data_len] # ensure that the list is not too long
+            if 'extratemp2' in res and len(res['extratemp2'])>i:
+                missing_temp2 = [-1]*(main_data_len - len(res['extratemp2'][i]))
+                res['extratemp2'][i].extend(missing_temp2)
+                res['extratemp2'][i] = res['extratemp2'][i][:main_data_len] # ensure that the list is not too long
+
     return res

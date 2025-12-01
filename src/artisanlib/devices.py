@@ -16,42 +16,35 @@
 # Marko Luther, 2023
 
 import sys
+import os
 import time as libtime
 import re
 import platform
 import logging
 from PIL import ImageColor
-from typing import Final, Optional, List, Tuple, cast, TYPE_CHECKING
+from typing import override, Final, cast, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
+    from artisanlib.dialogs import HelpDlg # noqa: F401 # pylint: disable=unused-import
     from PyQt6.QtWidgets import QAbstractItemView # pylint: disable=unused-import
     from artisanlib.scale import ScaleSpecs
 
 from artisanlib.util import (deltaLabelUTF8, setDeviceDebugLogLevel, argb_colorname2rgba_colorname, rgba_colorname2argb_colorname,
-    toInt, weight_units, convertWeight, render_weight)
+    toInt, weight_units, convertWeight, render_weight, getResourcePath)
 from artisanlib.dialogs import ArtisanResizeablDialog, tareDlg
-
-from artisanlib.widgets import MyContentLimitedQComboBox, MyQComboBox, MyQDoubleSpinBox, wait_cursor
+from artisanlib.widgets import MyContentLimitedQComboBox, MyQComboBox, MyQDoubleSpinBox
 from artisanlib.scale import SUPPORTED_SCALES
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
-try:
-    from PyQt6.QtCore import (Qt, pyqtSlot, QSettings, QTimer, QRegularExpression, QSignalBlocker) # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtGui import (QStandardItemModel, QStandardItem, QColor, QIntValidator, QRegularExpressionValidator, QPixmap) # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,  # @UnusedImport @Reimport  @UnresolvedImport
-                                 QPushButton, QSpinBox, QTabWidget, QComboBox, QDialogButtonBox, QGridLayout, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QGroupBox, QRadioButton, QButtonGroup, QInputDialog, QToolButton, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QTableWidget, QMessageBox, QHeaderView, QTableWidgetItem, QSizePolicy) # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import (Qt, pyqtSlot, QSettings, QTimer, QRegularExpression, QSignalBlocker) # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtGui import (QStandardItemModel, QStandardItem, QColor, QIntValidator, QRegularExpressionValidator, QPixmap) # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-                                 QPushButton, QSpinBox, QTabWidget, QComboBox, QDialogButtonBox, QGridLayout, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QGroupBox, QRadioButton, QButtonGroup, QInputDialog, QToolButton, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QTableWidget, QMessageBox, QHeaderView, QTableWidgetItem, QSizePolicy) # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import (Qt, pyqtSlot, QSettings, QTimer, QRegularExpression, QSignalBlocker)
+from PyQt6.QtGui import (QStandardItemModel, QStandardItem, QColor, QIntValidator, QRegularExpressionValidator, QPixmap, QIcon)
+from PyQt6.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+                             QPushButton, QSpinBox, QTabWidget, QComboBox, QDialogButtonBox, QGridLayout,
+                             QGroupBox, QRadioButton, QButtonGroup, QInputDialog, QToolButton,
+                             QTableWidget, QMessageBox, QHeaderView, QTableWidgetItem, QSizePolicy)
 
 
 class DeviceAssignmentDlg(ArtisanResizeablDialog):
@@ -61,7 +54,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.setWindowTitle(QApplication.translate('Form Caption','Device Assignment'))
         self.setModal(True)
 
-        self.helpdialog = None
+        self.helpdialog:HelpDlg|None = None
 
         self.org_phidgetRemoteFlag = self.aw.qmc.phidgetRemoteFlag
         self.org_yoctoRemoteFlag = self.aw.qmc.yoctoRemoteFlag
@@ -77,6 +70,10 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.org_scale2_name = self.aw.scale2_name
         self.org_scale2_id = self.aw.scale2_id
         self.org_container2_idx = self.aw.container2_idx
+
+        self.org_ambientTempSource = self.aw.qmc.ambientTempSource
+        self.org_ambientHumiditySource = self.aw.qmc.ambientHumiditySource
+        self.org_ambientPressureSource = self.aw.qmc.ambientPressureSource
 
         ################ TAB 1   WIDGETS
         #ETcurve
@@ -120,6 +117,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.controlButtonFlag = QCheckBox(QApplication.translate('Label', 'Control'))
         self.controlButtonFlag.setChecked(self.aw.qmc.Controlbuttonflag)
         self.controlButtonFlag.stateChanged.connect(self.showControlbuttonToggle)
+        self.controlButtonFlag.setToolTip(QApplication.translate('Tooltip', 'Enable PID control'))
 
         self.nonpidButton = QRadioButton(QApplication.translate('Radio Button','Meter'))
         self.pidButton = QRadioButton(QApplication.translate('Radio Button','PID'))
@@ -138,14 +136,6 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                     break
         self.sorted_devices = sorted(dev)
         self.devicetypeComboBox = MyContentLimitedQComboBox()
-
-##        self.devicetypeComboBox.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
-##        self.devicetypeComboBox.view().setTextElideMode(Qt.TextElideMode.ElideNone)
-#        # HACK: only needed for the macintosh UI on Qt 5.12 onwords; without long items get cut in the popup
-#        #  note the -7 as the width of the popup is too large if given the correct maximum characters
-##        self.devicetypeComboBox.setMinimumContentsLength(max(22,len(max(dev, key=len)) - 7)) # expects # characters, but is to wide
-# the following "hack" helped on PyQt5, but seems not to be needed on PyQt6 any longer
-#        self.devicetypeComboBox.setSizePolicy(QSizePolicy.Policy.Expanding,self.devicetypeComboBox.sizePolicy().verticalPolicy())
 
         self.devicetypeComboBox.addItems(self.sorted_devices)
         self.programedit = QLineEdit(self.aw.ser.externalprogram)
@@ -244,7 +234,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.showControlButton.setChecked(self.aw.qmc.PIDbuttonflag)
         self.showControlButton.stateChanged.connect(self.PIDfirmwareToggle)
         FILTLabel =QLabel(QApplication.translate('Label', 'Filter'))
-        self.FILTspinBoxes = []
+        self.FILTspinBoxes:list[QSpinBox] = []
         for i in range(4):
             spinBox = QSpinBox()
             spinBox.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -573,7 +563,6 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         phidget1046HBox = QHBoxLayout()
         phidget1046HBox.addStretch()
         phidget1046HBox.addLayout(phidgetBox1046)
-#        phidget1046HBox.addStretch()
         phidget1046VBox = QVBoxLayout()
         phidget1046VBox.addLayout(phidget1046HBox)
         phidget1046VBox.addStretch()
@@ -602,7 +591,6 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.formulaCombo1200.setMinimumContentsLength(5)
         width = self.formulaCombo1200.minimumSizeHint().width()
         self.formulaCombo1200.setMinimumWidth(width)
-#        self.formulaCombo1200.setMaximumWidth(width)
 
         self.wireCombo1200 = QComboBox()
         self.wireCombo1200.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -617,7 +605,6 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.wireCombo1200.setMinimumContentsLength(5)
         width = self.wireCombo1200.minimumSizeHint().width()
         self.wireCombo1200.setMinimumWidth(width)
-#        self.wireCombo1200.setMaximumWidth(width)
 
         self.asyncCheckBoxe1200 = QCheckBox()
         self.asyncCheckBoxe1200.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -637,7 +624,6 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.changeTriggerCombo1200.setMinimumContentsLength(4)
         width = self.changeTriggerCombo1200.minimumSizeHint().width()
         self.changeTriggerCombo1200.setMinimumWidth(width)
-#        self.changeTriggerCombo1200.setMaximumWidth(width)
         self.changeTriggerCombo1200.setEnabled(self.aw.qmc.phidget1200_async)
 
         self.rateCombo1200 = QComboBox()
@@ -653,7 +639,6 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.rateCombo1200.setMinimumContentsLength(3)
         width = self.rateCombo1200.minimumSizeHint().width()
         self.rateCombo1200.setMinimumWidth(width)
-#        self.rateCombo1200.setMaximumWidth(width)
 
 #---
         self.formulaCombo1200_2 = QComboBox()
@@ -683,7 +668,6 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.wireCombo1200_2.setMinimumContentsLength(4)
         width = self.wireCombo1200_2.minimumSizeHint().width()
         self.wireCombo1200_2.setMinimumWidth(width)
-#        self.wireCombo1200_2.setMaximumWidth(width)
 
         self.asyncCheckBoxe1200_2 = QCheckBox()
         self.asyncCheckBoxe1200_2.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -703,7 +687,6 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.changeTriggerCombo1200_2.setMinimumContentsLength(4)
         width = self.changeTriggerCombo1200_2.minimumSizeHint().width()
         self.changeTriggerCombo1200_2.setMinimumWidth(width)
-#        self.changeTriggerCombo1200_2.setMaximumWidth(width)
         self.changeTriggerCombo1200_2.setEnabled(self.aw.qmc.phidget1200_async)
 
         self.rateCombo1200_2 = QComboBox()
@@ -719,7 +702,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.rateCombo1200_2.setMinimumContentsLength(3)
         width = self.rateCombo1200_2.minimumSizeHint().width()
         self.rateCombo1200_2.setMinimumWidth(width)
-#        self.rateCombo1200_2.setMaximumWidth(width)
+
 #---
 
         typeLabel = QLabel(QApplication.translate('Label','Type'))
@@ -1020,6 +1003,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.yoctoBoxRemoteFlag.stateChanged.connect(self.yoctoBoxRemoteFlagStateChanged)
         yoctoServerIdLabel = QLabel(QApplication.translate('Label','VirtualHub'))
         self.yoctoServerId = QLineEdit(self.aw.qmc.yoctoServerID)
+        self.yoctoServerId.setToolTip(QApplication.translate('Tooltip','Network IP address or name of the remote VirtualHub'))
         self.yoctoServerId.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.yoctoServerId.setMinimumWidth(100)
         self.yoctoServerId.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
@@ -1040,7 +1024,6 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         yoctoNetworkGrid = QGridLayout()
         yoctoNetworkGrid.addWidget(self.yoctoBoxRemoteFlag,0,0)
         yoctoNetworkGrid.addLayout(yoctoServerBox,0,1)
-#        yoctoNetworkGrid.setContentsMargins(10,10,10,10)
         yoctoNetworkGrid.setSpacing(20)
         yoctoNetworkGroupBox = QGroupBox(QApplication.translate('GroupBox','Network'))
         yoctoNetworkGroupBox.setLayout(yoctoNetworkGrid)
@@ -1084,10 +1067,18 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         yoctoVBox.addStretch()
         yoctoVBox.setSpacing(5)
         yoctoVBox.setContentsMargins(0,0,0,0)
+
         # Ambient Widgets and Layouts
+
+        ambientSourceLabel = QLabel(QApplication.translate('Label', 'Ambient Source'))
+
+        # Ambient Temperature Source Selector
+        self.ambientTempComboBox = QComboBox()
+        self.ambientTempComboBox.currentIndexChanged.connect(self.ambientTempComboBoxIndexChanged)
         self.temperatureDeviceCombo = QComboBox()
         self.temperatureDeviceCombo.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.temperatureDeviceCombo.addItems(self.aw.qmc.temperaturedevicefunctionlist)
+        self.temperatureDeviceCombo.currentIndexChanged.connect(self.temperatureDeviceComboBoxIndexChanged)
 
         # HACK: only needed for the macOS UI on Qt 5.12 onwords; without long items get cut in the popup
         #  note the -7 as the width of the popup is too large if given the correct maximum characters
@@ -1097,20 +1088,33 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.temperatureDeviceCombo.setCurrentIndex(self.aw.qmc.ambient_temperature_device)
         except Exception: # pylint: disable=broad-except
             pass
+
+
+        self.ambientHumidityComboBox = QComboBox()
+        self.ambientHumidityComboBox.currentIndexChanged.connect(self.ambientHumidityComboBoxIndexChanged)
         self.humidityDeviceCombo = QComboBox()
         self.humidityDeviceCombo.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.humidityDeviceCombo.addItems(self.aw.qmc.humiditydevicefunctionlist)
+        self.humidityDeviceCombo.currentIndexChanged.connect(self.humidityDeviceComboBoxIndexChanged)
         try:
             self.humidityDeviceCombo.setCurrentIndex(self.aw.qmc.ambient_humidity_device)
         except Exception: # pylint: disable=broad-except
             pass
+
+
+        self.ambientPressureComboBox = QComboBox()
+        self.ambientPressureComboBox.currentIndexChanged.connect(self.ambientPressureComboBoxIndexChanged)
         self.pressureDeviceCombo = QComboBox()
         self.pressureDeviceCombo.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.pressureDeviceCombo.addItems(self.aw.qmc.pressuredevicefunctionlist)
+        self.pressureDeviceCombo.currentIndexChanged.connect(self.pressureDeviceComboBoxIndexChanged)
         try:
             self.pressureDeviceCombo.setCurrentIndex(self.aw.qmc.ambient_pressure_device)
         except Exception: # pylint: disable=broad-except
             pass
+
+        self.updateAmbientSourceComboBoxes()
+
         self.elevationSpinBox = QSpinBox()
         self.elevationSpinBox.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.elevationSpinBox.setRange(0,3000)
@@ -1122,14 +1126,18 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         pressureDeviceLabel = QLabel(QApplication.translate('Label','Pressure'))
         elevationLabel = QLabel(QApplication.translate('Label','Elevation'))
         ambientGrid = QGridLayout()
-        ambientGrid.addWidget(temperatureDeviceLabel,0,0)
-        ambientGrid.addWidget(self.temperatureDeviceCombo,0,1)
-        ambientGrid.addWidget(humidityDeviceLabel,1,0)
-        ambientGrid.addWidget(self.humidityDeviceCombo,1,1)
-        ambientGrid.addWidget(pressureDeviceLabel,2,0)
-        ambientGrid.addWidget(self.pressureDeviceCombo,2,1)
-        ambientGrid.addWidget(elevationLabel,3,0)
-        ambientGrid.addWidget(self.elevationSpinBox,3,1)
+        ambientGrid.addWidget(ambientSourceLabel,0,2)
+        ambientGrid.addWidget(temperatureDeviceLabel,1,0)
+        ambientGrid.addWidget(self.temperatureDeviceCombo,1,1)
+        ambientGrid.addWidget(self.ambientTempComboBox,1,2)
+        ambientGrid.addWidget(humidityDeviceLabel,2,0)
+        ambientGrid.addWidget(self.humidityDeviceCombo,2,1)
+        ambientGrid.addWidget(self.ambientHumidityComboBox,2,2)
+        ambientGrid.addWidget(pressureDeviceLabel,3,0)
+        ambientGrid.addWidget(self.pressureDeviceCombo,3,1)
+        ambientGrid.addWidget(self.ambientPressureComboBox,3,2)
+        ambientGrid.addWidget(elevationLabel,4,0)
+        ambientGrid.addWidget(self.elevationSpinBox,4,1)
         ambientHBox = QHBoxLayout()
         ambientHBox.addStretch()
         ambientHBox.addLayout(ambientGrid)
@@ -1157,6 +1165,24 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.santokerPort.setFixedWidth(150)
         self.santokerPort.setValidator(QIntValidator(1, 65535,self.santokerPort))
         self.santokerPort.setEnabled(not self.aw.santokerSerial)
+
+        eventFlagLabels = [
+            QApplication.translate('Label','CHARGE'),
+            QApplication.translate('Label','DRY'),
+            QApplication.translate('Label','FCs'),
+            QApplication.translate('Label','FCe'),
+            QApplication.translate('Label','SCs'),
+            QApplication.translate('Label','SCe'),
+            QApplication.translate('Label','DROP')
+        ]
+        self.santokerEventFlags:list[QCheckBox] = [QCheckBox(l) for l in eventFlagLabels]
+        self.santokerEventFlags[3].setEnabled(False) # not available
+        self.santokerEventFlags[5].setEnabled(False) # not available
+        for i, cb in enumerate(self.santokerEventFlags):
+            cb.setToolTip(QApplication.translate('Tooltip','Receive {} event from machine').format(cb.text()))
+            if len(self.aw.santokerEventFlags) > i:
+                cb.setChecked(self.aw.santokerEventFlags[i])
+
 
         self.santokerSerialFlag = QCheckBox(QApplication.translate('Label','Serial'))
         self.santokerSerialFlag.setChecked(self.aw.santokerSerial and not self.aw.santokerBLE)
@@ -1195,6 +1221,12 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
 #        self.kaleidoPIDFlag = QCheckBox()
 #        self.kaleidoPIDFlag.setChecked(self.aw.kaleidoPID)
 
+        self.kaleidoEventFlags:list[QCheckBox] = [QCheckBox(l) for l in eventFlagLabels]
+        for i, cb in enumerate(self.kaleidoEventFlags):
+            cb.setToolTip(QApplication.translate('Tooltip','Receive {} event from machine').format(cb.text()))
+            if len(self.aw.kaleidoEventFlags) > i:
+                cb.setChecked(self.aw.kaleidoEventFlags[i])
+
         mugmaHostLabel = QLabel(QApplication.translate('Label','Host'))
         self.mugmaHost = QLineEdit(self.aw.mugmaHost)
         self.mugmaHost.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -1205,6 +1237,18 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.mugmaPort.setValidator(QIntValidator(1, 65535,self.mugmaPort))
         self.mugmaPort.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.mugmaPort.setFixedWidth(150)
+
+        shelly3EMProHostLabel = QLabel(QApplication.translate('Label','Host'))
+        self.shelly3EMProHost = QLineEdit(self.aw.shelly_3EMPro_host)
+        self.shelly3EMProHost.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.shelly3EMProHost.setFixedWidth(150)
+        self.shelly3EMProHost.setValidator(QRegularExpressionValidator(regexhost,self.shelly3EMProHost))
+
+        shellyPlusPlugHostLabel = QLabel(QApplication.translate('Label','Host'))
+        self.shellyPlusPlugHost = QLineEdit(self.aw.shelly_PlusPlug_host)
+        self.shellyPlusPlugHost.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.shellyPlusPlugHost.setFixedWidth(150)
+        self.shellyPlusPlugHost.setValidator(QRegularExpressionValidator(regexhost,self.shellyPlusPlugHost))
 
         colorTrackMeanLabel = QLabel(QApplication.translate('Label','Mean Filter'))
         self.colorTrackMeanSpinBox = QSpinBox()
@@ -1234,12 +1278,25 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         santokerHBox.addStretch()
         santokerHBox.addLayout(santokerNetworkGrid)
         santokerHBox.addStretch()
+
+        santokerEventFlagHBox = QHBoxLayout()
+        santokerEventFlagHBox.setSpacing(17)
+        santokerEventFlagHBox.addStretch()
+        santokerSerialHBox.addSpacing(20)
+        for cb in self.santokerEventFlags:
+            santokerEventFlagHBox.addWidget(cb)
+        santokerSerialHBox.addSpacing(20)
+        santokerEventFlagHBox.addStretch()
+
         santokerVBox = QVBoxLayout()
         santokerVBox.addLayout(santokerSerialHBox)
+        santokerVBox.addSpacing(15)
         santokerVBox.addLayout(santokerHBox)
+        santokerVBox.addSpacing(15)
+        santokerVBox.addLayout(santokerEventFlagHBox)
         santokerVBox.addStretch()
         santokerVBox.setSpacing(5)
-        santokerVBox.setContentsMargins(0,0,0,0)
+        santokerVBox.setContentsMargins(7,5,7,5) # left, top, right, bottom
 
         santokerNetworkGroupBox = QGroupBox('Santoker')
         santokerNetworkGroupBox.setLayout(santokerVBox)
@@ -1253,16 +1310,29 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
 #        kaleidoNetworkGrid.addWidget(self.kaleidoPIDFlag,2,0)
 #        kaleidoNetworkGrid.addWidget(kaleidoPIDLabel,2,1)
         kaleidoNetworkGrid.setSpacing(20)
-        kaleidoNetworkGroupBox = QGroupBox('Kaleido')
-        kaleidoNetworkGroupBox.setLayout(kaleidoNetworkGrid)
         kaleidoHBox = QHBoxLayout()
-        kaleidoHBox.addWidget(kaleidoNetworkGroupBox)
+        kaleidoHBox.addLayout(kaleidoNetworkGrid)
         kaleidoHBox.addStretch()
+
+        kaleidoEventFlagHBox = QHBoxLayout()
+        kaleidoEventFlagHBox.setSpacing(17)
+        kaleidoEventFlagHBox.addStretch()
+        kaleidoEventFlagHBox.addSpacing(20)
+        for cb in self.kaleidoEventFlags:
+            kaleidoEventFlagHBox.addWidget(cb)
+        kaleidoEventFlagHBox.addSpacing(20)
+        kaleidoEventFlagHBox.addStretch()
+
         kaleidoVBox = QVBoxLayout()
         kaleidoVBox.addLayout(kaleidoHBox)
+        kaleidoVBox.addSpacing(15)
+        kaleidoVBox.addLayout(kaleidoEventFlagHBox)
         kaleidoVBox.addStretch()
         kaleidoVBox.setSpacing(5)
-        kaleidoVBox.setContentsMargins(0,0,0,0)
+        kaleidoVBox.setContentsMargins(7,5,7,5) # left, top, right, bottom
+
+        kaleidoNetworkGroupBox = QGroupBox('Kaleido')
+        kaleidoNetworkGroupBox.setLayout(kaleidoVBox)
 
         mugmaNetworkGrid = QGridLayout()
         mugmaNetworkGrid.addWidget(mugmaHostLabel,0,1)
@@ -1278,6 +1348,32 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         mugmaVBox = QVBoxLayout()
         mugmaVBox.addLayout(mugmaHBox)
         mugmaVBox.setContentsMargins(0,0,0,0)
+
+        shelly3EMProNetworkGrid = QGridLayout()
+        shelly3EMProNetworkGrid.addWidget(shelly3EMProHostLabel,0,1)
+        shelly3EMProNetworkGrid.addWidget(self.shelly3EMProHost,0,2)
+        shelly3EMProNetworkGrid.setSpacing(20)
+        shelly3EMProNetworkGroupBox = QGroupBox('Shelly 3EM Pro')
+        shelly3EMProNetworkGroupBox.setLayout(shelly3EMProNetworkGrid)
+        shelly3EMProHBox = QHBoxLayout()
+        shelly3EMProHBox.addWidget(shelly3EMProNetworkGroupBox)
+        shelly3EMProHBox.addStretch()
+        shelly3EMProVBox = QVBoxLayout()
+        shelly3EMProVBox.addLayout(shelly3EMProHBox)
+        shelly3EMProVBox.setContentsMargins(0,0,0,0)
+
+        shellyPlusPlugNetworkGrid = QGridLayout()
+        shellyPlusPlugNetworkGrid.addWidget(shellyPlusPlugHostLabel,0,1)
+        shellyPlusPlugNetworkGrid.addWidget(self.shellyPlusPlugHost,0,2)
+        shellyPlusPlugNetworkGrid.setSpacing(20)
+        shellyPlusPlugNetworkGroupBox = QGroupBox('Shelly Plus Plug')
+        shellyPlusPlugNetworkGroupBox.setLayout(shellyPlusPlugNetworkGrid)
+        shellyPlusPlugHBox = QHBoxLayout()
+        shellyPlusPlugHBox.addWidget(shellyPlusPlugNetworkGroupBox)
+        shellyPlusPlugHBox.addStretch()
+        shellyPlusPlugVBox = QVBoxLayout()
+        shellyPlusPlugVBox.addLayout(shellyPlusPlugHBox)
+        shellyPlusPlugVBox.setContentsMargins(0,0,0,0)
 
         colorTrackNetworkGrid = QGridLayout()
         colorTrackNetworkGrid.addWidget(colorTrackMeanLabel,0,1)
@@ -1445,11 +1541,13 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         #LAYOUT TAB 7 (Santoker)
         tab7VLayout = QVBoxLayout()
         tab7VLayout.addWidget(santokerNetworkGroupBox)
-        tab7VLayout.addLayout(kaleidoVBox)
+        tab7VLayout.addWidget(kaleidoNetworkGroupBox)
         tab7VLayout.addStretch()
         tab7V2Layout = QVBoxLayout()
         tab7V2Layout.addLayout(mugmaVBox)
         tab7V2Layout.addLayout(colorTrackVBox)
+        tab7V2Layout.addLayout(shelly3EMProVBox)
+        tab7V2Layout.addLayout(shellyPlusPlugVBox)
         tab7V2Layout.addStretch()
         tab7Layout = QHBoxLayout()
         tab7Layout.addLayout(tab7VLayout)
@@ -1464,8 +1562,24 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         if not self.aw.app.artisanviewerMode:
             self.scale1_devices:ScaleSpecs = [] # discovered scale1 devices
             self.scale2_devices:ScaleSpecs = [] # discovered scale2 devices
-            self.scale1_weight:Optional[float] = None # weight of scale 1 in g
-            self.scale2_weight:Optional[float] = None # weight of scale 2 in g
+            self.scale1_weight:float|None = None # weight of scale 1 in g
+            self.scale2_weight:float|None = None # weight of scale 2 in g
+
+            # remember connection state of scales
+            self.scale1_was_connected:bool = self.aw.scale_manager.is_scale1_connected()
+            self.scale2_was_connected:bool = self.aw.scale_manager.is_scale2_connected()
+            # connect to scale_manager signals
+            self.aw.scale_manager.scale1_scanned_signal.connect(self.scale1_scanned)
+            self.aw.scale_manager.scale1_connected_signal.connect(self.scale1connected)
+            self.aw.scale_manager.scale1_disconnected_signal.connect(self.scale1disconnected)
+            self.aw.scale_manager.scale1_weight_changed_signal.connect(self.scale1_weight_changed)
+            self.aw.scale_manager.scale1_stable_weight_changed_signal.connect(self.scale1_weight_changed)
+            #-
+            self.aw.scale_manager.scale2_scanned_signal.connect(self.scale2_scanned)
+            self.aw.scale_manager.scale2_connected_signal.connect(self.scale2connected)
+            self.aw.scale_manager.scale2_disconnected_signal.connect(self.scale2disconnected)
+            self.aw.scale_manager.scale2_weight_changed_signal.connect(self.scale2_weight_changed)
+            self.aw.scale_manager.scale2_stable_weight_changed_signal.connect(self.scale2_weight_changed)
 
             scale1ModelLabel = QLabel(QApplication.translate('Label','Model'))
             self.scale1ModelComboBox = QComboBox()
@@ -1486,11 +1600,11 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.scale1Weight = QLabel() # displays the current reading
             self.scale1Weight.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             self.scale1Weight.setMinimumWidth(60)
-            self.scale1Weight.setEnabled(False)
+            self.scale1Weight.setEnabled(self.scale1_was_connected)
             self.scale1TareButton = QPushButton(QApplication.translate('Button', 'Tare'))
             self.scale1TareButton.setToolTip(QApplication.translate('Tooltip','Tare your scale'))
             self.scale1TareButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            self.scale1TareButton.setEnabled(False)
+            self.scale1TareButton.setEnabled(self.scale1_was_connected)
             if self.aw.scale1_model is None:
                 self.scale1NameComboBox.setEnabled(False)
                 self.scale1EditButton.setEnabled(False)
@@ -1533,6 +1647,11 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             scale1Layout.addLayout(scale1HLayout)
             scale1Layout.setContentsMargins(0,0,0,0)
 
+            if self.scale1_was_connected:
+                scale1_last_weight:int|None = self.aw.scale_manager.get_scale1_last_weight()
+                if scale1_last_weight is not None:
+                    self.scale1_weight_changed(scale1_last_weight)
+
             scale2ModelLabel = QLabel(QApplication.translate('Label','Model'))
             self.scale2ModelComboBox = QComboBox()
             self.scale2ModelComboBox.setToolTip(QApplication.translate('Tooltip','Choose the model of your scale'))
@@ -1552,11 +1671,11 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.scale2Weight = QLabel() # displays the current reading
             self.scale2Weight.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             self.scale2Weight.setMinimumWidth(60)
-            self.scale2Weight.setEnabled(False)
+            self.scale2Weight.setEnabled(self.scale2_was_connected)
             self.scale2TareButton = QPushButton(QApplication.translate('Button', 'Tare'))
             self.scale2TareButton.setToolTip(QApplication.translate('Tooltip','Tare your scale'))
             self.scale2TareButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            self.scale2TareButton.setEnabled(False)
+            self.scale2TareButton.setEnabled(self.scale2_was_connected)
             if self.aw.scale2_model is None:
                 self.scale2NameComboBox.setEnabled(False)
                 self.scale2EditButton.setEnabled(False)
@@ -1568,6 +1687,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                     self.scale2EditButton.setEnabled(False)
                 else:
                     self.scale2NameComboBox.setEnabled(True)
+                    self.scale2EditButton.setEnabled(True)
             self.scale2ModelComboBox.currentIndexChanged.connect(self.scale2ModelChanged)
             self.scale2NameComboBox.currentIndexChanged.connect(self.scale2NameChanged)
             self.scale2ScanButton.clicked.connect(self.scanScale2)
@@ -1597,6 +1717,11 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             scale2Layout = QVBoxLayout()
             scale2Layout.addLayout(scale2HLayout)
             scale2Layout.setContentsMargins(0,0,0,0)
+
+            if self.scale2_was_connected:
+                scale2_last_weight:int|None = self.aw.scale_manager.get_scale2_last_weight()
+                if scale2_last_weight is not None:
+                    self.scale2_weight_changed(scale2_last_weight)
 
             self.taskWebDisplayGreenURL = QLabel()
             self.taskWebDisplayGreenURL.setOpenExternalLinks(True)
@@ -1639,13 +1764,19 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             taskWebDisplayGreenVLayout.addLayout(taskWebDisplayGreenHLayout)
             taskWebDisplayGreenVLayout.addStretch()
 
+
             self.taskWebDisplayRoastedURL = QLabel()
             self.taskWebDisplayRoastedURL.setOpenExternalLinks(True)
             self.taskWebDisplayRoastedFlag = QCheckBox()
             self.taskWebDisplayRoastedFlag.setToolTip(QApplication.translate('Tooltip','Start/stop the roasted coffee weighting task web display'))
-            self.taskWebDisplayRoastedFlag.setChecked(self.aw.taskWebDisplayRoastedActive)
             self.taskWebDisplayRoastedFlag.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+#            # if green display is ON, roasted display can only be turned ON if roasted container is selected
+#            if self.aw.taskWebDisplayGreenActive and self.aw.container2_idx == -1:
+#                self.aw.taskWebDisplayRoastedActive = False
+#                self.taskWebDisplayRoastedFlag.setEnabled(False)
+            self.taskWebDisplayRoastedFlag.setChecked(self.aw.taskWebDisplayRoastedActive)
             self.taskWebDisplayRoastedFlag.clicked.connect(self.taskWebDisplayRoasted)
+
             self.taskWebDisplayRoastedPortLabel = QLabel(QApplication.translate('Label', 'Port'))
             self.taskWebDisplayRoastedPort = QLineEdit(str(self.aw.taskWebDisplayRoastedPort))
             self.taskWebDisplayRoastedPort.setToolTip(QApplication.translate('Tooltip','IP port of the roasted coffee weighting task web display'))
@@ -1653,7 +1784,8 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.taskWebDisplayRoastedPort.setValidator(QRegularExpressionValidator(QRegularExpression(r'^[0-9]{1,4}$'),self))
             self.taskWebDisplayRoastedPort.setMaximumWidth(45)
             self.taskWebDisplayRoastedPort.editingFinished.connect(self.changeTaskWebDisplayRoastedPort)
-            self.taskWebDisplayRoastedPort.setDisabled(self.aw.taskWebDisplayRoastedActive)
+
+            self.taskWebDisplayRoastedPort.setDisabled(self.aw.taskWebDisplayRoastedActive) # or (self.aw.taskWebDisplayGreenActive and self.aw.container2_idx == -1))
             self.taskWebDisplayRoastedQRpic = QLabel() # the QLabel holding the QR code image
             if self.aw.taskWebDisplayRoastedActive:
                 try:
@@ -1690,7 +1822,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.containerGreenTareWeight = QLabel('')
             self.containerGreenTareWeight.setToolTip(QApplication.translate('Tooltip','Weight of your green coffee container'))
             self.containerGreenComboBox = QComboBox()
-            self.containerGreenComboBox.setToolTip(QApplication.translate('Tooltip','Identify your green coffee container and its weight'))
+            self.containerGreenComboBox.setToolTip(QApplication.translate('Tooltip','Identify your green coffee container and its weight. If a container is selected only that container is recognized. If no container is selected, all defined containers are recognized.'))
             self.containerGreenComboBox.setMaximumWidth(120)
             self.containerGreenComboBox.setMinimumWidth(120)
             self.updateGreenContainerPopup(adjust_index=False)
@@ -1701,16 +1833,82 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             containerGreenGridLayout = QGridLayout()
             containerGreenGridLayout.addWidget(self.containerGreenComboBox,0,0)
             containerGreenGridLayout.addWidget(self.containerGreenTareWeight,0,1)
+            containerGreenGridLayout.setSpacing(3)
+
+            basedir = os.path.join(getResourcePath(),'Icons')
+            p = os.path.join(basedir, ('bucket_empty_dark.svg' if self.aw.app.darkmode else 'bucket_empty_light.svg')) # bucket_filled
+            self.bucket_button1 = QToolButton()
+            self.bucket_button1.setIcon(QIcon(p))
+            self.bucket_button1.setFixedHeight(20)
+            self.bucket_button1.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            self.bucket_button1.setStyleSheet('QToolButton {border:none;}')
+            self.bucket_button2 = QToolButton()
+            self.bucket_button2.setIcon(QIcon(p))
+            self.bucket_button2.setFixedHeight(20)
+            self.bucket_button2.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            self.bucket_button2.setStyleSheet('QToolButton {border:none;}')
+            self.bucket_button2.setEnabled(False)
+            self.bucket_button3 = QToolButton()
+            self.bucket_button3.setIcon(QIcon(p))
+            self.bucket_button3.setFixedHeight(20)
+            self.bucket_button3.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            self.bucket_button3.setStyleSheet('QToolButton {border:none;}')
+
+            self.single_bucket_mode = QRadioButton()
+            self.single_bucket_mode.setToolTip(QApplication.translate('Tooltip','The one-bucket mode assumes that the entire batch fits into a single bucket'))
+            self.dual_bucket_mode = QRadioButton()
+            self.dual_bucket_mode.setToolTip(QApplication.translate('Tooltip','The two-bucket mode allows splitting a batch into two buckets for easier lifting'))
+            bucket_mode = QButtonGroup(self)
+            bucket_mode.addButton(self.single_bucket_mode)
+            bucket_mode.addButton(self.dual_bucket_mode)
+            if self.aw.two_bucket_mode:
+                self.dual_bucket_mode.setChecked(True)
+                self.bucket_button1.setEnabled(False)
+                self.bucket_button2.setEnabled(True)
+                self.bucket_button3.setEnabled(True)
+            else:
+                self.single_bucket_mode.setChecked(True)
+                self.bucket_button1.setEnabled(True)
+                self.bucket_button2.setEnabled(False)
+                self.bucket_button3.setEnabled(False)
+            self.dual_bucket_mode.toggled.connect(self.bucket_mode_toggled)
+
+            bucketGreenHLayout = QHBoxLayout()
+            bucketGreenHLayout.setSpacing(3)
+            bucketGreenHLayout.addWidget(self.single_bucket_mode)
+            bucketGreenHLayout.addWidget(self.bucket_button1)
+            bucketGreenHLayout.addSpacing(10)
+            bucketGreenHLayout.addWidget(self.dual_bucket_mode)
+            bucketGreenHLayout.addWidget(self.bucket_button2)
+            bucketGreenHLayout.addWidget(self.bucket_button3)
+
+            greenTaskPrecisionLabel = QLabel(QApplication.translate('Label', 'Accuracy'))
+            self.greenTaskPrecision = MyQDoubleSpinBox()
+            self.greenTaskPrecision.setToolTip(QApplication.translate('Tooltip','Target accuracy expressed as a percentage of the batch size. If zero is selected, the check is disabled.'))
+            self.greenTaskPrecision.setDecimals(1)
+            self.greenTaskPrecision.setSingleStep(0.1)
+            self.greenTaskPrecision.setRange(0, 10.)
+            self.greenTaskPrecision.setAlignment(Qt.AlignmentFlag.AlignRight)
+            self.greenTaskPrecision.setMinimumWidth(40)
+            self.greenTaskPrecision.setValue(self.aw.qmc.dropDuplicatesLimit)
+            self.greenTaskPrecision.setSuffix('%')
+            self.greenTaskPrecision.setValue(self.aw.green_task_precision)
 
             containerGreenHLayout = QHBoxLayout()
             containerGreenHLayout.addLayout(containerGreenGridLayout)
             containerGreenHLayout.addStretch()
+            containerGreenHLayout.addWidget(greenTaskPrecisionLabel)
+            containerGreenHLayout.addWidget(self.greenTaskPrecision)
+            containerGreenHLayout.addSpacing(15)
+            containerGreenHLayout.addLayout(bucketGreenHLayout)
+            containerGreenHLayout.setSpacing(5)
+            containerGreenHLayout.setContentsMargins(5,0,5,0) # left, top, right, bottom
 
             # container roasted
             self.containerRoastedTareWeight = QLabel('')
             self.containerRoastedTareWeight.setToolTip(QApplication.translate('Tooltip','Weight of your roasted coffee container'))
             self.containerRoastedComboBox = QComboBox()
-            self.containerRoastedComboBox.setToolTip(QApplication.translate('Tooltip','Identify your roasted coffee container and its weight'))
+            self.containerRoastedComboBox.setToolTip(QApplication.translate('Tooltip','Identify your roasted coffee container and its weight. If no roasted container is selected, the weighing of roasted batches is disabled.'))
             self.containerRoastedComboBox.setMaximumWidth(120)
             self.containerRoastedComboBox.setMinimumWidth(120)
             self.updateRoastedContainerPopup(adjust_index=False)
@@ -1729,12 +1927,13 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             # Bucket Hobbock, Container, Bin
             containerGreen = QGroupBox(QApplication.translate('GroupBox','Container Green'))
             containerGreen.setLayout(containerGreenHLayout)
+
             containerRoasted = QGroupBox(QApplication.translate('GroupBox','Container Roasted'))
             containerRoasted.setLayout(containerRoastedHLayout)
 
-            taskGreen = QGroupBox(QApplication.translate('GroupBox', 'Task Green'))
+            taskGreen = QGroupBox(QApplication.translate('GroupBox', 'Task Display Green'))
             taskGreen.setLayout(taskWebDisplayGreenVLayout)
-            taskRoasted = QGroupBox(QApplication.translate('GroupBox', 'Task Roasted'))
+            taskRoasted = QGroupBox(QApplication.translate('GroupBox', 'Task Display Roasted'))
             taskRoasted.setLayout(taskWebDisplayRoastedVLayout)
 
             tab8Layout.addWidget(scale1,0,0)
@@ -1776,13 +1975,12 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         C7Widget = QWidget()
         C7Widget.setLayout(tab7Layout)
         self.TabWidget.addTab(C7Widget,QApplication.translate('Tab','Networks'))
-        self.TabWidget.currentChanged.connect(self.tabSwitched)
         C8Widget = QWidget()
         if not self.aw.app.artisanviewerMode:
             C8Widget.setLayout(tab8Layout)
         else:
             C8Widget.setLayout(tab8LayoutOFF)
-        self.TabWidget.addTab(C8Widget,QApplication.translate('Tab','Scales'))
+        self.TabWidget.addTab(C8Widget,QApplication.translate('Tab','Batch Manager'))
         self.TabWidget.currentChanged.connect(self.tabSwitched)
         #incorporate layouts
         Mlayout = QVBoxLayout()
@@ -1792,7 +1990,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         Mlayout.setContentsMargins(5,10,5,5)
         self.setLayout(Mlayout)
         if platform.system() != 'Windows':
-            ok_button: Optional[QPushButton] = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
+            ok_button: QPushButton|None = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
             if ok_button is not None:
                 ok_button.setFocus()
         else:
@@ -1805,6 +2003,75 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         # some tabs are not rendered at all on Windows using Qt v6.5.1 (https://bugreports.qt.io/projects/QTBUG/issues/QTBUG-114204?filter=allissues)
         QTimer.singleShot(50, self.setActiveTab)
 
+    @pyqtSlot(int)
+    def temperatureDeviceComboBoxIndexChanged(self, i:int) -> None:
+        self.ambientTempComboBox.setEnabled(i == 0)
+
+    @pyqtSlot(int)
+    def ambientTempComboBoxIndexChanged(self, i:int) -> None:
+        self.aw.qmc.ambientTempSource = i
+
+    @pyqtSlot(int)
+    def humidityDeviceComboBoxIndexChanged(self, i:int) -> None:
+        self.ambientHumidityComboBox.setEnabled(i == 0)
+
+    @pyqtSlot(int)
+    def ambientHumidityComboBoxIndexChanged(self, i:int) -> None:
+        self.aw.qmc.ambientHumiditySource = i
+
+    @pyqtSlot(int)
+    def pressureDeviceComboBoxIndexChanged(self, i:int) -> None:
+        self.ambientPressureComboBox.setEnabled(i == 0)
+
+    @pyqtSlot(int)
+    def ambientPressureComboBoxIndexChanged(self, i:int) -> None:
+        self.aw.qmc.ambientPressureSource = i
+
+    def buildAmbientTemperatureSourceList(self) -> list[str]:
+        extra_names = []
+        for i in range(len(self.aw.qmc.extradevices)):
+            try:
+                name1edit = cast(QLineEdit, self.devicetable.cellWidget(i,3))
+                extra_names.append(self.aw.qmc.device_name_subst(name1edit.text()))
+            except Exception: # pylint: disable=broad-except
+                # on __init__ the device table might not yet have been created to read off the edited names
+                extra_names.append(self.aw.qmc.device_name_subst(self.aw.qmc.extraname1[i]))
+            try:
+                name2edit = cast(QLineEdit, self.devicetable.cellWidget(i,4))
+                extra_names.append(self.aw.qmc.device_name_subst(name2edit.text()))
+            except Exception: # pylint: disable=broad-except
+                # on __init__ the device table might not yet have been created to read off the edited names
+                extra_names.append(self.aw.qmc.device_name_subst(self.aw.qmc.extraname2[i]))
+        return ['',
+                self.aw.qmc.device_name_subst(self.aw.ETname),
+                self.aw.qmc.device_name_subst(self.aw.BTname)] + extra_names
+
+    def updateAmbientSourceComboBoxes(self) -> None:
+        ambientSensorSourceList = self.buildAmbientTemperatureSourceList()
+        #-
+        if len(ambientSensorSourceList) <= self.aw.qmc.ambientTempSource:
+            self.aw.qmc.ambientTempSource = 0
+        self.ambientTempComboBox.blockSignals(True)
+        self.ambientTempComboBox.clear()
+        self.ambientTempComboBox.addItems(ambientSensorSourceList)
+        self.ambientTempComboBox.setCurrentIndex(self.aw.qmc.ambientTempSource)
+        self.ambientTempComboBox.blockSignals(False)
+        #-
+        if len(ambientSensorSourceList) <= self.aw.qmc.ambientHumiditySource:
+            self.aw.qmc.ambientHumiditySource = 0
+        self.ambientHumidityComboBox.blockSignals(True)
+        self.ambientHumidityComboBox.clear()
+        self.ambientHumidityComboBox.addItems(ambientSensorSourceList)
+        self.ambientHumidityComboBox.setCurrentIndex(self.aw.qmc.ambientHumiditySource)
+        self.ambientHumidityComboBox.blockSignals(False)
+        #-
+        if len(ambientSensorSourceList) <= self.aw.qmc.ambientPressureSource:
+            self.aw.qmc.ambientPressureSource = 0
+        self.ambientPressureComboBox.blockSignals(True)
+        self.ambientPressureComboBox.clear()
+        self.ambientPressureComboBox.addItems(ambientSensorSourceList)
+        self.ambientPressureComboBox.setCurrentIndex(self.aw.qmc.ambientPressureSource)
+        self.ambientPressureComboBox.blockSignals(False)
 
     @pyqtSlot()
     def changeTaskWebDisplayGreenPort(self) -> None:
@@ -1827,53 +2094,38 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.scale1ScanButton.setEnabled(False)
             self.update_scale1_weight(None)
 
-
     @pyqtSlot(int)
     def scale1NameChanged(self, i:int) -> None:
         if 0 <= i < len(self.scale1_devices) and self.aw.scale1_model is not None:
             self.aw.scale1_name = self.scale1_devices[i][0]
             self.aw.scale1_id = self.scale1_devices[i][1]
-            scale = self.aw.scale_manager.get_scale(self.aw.scale1_model, self.aw.scale1_id, self.aw.scale1_name)
-            self.aw.scale_manager.set_scale1(scale)
-            if scale is not None:
-                scale.set_connected_handler(self.scale1connected)
-                scale.set_disconnected_handler(self.scale1disconnected)
-                scale.weight_changed_signal.connect(self.scale1_weight_changed) # type:ignore[call-overload]
-                scale.connect_scale()
+            if i != 0 or self.scale1NameComboBox.count() != 1 or not self.aw.scale_manager.is_scale1_connected():
+                # in case i==0 and there is only one entry and we are already connected, we don't disconnect that connection!
+                self.aw.scale_manager.set_scale1_signal.emit(self.aw.scale1_model, self.aw.scale1_id, self.aw.scale1_name)
+                self.aw.scale_manager.connect_scale1_signal.emit(self.aw.qmc.device_logging)
         # i == -1 if self.scale1NameComboBox is empty!
         else:
-            scale1 = self.aw.scale_manager.get_scale1()
-            if scale1 is not None:
-                scale1.weight_changed_signal.disconnect() # type:ignore[call-overload]
-                scale1.disconnect_scale()
+            self.aw.scale_manager.set_scale1_signal.emit(-1, '', '')
 
+    @pyqtSlot()
     def scale1connected(self) -> None:
-        if self.aw.scale1_name:
-            scale_name = (self.aw.getScaleName((self.aw.scale1_name, self.aw.scale1_id)) if self.aw.scale1_id else self.aw.scale1_name)
-        else:
-            scale_name = QApplication.translate('Message','scale')
-        self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} connected').format(scale_name),True,None)
         self.scale1Weight.setEnabled(True)
         self.scale1TareButton.setEnabled(True)
         self.scale1EditButton.setEnabled(True)
 
+    @pyqtSlot()
     def scale1disconnected(self) -> None:
-        if self.aw.scale1_name:
-            scale_name = (self.aw.getScaleName((self.aw.scale1_name, self.aw.scale1_id)) if self.aw.scale1_id else self.aw.scale1_name)
-        else:
-            scale_name = QApplication.translate('Message','scale')
-        self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} disconnected').format(scale_name),True,None)
         self.scale1Weight.setEnabled(False)
         self.scale1TareButton.setEnabled(False)
         self.scale1EditButton.setEnabled(False)
         self.update_scale1_weight(None)
 
-    @pyqtSlot(float)
-    def scale1_weight_changed(self, w:float) -> None:
+    @pyqtSlot(int)
+    def scale1_weight_changed(self, w:int) -> None:
         self.update_scale1_weight(w)
 
     # returns formatted weight converted to current weight unit
-    def format_scale_weight(self, w:Optional[float]) -> str:
+    def format_scale_weight(self, w:float|None) -> str:
         if w is None:
             return '----'
         unit = weight_units.index(self.aw.qmc.weight[2])
@@ -1888,7 +2140,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         v = convertWeight(w,0,weight_units.index(self.aw.qmc.weight[2]))
         return f'{v:.2f}{self.aw.qmc.weight[2].lower()}'
 
-    def update_scale1_weight(self, weight:Optional[float]) -> None:
+    def update_scale1_weight(self, weight:float|None) -> None:
         self.scale1_weight = weight
         if self.aw.scale1_name is not None and self.aw.scale1_id is not None:
             self.scale1Weight.setText(self.format_scale_weight(self.scale1_weight))
@@ -1909,15 +2161,25 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
     @pyqtSlot(bool)
     def scanScale1(self, _:bool = False) -> None:
         if self.aw.scale1_model is not None:
-            with wait_cursor():
-                devices:ScaleSpecs = self.aw.scale_manager.scan_for_scales(self.aw.scale1_model)
-                self.updateScale1devices(devices)
-                if devices:
-                    self.scale1NameComboBox.setEnabled(True)
-                    self.scale1EditButton.setEnabled(True)
-                else:
-                    self.scale1NameComboBox.setEnabled(False)
-                    self.scale1EditButton.setEnabled(False)
+            self.scale1ScanButton.setEnabled(False)
+            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+            QApplication.processEvents()
+            self.aw.scale_manager.scan_scale1_signal.emit(self.aw.scale1_model)
+
+    @pyqtSlot(list)
+    def scale1_scanned(self, devices:'ScaleSpecs') -> None:
+        try:
+            self.updateScale1devices(devices)
+            if devices:
+                self.scale1NameComboBox.setEnabled(True)
+                self.scale1EditButton.setEnabled(True)
+            else:
+                self.scale1NameComboBox.setEnabled(False)
+                self.scale1EditButton.setEnabled(False)
+        except Exception as e: # pylint: disable=broad-except
+            _log.error(e)
+        self.scale1ScanButton.setEnabled(True)
+        QApplication.restoreOverrideCursor()
 
     @pyqtSlot(bool)
     def editScale1(self, _:bool = False) -> None:
@@ -1926,7 +2188,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             if current_name is None:
                 current_name = self.aw.scale1_name
             new_name, state = QInputDialog.getText(self, 'Scale Name', 'Set scale name', QLineEdit.EchoMode.Normal, text=current_name)
-            if state and new_name is not None:
+            if state:
                 self.aw.set_custom_scale_name(self.aw.scale1_id, new_name.strip())
                 # we need to update both popups
                 self.updateScale1devices(self.scale1_devices, keep_selection=True)
@@ -1934,9 +2196,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
 
     @pyqtSlot(bool)
     def tareScale1(self, _:bool = False) -> None:
-        scale = self.aw.scale_manager.get_scale1()
-        if scale is not None:
-            scale.tare_scale()
+        self.aw.scale_manager.tare_scale1_signal.emit()
 
     @pyqtSlot(int)
     def scale2ModelChanged(self, i:int) -> None:
@@ -1957,51 +2217,36 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         if 0 <= i < len(self.scale2_devices) and self.aw.scale2_model is not None:
             self.aw.scale2_name = self.scale2_devices[i][0]
             self.aw.scale2_id = self.scale2_devices[i][1]
-            scale = self.aw.scale_manager.get_scale(self.aw.scale2_model, self.aw.scale2_id, self.aw.scale2_name)
-            self.aw.scale_manager.set_scale2(scale)
-            if scale is not None:
-                scale.set_connected_handler(self.scale2connected)
-                scale.set_disconnected_handler(self.scale2disconnected)
-                scale.weight_changed_signal.connect(self.scale2_weight_changed) # type:ignore[call-overload]
-                scale.connect_scale()
+            if i != 0 or self.scale2NameComboBox.count() != 1 or not self.aw.scale_manager.is_scale2_connected():
+                self.aw.scale_manager.set_scale2_signal.emit(self.aw.scale2_model, self.aw.scale2_id, self.aw.scale2_name)
+                self.aw.scale_manager.connect_scale2_signal.emit(self.aw.qmc.device_logging)
         # i == -1 if self.scale2NameComboBox is empty!
         else:
-            scale2 = self.aw.scale_manager.get_scale2()
-            if scale2 is not None:
-                scale2.weight_changed_signal.disconnect() # type:ignore[call-overload]
-                scale2.disconnect_scale()
+            self.aw.scale_manager.set_scale2_signal.emit(-1, '', '')
 
-    @pyqtSlot(float)
-    def scale2_weight_changed(self, w:float) -> None:
+    @pyqtSlot()
+    def scale2connected(self) -> None:
+        self.scale2Weight.setEnabled(True)
+        self.scale2TareButton.setEnabled(True)
+        self.scale2EditButton.setEnabled(True)
+
+    @pyqtSlot()
+    def scale2disconnected(self) -> None:
+        self.scale2Weight.setEnabled(False)
+        self.scale2TareButton.setEnabled(False)
+        self.scale2EditButton.setEnabled(False)
+        self.update_scale2_weight(None)
+
+    @pyqtSlot(int)
+    def scale2_weight_changed(self, w:int) -> None:
         self.update_scale2_weight(w)
 
-    def update_scale2_weight(self, weight:Optional[float]) -> None:
+    def update_scale2_weight(self, weight:float|None) -> None:
         self.scale2_weight = weight
         if self.aw.scale2_name is not None and self.aw.scale2_id is not None:
             self.scale2Weight.setText(self.format_scale_weight(self.scale2_weight))
         else:
             self.scale2Weight.setText('')
-
-    def scale2connected(self) -> None:
-        if self.aw.scale2_name:
-            scale_name = (self.aw.getScaleName((self.aw.scale2_name, self.aw.scale2_id)) if self.aw.scale2_id else self.aw.scale2_name)
-        else:
-            scale_name = QApplication.translate('Message','scale')
-        self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} connected').format(scale_name),True,None)
-        self.scale2Weight.setEnabled(True)
-        self.scale2TareButton.setEnabled(True)
-        self.scale2EditButton.setEnabled(True)
-
-    def scale2disconnected(self) -> None:
-        if self.aw.scale2_name:
-            scale_name = (self.aw.getScaleName((self.aw.scale2_name, self.aw.scale2_id)) if self.aw.scale2_id else self.aw.scale2_name)
-        else:
-            scale_name = QApplication.translate('Message','scale')
-        self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} disconnected').format(scale_name),True,None)
-        self.scale2Weight.setEnabled(False)
-        self.scale2TareButton.setEnabled(False)
-        self.scale2EditButton.setEnabled(False)
-        self.update_scale2_weight(None)
 
     def updateScale2devices(self, devices:'ScaleSpecs', keep_selection:bool = False) -> None:
         self.scale2_devices = devices
@@ -2017,15 +2262,25 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
     @pyqtSlot(bool)
     def scanScale2(self, _:bool = False) -> None:
         if self.aw.scale2_model is not None:
-            with wait_cursor():
-                devices:ScaleSpecs = self.aw.scale_manager.scan_for_scales(self.aw.scale2_model)
-                self.updateScale2devices(devices)
-                if devices:
-                    self.scale2NameComboBox.setEnabled(True)
-                    self.scale2EditButton.setEnabled(True)
-                else:
-                    self.scale2NameComboBox.setEnabled(False)
-                    self.scale2EditButton.setEnabled(False)
+            self.scale2ScanButton.setEnabled(False)
+            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+            QApplication.processEvents()
+            self.aw.scale_manager.scan_scale2_signal.emit(self.aw.scale2_model)
+
+    @pyqtSlot(list)
+    def scale2_scanned(self, devices:'ScaleSpecs') -> None:
+        try:
+            self.updateScale2devices(devices)
+            if devices:
+                self.scale2NameComboBox.setEnabled(True)
+                self.scale2EditButton.setEnabled(True)
+            else:
+                self.scale2NameComboBox.setEnabled(False)
+                self.scale2EditButton.setEnabled(False)
+        except Exception as e: # pylint: disable=broad-except
+            _log.error(e)
+        self.scale2ScanButton.setEnabled(True)
+        QApplication.restoreOverrideCursor()
 
     @pyqtSlot(bool)
     def editScale2(self, _:bool = False) -> None:
@@ -2034,7 +2289,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             if current_name is None:
                 current_name = self.aw.scale2_name
             new_name, state = QInputDialog.getText(self, 'Scale Name', 'Set scale name', QLineEdit.EchoMode.Normal, text=current_name)
-            if state and new_name is not None:
+            if state:
                 self.aw.set_custom_scale_name(self.aw.scale2_id, new_name.strip())
                 # we need to update both popups
                 self.updateScale1devices(self.scale1_devices, keep_selection=True)
@@ -2042,17 +2297,23 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
 
     @pyqtSlot(bool)
     def tareScale2(self, _:bool = False) -> None:
-        scale = self.aw.scale_manager.get_scale2()
-        if scale is not None:
-            scale.tare_scale()
+        self.aw.scale_manager.tare_scale2_signal.emit()
 
     @staticmethod
     def container_menu_idx(i:int) -> int: # takes a container idx and returns the index of the corresponding menu item
         return i + 3 # skip <edit>, separator and empty index
 
-    # if adjust_index is True (default), the self.aw.container1_idx is updated to still point to the previous entry if possible
     @pyqtSlot()
-    def updateGreenContainerPopup(self, adjust_index:bool=True) -> None:
+    def updateGreenContainerPopupKeepSelectionSlot(self) -> None:
+        self.updateGreenContainerPopup(keep_selection=True)
+
+    @pyqtSlot()
+    def updateGreenContainerPopupUpdateSelectionSlot(self) -> None:
+        self.updateGreenContainerPopup(keep_selection=False)
+
+    # if adjust_index is True (default), the self.aw.container1_idx is updated to still point to the previous entry if possible
+    # if keep_selection, the current selection is not adjusted if new entries are added. If keep_selection is not set, new entries are selected
+    def updateGreenContainerPopup(self, adjust_index:bool=True, keep_selection:bool=False) -> None:
         prev_item_count = self.containerGreenComboBox.count()
         with QSignalBlocker(self.containerGreenComboBox): # blocking all signals, especially its currentIndexChanged connected to tareChanged which would lead to cycles
             self.containerGreenComboBox.clear()
@@ -2061,13 +2322,14 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.containerGreenComboBox.addItem('')
             self.containerGreenComboBox.addItems(self.aw.qmc.container_names)
             width = self.containerGreenComboBox.minimumSizeHint().width()
-            view: Optional[QAbstractItemView] = self.containerGreenComboBox.view()
+            view: QAbstractItemView|None = self.containerGreenComboBox.view()
             if view is not None:
                 view.setMinimumWidth(width)
         if adjust_index:
-            if self.containerGreenComboBox.count() > prev_item_count:
-                # if item list is longer (new items added), we select the last item
-                self.aw.container1_idx = self.containerGreenComboBox.count() - 4
+            if not keep_selection and self.containerGreenComboBox.count() > prev_item_count:
+#                # if item list is longer (new items added), we select the last item
+#                self.aw.container1_idx = self.containerGreenComboBox.count() - 4
+                self.aw.container1_idx = -1 # we select the empty entry
             if len(self.aw.qmc.container_weights) > self.aw.container1_idx:
                 self.containerGreenComboBox.setCurrentIndex(self.container_menu_idx(self.aw.container1_idx))
             else:
@@ -2079,7 +2341,8 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         if i == 0:
             self.containerGreenComboBox.setCurrentIndex(self.container_menu_idx(self.aw.container1_idx))
             tareDLG = tareDlg(self,self.aw, self.get_scale1_weight)
-            tareDLG.tare_updated_signal.connect(self.updateGreenContainerPopup)
+            tareDLG.tare_updated_signal.connect(self.updateGreenContainerPopupUpdateSelectionSlot)
+            tareDLG.tare_updated_signal.connect(self.updateRoastedContainerPopupKeepSelectionSlot)
             tareDLG.show()
         else:
             self.aw.container1_idx = i - 3
@@ -2093,13 +2356,23 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         else:
             self.containerGreenTareWeight.setText(render_weight(weight, 0,  weight_units.index(self.aw.qmc.weight[2])))
 
-    def get_scale1_weight(self) -> Optional[float]:
-        return self.scale1_weight
+    def get_scale1_weight(self) -> float|None:
+        if self.scale1_weight is not None:
+            return self.scale1_weight
+        return self.scale2_weight
 
+
+    @pyqtSlot()
+    def updateRoastedContainerPopupKeepSelectionSlot(self) -> None:
+        self.updateRoastedContainerPopup(keep_selection=True)
+
+    @pyqtSlot()
+    def updateRoastedContainerPopupUpdateSelectionSlot(self) -> None:
+        self.updateRoastedContainerPopup(keep_selection=False)
 
     # if adjust_index is True (default), the self.aw.container2_idx is updated to still point to the previous entry if possible
-    @pyqtSlot()
-    def updateRoastedContainerPopup(self, adjust_index:bool=True) -> None:
+    # if keep_selection, the current selection is not adjusted if ne entries are added. If keep_selection is not set, new entries are selected
+    def updateRoastedContainerPopup(self, adjust_index:bool=True, keep_selection:bool=False) -> None:
         prev_item_count = self.containerRoastedComboBox.count()
         with QSignalBlocker(self.containerRoastedComboBox): # blocking all signals, especially its currentIndexChanged connected to tareChanged which would lead to cycles
             self.containerRoastedComboBox.clear()
@@ -2108,11 +2381,11 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.containerRoastedComboBox.addItem('')
             self.containerRoastedComboBox.addItems(self.aw.qmc.container_names)
             width = self.containerRoastedComboBox.minimumSizeHint().width()
-            view: Optional[QAbstractItemView] = self.containerGreenComboBox.view()
+            view: QAbstractItemView|None = self.containerGreenComboBox.view()
             if view is not None:
                 view.setMinimumWidth(width)
         if adjust_index:
-            if self.containerRoastedComboBox.count() > prev_item_count:
+            if not keep_selection and self.containerRoastedComboBox.count() > prev_item_count:
                 # if item list is longer (new items added), we select the last item
                 self.aw.container2_idx = self.containerRoastedComboBox.count() - 4
             if len(self.aw.qmc.container_weights) > self.aw.container2_idx:
@@ -2126,12 +2399,20 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         if i == 0:
             self.containerRoastedComboBox.setCurrentIndex(self.container_menu_idx(self.aw.container2_idx))
             tareDLG = tareDlg(self,self.aw, self.get_scale2_weight)
-            tareDLG.tare_updated_signal.connect(self.updateRoastedContainerPopup)
+            tareDLG.tare_updated_signal.connect(self.updateRoastedContainerPopupUpdateSelectionSlot)
+            tareDLG.tare_updated_signal.connect(self.updateGreenContainerPopupKeepSelectionSlot)
             tareDLG.show()
         else:
             self.aw.container2_idx = i - 3
             # update displayed scale weight
             self.updateRoastedContainerWeight()
+#        # we need to update availability, as roasted scale is only available if roasted container weight is set
+#        self.aw.scale_manager.update_availability(force=True)
+#        # if green display is ON, roasted display can only be turned ON if roasted container is selected
+#        if self.aw.taskWebDisplayGreenActive and self.aw.container2_idx == -1:
+#            self.taskWebDisplayRoasted(False)
+#        self.taskWebDisplayRoastedFlag.setDisabled(self.aw.taskWebDisplayGreenActive)# and self.aw.container2_idx == -1)
+#        self.taskWebDisplayRoastedPort.setDisabled(self.aw.taskWebDisplayGreenActive)# and self.aw.container2_idx == -1)
 
     def updateRoastedContainerWeight(self) -> None:
         weight = self.aw.qmc.get_container_weight(self.aw.container2_idx)
@@ -2140,9 +2421,10 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         else:
             self.containerRoastedTareWeight.setText(render_weight(weight, 0,  weight_units.index(self.aw.qmc.weight[2])))
 
-    def get_scale2_weight(self) -> Optional[float]:
-        return self.scale2_weight
-
+    def get_scale2_weight(self) -> float|None:
+        if self.scale2_weight is not None:
+            return self.scale2_weight
+        return self.scale1_weight
 
     @pyqtSlot(bool)
     def taskWebDisplayGreen(self, b:bool = False) -> None:
@@ -2155,6 +2437,11 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                     self.setTaskGreenURL(self.getTaskURL(self.aw.taskWebDisplayGreenPort, self.aw.taskWebDisplayGreen_server.indexPath())) # this might fail if socket cannot be established
                     self.taskWebDisplayGreenFlag.setChecked(True)
                     self.taskWebDisplayGreenPort.setDisabled(True)
+#                    # if green display is turned ON, turn roasted display OFF if no roasted container is selected
+#                    if  self.aw.container2_idx == -1:
+#                        self.taskWebDisplayRoasted(False)
+#                        self.taskWebDisplayRoastedFlag.setEnabled(False)
+#                        self.taskWebDisplayRoastedPort.setEnabled(False)
             except Exception as e: # pylint: disable=broad-except
                 self.aw.sendmessage(str(e))
                 res = False
@@ -2166,6 +2453,9 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.taskWebDisplayGreenPort.setDisabled(False)
             self.taskWebDisplayGreenURL.setText('')
             self.taskWebDisplayGreenQRpic.setPixmap(QPixmap())
+#            # if green display is OFF, roasted display can always be turned ON
+#            self.taskWebDisplayRoastedFlag.setEnabled(True)
+#            self.taskWebDisplayRoastedPort.setDisabled(self.aw.taskWebDisplayRoastedActive)
 
     def setTaskGreenURL(self, url:str) -> None:
         # set URL label
@@ -2349,8 +2639,8 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             _log.exception(e)
 
     @staticmethod
-    def createItems(strs:List[str]) -> List[QStandardItem]:
-        items:List[QStandardItem] = []
+    def createItems(strs:list[str]) -> list[QStandardItem]:
+        items:list[QStandardItem] = []
         for st in strs:
             item = QStandardItem(st)
             items.append(item)
@@ -2373,7 +2663,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.aw.showControlButton()
 
     @staticmethod
-    def centeredCheckBox() -> Tuple[QWidget, QCheckBox]:
+    def centeredCheckBox() -> tuple[QWidget, QCheckBox]:
         widget = QWidget()
         checkBox = QCheckBox()
         checkBox.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -2384,21 +2674,21 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         return widget, checkBox
 
     @staticmethod
-    def centeredCheckBox_isChecked(widget:Optional[QWidget]) -> bool:
+    def centeredCheckBox_isChecked(widget:QWidget|None) -> bool:
         if widget is not None:
             layout = widget.layout()
             if layout is not None:
                 item0 = layout.itemAt(0)
                 if item0 is not None:
                     checkBox = item0.widget()
-                    if checkBox is not None and isinstance(checkBox, QCheckBox):
+                    if checkBox is not None and isinstance(checkBox, QCheckBox): # pyrefly: ignore[invalid-argument]
                         return checkBox.isChecked() # type:ignore[reportAttributeAccessIssue, unused-ignore] # pyright reports isChecked not known for QWidget
         return False
 
     def createDeviceTable(self) -> None:
         try:
             columns = 15
-            if self.devicetable is not None and self.devicetable.columnCount() == columns:
+            if self.devicetable.columnCount() == columns:
                 # rows have been already established
                 # save the current columnWidth to reset them after table creation
                 self.aw.qmc.devicetablecolumnwidths = [self.devicetable.columnWidth(c) for c in range(self.devicetable.columnCount())]
@@ -2614,7 +2904,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                     fields.append(re_strip.sub('',item.text()))
             tbl.field_names = fields
             for r in range(nrows):
-                rows = []
+                rows:list[str] = []
                 # device type
                 typeComboBox = cast(MyQComboBox, self.devicetable.cellWidget(r,0))
                 rows.append(typeComboBox.currentText())
@@ -2920,25 +3210,13 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                         self.aw.qmc.extradevices[i] = self.aw.qmc.devices.index('+' + str(typecombobox.currentText())) + 1
                     except Exception: # pylint: disable=broad-except
                         self.aw.qmc.extradevices[i] = 0
-                if name1edit:
-                    self.aw.qmc.extraname1[i] = name1edit.text()
-                else:
-                    self.aw.qmc.extraname1[i] = ''
-                if name2edit:
-                    self.aw.qmc.extraname2[i] = name2edit.text()
-                else:
-                    self.aw.qmc.extraname2[i] = ''
+                self.aw.qmc.extraname1[i] = name1edit.text()
+                self.aw.qmc.extraname2[i] = name2edit.text()
 
                 self.aw.extraLCDlabel1[i].setText('<b>' + self.aw.qmc.device_name_subst(self.aw.qmc.extraname1[i]) + '</b>')
                 self.aw.extraLCDlabel2[i].setText('<b>' + self.aw.qmc.device_name_subst(self.aw.qmc.extraname2[i]) + '</b>')
-                if mexpr2edit:
-                    self.aw.qmc.extramathexpression1[i] = mexpr1edit.text()
-                else:
-                    self.aw.qmc.extramathexpression1[i] = ''
-                if mexpr2edit:
-                    self.aw.qmc.extramathexpression2[i] = mexpr2edit.text()
-                else:
-                    self.aw.qmc.extramathexpression2[i] = ''
+                self.aw.qmc.extramathexpression1[i] = mexpr1edit.text()
+                self.aw.qmc.extramathexpression2[i] = mexpr2edit.text()
             #update legend with new curves
             if redraw:
                 self.aw.qmc.redraw(recomputeAllDeltas=False)
@@ -2964,8 +3242,8 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
     def updateETBTinprofile(self, _:bool) -> None:
         try:
             # be sure there is an equation to process
-            nonempty_ETfunction = bool(self.ETfunctionedit.text() is not None and len(self.ETfunctionedit.text().strip()))
-            nonempty_BTfunction = bool(self.BTfunctionedit.text() is not None and len(self.BTfunctionedit.text().strip()))
+            nonempty_ETfunction = bool(len(self.ETfunctionedit.text().strip()))
+            nonempty_BTfunction = bool(len(self.BTfunctionedit.text().strip()))
             if (nonempty_ETfunction or nonempty_BTfunction):
 
                 # confirm the action
@@ -3083,7 +3361,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                     colorname = argb_colorname2rgba_colorname(colorf.name(QColor.NameFormat.HexArgb))
                     self.aw.qmc.extradevicecolor1[i] = colorname
                     # set LCD label color
-                    self.aw.setLabelColor(self.aw.extraLCDlabel1[i],colorname)
+                    self.aw.setLabelColor(self.aw.extraLCDlabel1[i], colorname, self.aw.extraCurveVisibility1[i])
                     color1Button = cast(QPushButton, self.devicetable.cellWidget(i,1))
                     color1Button.setStyleSheet(f"border: none; outline: none; background-color: rgba{ImageColor.getcolor(self.aw.qmc.extradevicecolor1[i], 'RGBA')}; color: { self.aw.labelBorW(self.aw.qmc.extradevicecolor1[i])}")
                     color1Button.setText(colorname)
@@ -3097,7 +3375,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                     colorname = argb_colorname2rgba_colorname(colorf.name(QColor.NameFormat.HexArgb))
                     self.aw.qmc.extradevicecolor2[i] = colorname
                     # set LCD label color
-                    self.aw.setLabelColor(self.aw.extraLCDlabel2[i],colorname)
+                    self.aw.setLabelColor(self.aw.extraLCDlabel2[i],colorname, self.aw.extraCurveVisibility2[i])
                     color2Button = cast(QPushButton, self.devicetable.cellWidget(i,2))
                     color2Button.setStyleSheet(f"border: none; outline: none; background-color: rgba{ImageColor.getcolor(self.aw.qmc.extradevicecolor2[i], 'RGBA')}; color: {self.aw.labelBorW(self.aw.qmc.extradevicecolor2[i])}")
                     color2Button.setText(colorname)
@@ -3108,18 +3386,38 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' setextracolor(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
     # close is called from OK and CANCEL
+    @override
     def close(self) -> bool:
         self.closeHelp()
         settings = QSettings()
         #save window geometry
         settings.setValue('DeviceAssignmentGeometry',self.saveGeometry())
         self.aw.DeviceAssignmentDlg_activeTab = self.TabWidget.currentIndex()
-#        self.aw.closeEventSettings() # save all app settings
 
-        if not self.aw.schedule_window:
-            # we disconnect all scales again if scheduler is not active
-            self.aw.scale_manager.disconnect_all()
-
+        if not self.aw.app.artisanviewerMode: # scales only defined if not in ViewerMode
+            # disconnect from scale_manager signals
+            try:
+                self.aw.scale_manager.scale1_scanned_signal.disconnect(self.scale1_scanned)
+                self.aw.scale_manager.scale1_connected_signal.disconnect(self.scale1connected)
+                self.aw.scale_manager.scale1_disconnected_signal.disconnect(self.scale1disconnected)
+                self.aw.scale_manager.scale1_weight_changed_signal.disconnect(self.scale1_weight_changed)
+                #-
+                self.aw.scale_manager.scale2_scanned_signal.disconnect(self.scale2_scanned)
+                self.aw.scale_manager.scale2_connected_signal.disconnect(self.scale2connected)
+                self.aw.scale_manager.scale2_disconnected_signal.disconnect(self.scale2disconnected)
+                self.aw.scale_manager.scale2_weight_changed_signal.disconnect(self.scale2_weight_changed)
+            except Exception as e: # pylint: disable=broad-except
+                _log.error(e)
+            if self.aw.schedule_window is None:
+                # in case the scheduler is running, we keep the scales connected as it is using them
+                try:
+                    # disconnect scales if they were not connected before
+                    if not self.scale1_was_connected:
+                        self.aw.scale_manager.disconnect_scale1_signal.emit()
+                    if not self.scale2_was_connected:
+                        self.aw.scale_manager.disconnect_scale2_signal.emit()
+                except Exception as e: # pylint: disable=broad-except
+                    _log.error(e)
         return True
 
     @pyqtSlot()
@@ -3140,6 +3438,10 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.aw.scale2_name = self.org_scale2_name
         self.aw.scale2_id = self.org_scale2_id
         self.aw.container2_idx = self.org_container2_idx
+
+        self.aw.qmc.ambientTempSource = self.org_ambientTempSource
+        self.aw.qmc.ambientHumiditySource = self.org_ambientHumiditySource
+        self.aw.qmc.ambientPressureSource = self.org_ambientPressureSource
 
         self.reject()
 
@@ -3170,6 +3472,12 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
 
             self.aw.ser.externalprogram = self.programedit.text()
             self.aw.ser.externaloutprogram = self.outprogramedit.text()
+
+            self.aw.santokerEventFlags = [cb.isChecked() for cb in self.santokerEventFlags]
+            self.aw.kaleidoEventFlags = [cb.isChecked() for cb in self.kaleidoEventFlags]
+
+            self.aw.two_bucket_mode = self.dual_bucket_mode.isChecked()
+            self.aw.green_task_precision = self.greenTaskPrecision.value()
 
             if self.pidButton.isChecked():
                 #type index[0]: 0 = PXG, 1 = PXR, 2 = DTA
@@ -3428,7 +3736,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 ####  DEVICE 21 is +309_34 but +DEVICE cannot be set as main device
                 ##########################
                 ##########################
-                ####  DEVICE 22 is +PID DUTY% but +DEVICE cannot be set as main device
+                ####  DEVICE 22 is +PID DUTY/SV % but +DEVICE cannot be set as main device
                 ##########################
                 elif meter == 'Omega HHM28[6]' and self.aw.qmc.device != 23:
                     self.aw.qmc.device = 23
@@ -3441,7 +3749,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                     message = QApplication.translate('Message','Device set to {0}. Now, check Serial Port settings').format(meter)
 # +DEVICEs cannot be set as main device
                 ##########################
-                ####  DEVICE 24 is +VOLTCRAFT 204_34 but +DEVICE cannot be set as main device
+                ####  DEVICE 24 is +VOLTCRAFT 204 34 but +DEVICE cannot be set as main device
                 ##########################
                 ##########################
                 ####  DEVICE 25 is +Virtual but +DEVICE cannot be set as main device
@@ -3955,7 +4263,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 elif meter == 'IKAWA':
                     self.aw.qmc.device = 142
                     message = QApplication.translate('Message','Device set to {0}').format(meter)
-                    permission_status:Optional[bool] = self.aw.app.getBluetoothPermission(request=True)
+                    permission_status:bool|None = self.aw.app.getBluetoothPermission(request=True)
                     if permission_status is False:
                         msg:str = QApplication.translate('Message','Bluetootooth access denied')
                         QMessageBox.warning(None, #self, # only without super this one shows the native dialog on macOS under Qt 6.6.2 and later
@@ -4099,6 +4407,55 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 elif meter == 'Aillio Bullet R2':
                     self.aw.qmc.device = 176
                     message = QApplication.translate('Message','Device set to {0}').format(meter)
+                ##########################
+                ####  DEVICE 177 is +PID P/I but +DEVICE cannot be set as main device
+                ##########################
+                ##########################
+                ####  DEVICE 178 is +PID D/Error but +DEVICE cannot be set as main device
+                ##########################
+                ##########################
+                ####  DEVICE 179 is +Shelly 3EM Pro Energy/Return
+                ##########################
+                ##########################
+                ####  DEVICE 180 is +Shelly Plug Energy/Last
+                ##########################
+                ##########################
+                ####  DEVICE 181 is +Shelly 3EM Pro Power/S
+                ##########################
+                ##########################
+                ####  DEVICE 182 is +Shelly Plug Power/Temp
+                ##########################
+                ##########################
+                ####  DEVICE 183 is +Shelly Plug Voltage/Current
+                ##########################
+                elif meter == 'TASI TA612C' and self.aw.qmc.device != 184:
+                    self.aw.qmc.device = 184
+                    #self.aw.ser.comport = "COM4"
+                    self.aw.ser.baudrate = 9600
+                    self.aw.ser.bytesize = 8
+                    self.aw.ser.parity= 'N'
+                    self.aw.ser.stopbits = 1
+                    self.aw.ser.timeout = 0.7
+                    message = QApplication.translate('Message','Device set to {0}, which is equivalent to CENTER 309. Now, choose serial port').format(meter)
+                ##########################
+                ####  DEVICE 185 is +TASI TA612C 34 but +DEVICE cannot be set as main device
+                ##########################
+                ##########################
+                ####  DEVICE 186 is +CM ET/BT
+                ##########################
+                ##########################
+                ####  DEVICE 187 is +RoastSeeNEXT Agtron/Crack
+                ##########################
+                ###############+##########
+                ####  DEVICE 188 is +RoastSeeNEXT RoR/FOR
+                ##########################
+                ##########################
+                ####  DEVICE 189 is +RoastSeeNEXT Distance/Time
+                ##########################
+                ##########################
+                ####  DEVICE 190 is +RoastSeeNEXT Yellow
+                ##########################
+
 
                 # ADD DEVICE:
 
@@ -4112,12 +4469,12 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
     # - add an elif entry above to specify the default serial settings
             #extra devices serial config
             #set of different serial settings modes options
-            ssettings: Final[List[Tuple[int,int,str,int,float]]] = [(9600,8,'O',1,0.5),(19200,8,'E',1,0.5),(2400,7,'E',1,1),(9600,8,'N',1,0.5),
+            ssettings: Final[list[tuple[int,int,str,int,float]]] = [(9600,8,'O',1,0.5),(19200,8,'E',1,0.5),(2400,7,'E',1,1),(9600,8,'N',1,0.5),
                          (19200,8,'N',1,0.5),(2400,8,'N',1,1),(9600,8,'E',1,0.5),(38400,8,'E',1,0.5),(115200,8,'N',1,0.4),(57600,8,'N',1,0.4)]
             #map device index to a setting mode (choose the one that matches the device)
     # ADD DEVICE: to add a device you have to modify several places. Search for the tag "ADD DEVICE:"in the code
     # - add an entry to devsettings below (and potentially to ssettings above)
-            devssettings: Final[List[int]] = [
+            devssettings: Final[list[int]] = [
                 0, # 0
                 1, # 1
                 2, # 2
@@ -4294,12 +4651,26 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 1, # 173
                 1, # 174
                 1, # 175
-                1  # 176
+                1, # 176
+                6, # 177
+                6, # 178
+                1, # 179
+                1, # 180
+                1, # 181
+                1, # 182
+                1, # 183
+                3, # 184
+                3, # 185
+                3, # 186
+                3, # 187
+                3, # 188
+                3, # 189
+                3  # 190
                 ]
             #init serial settings of extra devices
             for i, _ in enumerate(self.aw.qmc.extradevices):
                 if self.aw.qmc.extradevices[i] < len(devssettings) and devssettings[self.aw.qmc.extradevices[i]] < len(ssettings):
-                    dsettings: Tuple[int,int,str,int,float] = ssettings[devssettings[self.aw.qmc.extradevices[i]]]
+                    dsettings: tuple[int,int,str,int,float] = ssettings[devssettings[self.aw.qmc.extradevices[i]]]
                     if i < len(self.aw.extrabaudrate):
                         self.aw.extrabaudrate[i] = dsettings[0]
                     else:
@@ -4426,6 +4797,8 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 self.aw.mugmaPort = int(self.mugmaPort.text())
             except Exception: # pylint: disable=broad-except
                 pass
+            self.aw.shelly_3EMPro_host = self.shelly3EMProHost.text().strip()
+            self.aw.shelly_PlusPlug_host = self.shellyPlusPlugHost.text().strip()
             self.aw.colorTrack_mean_window_size = self.colorTrackMeanSpinBox.value()
             self.aw.colorTrack_median_window_size = self.colorTrackMedianSpinBox.value()
             for i in range(8):
@@ -4458,7 +4831,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             #open serial conf Dialog
             #if device is not None or not external-program (don't need serial settings config)
             if (self.aw.qmc.device not in self.aw.qmc.nonSerialDevices or (self.aw.qmc.device == 134 and self.aw.santokerSerial) or
-                (self.aw.qmc.device == 138 and self.aw.kaleidoSerial)) and self.TabWidget.currentIndex() in {0,1,6}:
+                (self.aw.qmc.device == 138 and self.aw.kaleidoSerial)) and (self.aw.qmc.device != 50) and self.TabWidget.currentIndex() in {0,1,6}:
                 QTimer.singleShot(700, self.aw.setcommport)
             self.close()
             self.accept()
@@ -4466,6 +4839,12 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             _log.exception(e)
             _t, _e, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' device accept(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
+
+    @pyqtSlot(bool)
+    def bucket_mode_toggled(self, b:bool = False) -> None:
+        self.bucket_button1.setEnabled(not b)
+        self.bucket_button2.setEnabled(b)
+        self.bucket_button3.setEnabled(b)
 
     @pyqtSlot(bool)
     def showExtradevHelp(self, _checked:bool = False) -> None:
@@ -4498,5 +4877,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.aw.closeHelpDialog(self.helpdialog)
 
     @pyqtSlot(int)
-    def tabSwitched(self, _:int) -> None:
+    def tabSwitched(self, idx:int) -> None:
         self.closeHelp()
+        if idx == 5: # Ambient Tab
+            self.updateAmbientSourceComboBoxes()

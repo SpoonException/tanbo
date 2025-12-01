@@ -21,12 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-try:
-    #pylint: disable = E, W, R, C
-    from PyQt6.QtCore import QSemaphore # @UnusedImport @Reimport  @UnresolvedImport
-except Exception: # pylint: disable=broad-except
-    #pylint: disable = E, W, R, C
-    from PyQt5.QtCore import QSemaphore # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import QSemaphore
 
 from pathlib import Path
 from artisanlib.util import getDirectory
@@ -34,7 +29,7 @@ from plus import config
 import os
 import logging
 
-from typing import Final, Optional, IO
+from typing import Final, IO
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
@@ -98,7 +93,7 @@ def addPath(uuid: str, path: str) -> None:
     fh:IO[str]
     try:
         register_semaphore.acquire(1)
-        with portalocker.Lock(uuid_cache_path_lock, timeout=0.5) as fh:
+        with portalocker.Lock(uuid_cache_path_lock, timeout=0.5) as fh: # pyrefly: ignore
             addPathShelve(uuid, path, fh)
     except portalocker.exceptions.LockException as e:
         _log.exception(e)
@@ -111,7 +106,7 @@ def addPath(uuid: str, path: str) -> None:
             _log.debug(
                 'retry register:addPath(%s,%s)', str(uuid), str(path)
             )
-            with portalocker.Lock(uuid_cache_path_lock, timeout=0.3) as fh:
+            with portalocker.Lock(uuid_cache_path_lock, timeout=0.3) as fh:  # pyrefly: ignore
                 addPathShelve(uuid, path, fh)
         except Exception as ex:  # pylint: disable=broad-except
             _log.exception(ex)
@@ -123,7 +118,7 @@ def addPath(uuid: str, path: str) -> None:
 
 
 # returns None if given UUID is not registered, otherwise the registered path
-def getPath(uuid: str) -> Optional[str]:
+def getPath(uuid: str) -> str|None:
     _log.debug('getPath(%s)', uuid)
     import portalocker
     import shelve
@@ -131,7 +126,7 @@ def getPath(uuid: str) -> Optional[str]:
     db:shelve.Shelf[str]
     try:
         register_semaphore.acquire(1)
-        with portalocker.Lock(uuid_cache_path_lock, timeout=0.5) as fh:
+        with portalocker.Lock(uuid_cache_path_lock, timeout=0.5) as fh: # pyrefly: ignore
             try:
                 with shelve.open(uuid_cache_path) as db:
                     try:
@@ -159,7 +154,7 @@ def getPath(uuid: str) -> Optional[str]:
             )
             Path(uuid_cache_path_lock).unlink()
             _log.debug('retry register:getPath(%s)', str(uuid))
-            with portalocker.Lock(uuid_cache_path_lock, timeout=0.3) as fh:
+            with portalocker.Lock(uuid_cache_path_lock, timeout=0.3) as fh: # pyrefly: ignore
                 try:
                     with shelve.open(uuid_cache_path) as db:
                         try:
@@ -186,24 +181,26 @@ def getPath(uuid: str) -> Optional[str]:
         if register_semaphore.available() < 1:
             register_semaphore.release(1)
 
-
-# scans all .alog files for UUIDs and registers them in the cache
-def scanDir(path: Optional[str] = None) -> None:
-    _log.debug('scanDir(%s)', path)
-    try:
-        assert config.app_window is not None
-        if path is None:
-            # search the last used path
-            currentDictory = Path(
-                config.app_window.getDefaultPath()
-            )  # @UndefinedVariable
-        else:
-            currentDictory = Path(path)
-        for currentFile in currentDictory.glob(f'*.{config.profile_ext}'):
-            d = config.app_window.deserialize(
-                str(currentFile)
-            )  # @UndefinedVariable
-            if d is not None and config.uuid_tag in d:
-                addPath(d[config.uuid_tag], str(currentFile))  # @UndefinedVariable
-    except Exception as e:  # pylint: disable=broad-except
-        _log.exception(e)
+# NOT USED YET
+## scans all .alog files for UUIDs and registers them in the cache
+#def scanDir(path: Optional[str] = None) -> None:
+#    _log.debug('scanDir(%s)', path)
+#    try:
+#        aw = config.app_window
+#        if aw is not None:
+#            if path is None:
+#                # search the last used path
+#                currentDictory = Path(
+#                    aw.getDefaultPath()
+#                )  # @UndefinedVariable
+#            else:
+#                currentDictory = Path(path)
+#            for currentFile in currentDictory.glob(f'*.{config.profile_ext}'):
+#                d = aw.deserialize(
+#                    str(currentFile)
+#                )  # @UndefinedVariable
+#                aw.plusAddPath(d, str(currentFile))
+#                if d is not None and config.uuid_tag in d:
+#                    addPath(d[config.uuid_tag], str(currentFile))  # @UndefinedVariable
+#    except Exception as e:  # pylint: disable=broad-except
+#        _log.exception(e)

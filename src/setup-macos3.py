@@ -12,7 +12,7 @@
 # the GNU General Public License for more details.
 #
 # AUTHOR
-# Dave Baxter, Marko Luther 2023
+# Dave Baxter, Marko Luther 2025
 """This is a setup.py script
 
 Usage:
@@ -28,8 +28,6 @@ import plistlib
 
 import artisanlib
 
-from typing import List, Tuple
-
 
 # current version of artisan
 VERSION = artisanlib.__version__
@@ -39,10 +37,10 @@ QTDIR = os.environ['QT_PATH']
 
 APP = ['artisan.py']
 
-SUPPORTED_LANGUAGES = ['ar', 'da', 'de','el','en','es','fa','fi','fr','gd', 'he','hu','id','it','ja','ko','lv', 'nl','no','pl','pt_BR','pt','sk', 'sv','th','tr','uk','vi','zh_CN','zh_TW']
+SUPPORTED_LANGUAGES = ['ar', 'cs', 'da', 'de','el','en','es','fa','fi','fr','gd', 'he','hu','id','it','ja','ko','lv', 'nl','no','pl','pt_BR','pt','sk', 'sv','th','tr','uk','vi','zh_CN','zh_TW']
 
 
-DATA_FILES:List[Tuple[str,List[str]]] = [
+DATA_FILES:list[tuple[str,list[str]]] = [
     ('../Resources', [
         r'artisanProfile.icns',
         r'artisanAlarms.icns',
@@ -54,7 +52,12 @@ DATA_FILES:List[Tuple[str,List[str]]] = [
         r'includes/alarmclock.svg',
         r'includes/alarmclock.ttf',
         r'includes/alarmclock.woff',
+        r'includes/roboto-300.woff2',
+        r'includes/roboto-600.woff2',
+        r'includes/roboto-regular.woff2',
         r'includes/artisan.tpl',
+        r'includes/scale_widget.tpl',
+        r'includes/fitty_patched.js',
         r'includes/bigtext.js',
         r'includes/jquery-1.11.1.min.js',
         r'includes/android-chrome-192x192.png',
@@ -102,7 +105,7 @@ with open('Info.plist', 'r+b') as fp:
     try:
         plist['LSMinimumSystemVersion'] = os.environ['MACOSX_DEPLOYMENT_TARGET']
     except Exception: # pylint: disable=broad-except
-        plist['LSMinimumSystemVersion'] = '12.3'
+        plist['LSMinimumSystemVersion'] = '13.0'
     plist['LSMultipleInstancesProhibited'] = 'false'
     plist['LSArchitecturePriority'] = ['arm64', 'x86_64']
     plist['NSHumanReadableCopyright'] = LICENSE
@@ -164,15 +167,10 @@ subprocess.check_call(r'cp Wheels/Other/* dist/Wheels/Other',shell = True)
 subprocess.check_call(r'cp Wheels/Roasting/* dist/Wheels/Roasting',shell = True)
 os.chdir('./dist')
 
-#try:
-#    PYTHONPATH = os.environ['PYTHONPATH'] + r'/'
-#except Exception: # pylint: disable=broad-except
-#    PYTHONPATH = r'/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/'
-#
 
 try:
     PYTHON_V = os.environ['PYTHON_V']
-except Exception:
+except Exception: # pylint: disable=broad-except
     PYTHON_V = '3.12'
 python_version = f'python{PYTHON_V}'
 
@@ -204,7 +202,7 @@ for lang in SUPPORTED_LANGUAGES:
 #  place it in the brew Cellar
 
 brew_paths = ['/usr/local/Cellar', '/opt/homebrew/Cellar'] # path for Intel and arm brew installations
-libusb_versions = ['1.0.27', '1.0.26' , '1.0.25']
+libusb_versions = ['1.0.29', '1.0.27', '1.0.26' , '1.0.25']
 success = False
 for libusb_cand in [rf'{p}/libusb/{v}/lib/libusb-1.0.0.dylib' for v in libusb_versions for p in brew_paths]:
     print('libusb_cand',libusb_cand)
@@ -470,8 +468,10 @@ print('*** Removing unused language support from babel ***')
 
 for root, _, files in os.walk(f'./Artisan.app/Contents/Resources/lib/{python_version}/babel/locale-data'):
     for file in files:
-        if file.endswith('.dat') and file != 'root.dat' and (('_' not in file and file.split('.')[0] not in SUPPORTED_LANGUAGES) or
-                ('_' in file and file.split('.')[0] not in SUPPORTED_LANGUAGES)):
+        if (file.endswith('.dat') and
+            file not in {'root.dat', 'zh.dat', 'zh_Hans_CN.dat', 'zh_Hant_TW.dat'} and
+            (('_' not in file and file.split('.')[0] not in SUPPORTED_LANGUAGES) or
+                ('_' in file and file.split('.')[0] not in SUPPORTED_LANGUAGES))):
 #            print('Deleting', file)
             os.remove(os.path.join(root,file))
 

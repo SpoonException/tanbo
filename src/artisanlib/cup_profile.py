@@ -19,23 +19,17 @@ import platform
 from artisanlib.dialogs import ArtisanResizeablDialog
 from artisanlib.widgets import MyQDoubleSpinBox
 
-from typing import Optional, List, Any, cast, TYPE_CHECKING
+from typing import override, Any, cast, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
     from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
     from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
 
-try:
-    from PyQt6.QtCore import (Qt, pyqtSlot, QSettings) # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt6.QtWidgets import (QApplication, QCheckBox, QHBoxLayout, QVBoxLayout, QLabel, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QLineEdit,QPushButton, QComboBox, QDialogButtonBox, QHeaderView, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QTableWidget, QDoubleSpinBox, QGroupBox) # @UnusedImport @Reimport  @UnresolvedImport
-except ImportError:
-    from PyQt5.QtCore import (Qt, pyqtSlot, QSettings) # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-    from PyQt5.QtWidgets import (QApplication, QCheckBox, QHBoxLayout, QVBoxLayout, QLabel, # type: ignore # @UnusedImport @Reimport  @UnresolvedImport
-                                 QLineEdit,QPushButton, QComboBox, QDialogButtonBox, QHeaderView, # @UnusedImport @Reimport  @UnresolvedImport
-                                 QTableWidget, QDoubleSpinBox, QGroupBox) # @UnusedImport @Reimport  @UnresolvedImport
+from PyQt6.QtCore import (Qt, pyqtSlot, QSettings)
+from PyQt6.QtWidgets import (QApplication, QCheckBox, QHBoxLayout, QVBoxLayout, QLabel,
+                             QLineEdit,QPushButton, QComboBox, QDialogButtonBox, QHeaderView,
+                             QTableWidget, QDoubleSpinBox, QGroupBox)
 
 class flavorDlg(ArtisanResizeablDialog):
     def __init__(self, parent:'QWidget', aw:'ApplicationWindow') -> None:
@@ -53,6 +47,12 @@ class flavorDlg(ArtisanResizeablDialog):
         self.setWindowFlag(Qt.WindowType.WindowMaximizeButtonHint, False)
         self.setWindowFlags(flags)
         self.setWindowTitle(QApplication.translate('Form Caption','Cup Profile'))
+
+        self.aw.hideControls(False)
+        self.aw.hideLCDs(False)
+        self.aw.hideSliders(False)
+        self.aw.hide_minieventline(False)
+        self.aw.hideExtraButtons()
 
         settings = QSettings()
         if settings.contains('FlavorProperties'):
@@ -178,7 +178,7 @@ class flavorDlg(ArtisanResizeablDialog):
         if QApplication.queryKeyboardModifiers() == Qt.KeyboardModifier.AltModifier:
             # if ALT/OPTION key is hold, the items are swap
             swap = True
-        l:List[Any]
+        l:list[Any]
         for l in (self.aw.qmc.flavors, self.aw.qmc.flavorlabels):
             if swap:
                 self.swapItems(l, logicalIndex, newVisualIndex)
@@ -191,11 +191,11 @@ class flavorDlg(ArtisanResizeablDialog):
         self.aw.qmc.flavorchart()
 
     @staticmethod
-    def swapItems(l:List[Any], source:int, target:int) -> None:
+    def swapItems(l:list[Any], source:int, target:int) -> None:
         l[target],l[source] = l[source],l[target]
 
     @staticmethod
-    def moveItem(l:List[Any], source:int, target:int) -> None:
+    def moveItem(l:list[Any], source:int, target:int) -> None:
         l.insert(target, l.pop(source))
 
     @pyqtSlot(float)
@@ -368,10 +368,12 @@ class flavorDlg(ArtisanResizeablDialog):
             self.aw.qmc.flavorchart()
 
     @pyqtSlot('QCloseEvent')
-    def closeEvent(self,_:Optional['QCloseEvent'] = None) -> None:
+    @override
+    def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
+        del a0
         self.close()
 
-#    @pyqtSlot()
+    @override
     def close(self) -> bool:
         settings = QSettings()
         #save window geometry
@@ -387,7 +389,12 @@ class flavorDlg(ArtisanResizeablDialog):
         self.aw.qmc.clearFlavorChart()
         self.aw.redrawOnResize = True
         self.aw.qmc.redraw(recomputeAllDeltas=False)
-        self.aw.showControls()
-#        self.aw.closeEventSettings() # save all app settings
+
+        self.aw.updateControlsVisibility()
+        self.aw.updateReadingsLCDsVisibility()
+        self.aw.updateSlidersVisibility()
+        self.aw.update_minieventline_visibility()
+        self.aw.updateExtraButtonsVisibility()
+
         self.accept()
         return True

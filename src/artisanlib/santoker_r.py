@@ -16,7 +16,8 @@
 # Marko Luther, 2024
 
 import logging
-from typing import Optional, Final, Callable, TYPE_CHECKING
+from collections.abc import Callable
+from typing import override, Final, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from bleak.backends.characteristic import BleakGATTCharacteristic  # pylint: disable=unused-import
@@ -37,13 +38,13 @@ class SantokerR(ClientBLE):
 
 
     def __init__(self,
-                    connected_handler:Optional[Callable[[], None]] = None,
-                    disconnected_handler:Optional[Callable[[], None]] = None) -> None:
+                    connected_handler:Callable[[], None]|None = None,
+                    disconnected_handler:Callable[[], None]|None = None) -> None:
         super().__init__()
 
         # handlers
-        self.connected_handler:Optional[Callable[[], None]] = connected_handler
-        self.disconnected_handler:Optional[Callable[[], None]] = disconnected_handler
+        self.connected_handler:Callable[[], None]|None = connected_handler
+        self.disconnected_handler:Callable[[], None]|None = disconnected_handler
 
         # configuration
         self._logging = False         # if True device communication is logged
@@ -56,6 +57,7 @@ class SantokerR(ClientBLE):
         self.add_device_description(self.SANTOKER_R_SERVICE_UUID, self.SANTOKER_R_NAME)
         self.add_notify(self.SANTOKER_R_NOTIFY_UUID, self.notify_callback)
 
+    @override
     def setLogging(self, b:bool) -> None:
         self._logging = b
 
@@ -64,10 +66,12 @@ class SantokerR(ClientBLE):
         self._ET = -1
 
 
+    @override
     def on_connect(self) -> None:
         if self.connected_handler is not None:
             self.connected_handler()
 
+    @override
     def on_disconnect(self) -> None:
         self.reset_readings()
         if self.disconnected_handler is not None:

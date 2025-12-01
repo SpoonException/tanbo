@@ -1,12 +1,13 @@
 [General]
-Delay=400
-roastertype_setup=Santoker Cube BT PID
+Delay=500
+roastertype_setup=Santoker Cube PID
 roasterheating_setup=3
 roastersize_setup=0.1
-specialeventplayback=true, true, true, false
+specialeventplayback=false, false, true, false
 specialeventplaybackramp=false, false, true, false
 dropDuplicates=true
 dropDuplicatesLimit=0.1
+ramp_lookahead=5
 
 [Device]
 id=134
@@ -17,7 +18,7 @@ santokerBLE=true
 Controlbuttonflag=true
 
 [Axis]
-resetmaxtime=540
+resetmaxtime=360
 
 [background]
 DeltaBTB=false
@@ -25,7 +26,8 @@ DeltaETB=false
 
 [events]
 markTP=false
-etypes=, , ET-SV, Burner, 
+default_etypes_set=1, 0, 0, 1, 0
+etypes=, , ET-SV, , 
 clampEvents=true
 autoCharge=false
 
@@ -41,7 +43,6 @@ extrastopbits=1, 1, 1, 1, 1
 extratimeout=0.5, 0.5, 0.5, 0.5, 0.5
 
 [ExtraDev]
-devicetablecolumnwidths=230, 80, 80, 80, 80, 40, 40, 45, 47, 56, 57, 59, 61, 49, 49
 extraCurveVisibility1=false, false, false, false, true, true, true, true, true, true
 extraCurveVisibility2=false, false, false, false, true, true, true, true, true, true
 extraDelta1=false, false, false, true, false, false, false, false, false, false
@@ -120,19 +121,19 @@ slidervisibilities=1, 0, 1, 1
 
 [Alarms]
 alarm_popup_timout=10
-alarmaction=3, 5, 2, 3, 5, 3, 2
-alarmbeep=0, 0, 0, 0, 0, 0, 0
-alarmcond=1, 1, 1, 1, 1, 1, 1
-alarmflag=1, 1, 1, 1, 1, 1, 1
-alarmguard=-1, -1, -1, -1, -1, 3, -1
-alarmnegguard=-1, -1, -1, -1, -1, -1, -1
-alarmoffset=2, 3, 1, 1, 1, 90, 1
+alarmaction=3, 5, 2, 3, 5, 6, 3, 3, 2
+alarmbeep=0, 0, 0, 0, 0, 0, 0, 0, 0
+alarmcond=1, 1, 1, 1, 1, 1, 0, 0, 1
+alarmflag=1, 1, 1, 1, 1, 1, 1, 1, 1
+alarmguard=-1, -1, -1, -1, -1, -1, 3, 6, -1
+alarmnegguard=-1, -1, -1, -1, -1, -1, -1, -1, -1
+alarmoffset=2, 3, 1, 1, 1, 1, 0, 0, 1
 alarmsetlabel=
 alarmsfile=
-alarmsource=-3, -3, -3, -3, -3, -3, -3
-alarmstrings=60, 50, 1 # replay by time and PID ON, 100, 0, 30, 3 # event replay OFF
-alarmtemperature=500, 500, 500, 500, 500, 500, 500
-alarmtime=-1, -1, -1, 6, 6, 10, 6
+alarmsource=-3, -3, -3, -3, -3, -3, 0, 0, -3
+alarmstrings=70, 100, 1 # replay by time and PID ON, 100, 0, 0, 60 # further cool with lid open, 0 # done, 3 # event replay OFF
+alarmtemperature=500, 500, 500, 500, 500, 500, 45, 35, 500
+alarmtime=-1, -1, -1, 6, 6, 6, 6, 6, 6
 loadAlarmsFromBackground=false
 loadAlarmsFromProfile=false
 
@@ -146,22 +147,31 @@ invertControl=false
 negativeTargetMax=100
 negativeTargetMin=0
 negativeTargetRangeLimit=false
-pidKp=1.1
-pidKi=0.09
-pidKd=5
+pidKp=1.2
+pidKi=0.109
+pidKd=3.45
 pidNegativeTarget=0
 pidOnCHARGE=true
+pidOffDROP=true
 pidPositiveTarget=4
 pidSource=2
 positiveTargetMax=100
 positiveTargetMin=0
 positiveTargetRangeLimit=false
-svLookahead=5
+svLookahead=3
 svMode=0
 svSlider=false
-svSliderMax=230
+svSliderMax=220
 svSliderMin=0
 svValue=0
+derivative_filter=1
+pidDlimit=500
+pidDoE=true
+pidIRoC=false
+pidIRoCthreshold=15
+pidIWP=true
+pidIlimitFactor=1
+
 
 [EnergyDefaults]
 ratings=@Variant(\0\0\0\x7f\0\0\0\xePyQt_PyObject\0\0\0\x1\x10\x80\x4\x95\x5\x1\0\0\0\0\0\0}\x94K\x3}\x94G?\xb9\x99\x99\x99\x99\x99\x9a}\x94(\x8c\nloadlabels\x94]\x94(\x8c\x6Heater\x94\x8c\0\x94h\x6h\x6\x65\x8c\vloadratings\x94]\x94(G?\xf4\xcc\xcc\xcc\xcc\xcc\xcdK\0K\0K\0\x65\x8c\vratingunits\x94]\x94(K\x3K\0K\0K\0\x65\x8c\vsourcetypes\x94]\x94(K\x2K\0K\0K\0\x65\x8c\vload_etypes\x94]\x94(K\x4K\0K\0K\0\x65\x8c\x12presssure_percents\x94]\x94(\x89\x89\x89\x89\x65\x8c\x12loadevent_zeropcts\x94]\x94(K\0K\0K\0K\0\x65\x8c\x12loadevent_hundpcts\x94]\x94(KdKdKdKdeuss.)

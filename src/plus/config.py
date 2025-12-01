@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Final, Optional, TYPE_CHECKING
+from typing import Final, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
@@ -75,11 +75,13 @@ expired_subscription_max_days: Final[int] = 90
 
 # Cache and queue parameters
 
-stock_cache_expiration: Final[int] = 30  # expiration period in seconds
+# Note: stock_cache_expiration should be larger than schedule_cache_expiration
+stock_cache_expiration: Final[int] = 30   # expiration period in seconds for full stock updates (expensive)
+schedule_cache_expiration: Final[int] = 5 # expiration period in seconds for full stock updates only in case the schedule on the server has changed
 
 queue_start_delay: Final[int] = 5  # startup time of queue in seconds
 # delay between tasks in seconds (cycling interval of the queue)
-queue_task_delay: Final[float] = 1.0
+queue_task_delay: Final[float] = 2.0
 queue_retries: Final[int] = 2  # number of retries (should be >=0)
 queue_retry_delay: Final[int] = 30  # time between retries in seconds
 queue_discard_after: Final[int] = 3*24*60*60 # period in seconds after 'modified_at'..
@@ -115,7 +117,7 @@ uuid_cache: Final[str] = 'uuids'
 account_cache: Final[str] = 'account'
 
 # the account nr locally associated to the current account, or None
-account_nr: Optional[int] = None
+account_nr: int|None = None
 
 # the sync register that associates UUIDs with last known modification dates
 # modified_at for profiles uploaded/synced automatically
@@ -131,13 +133,13 @@ outbox_cache: Final[str] = 'outbox'
 
 # Runtime variables
 
-app_window: Optional['ApplicationWindow'] = None  # handle to the main Artisan application window
+app_window: 'ApplicationWindow|None' = None  # handle to the main Artisan application window
 #   if set, app_window.plus_login holds the current login account if any and
 #   app_window.updatePlusIcon() is a function that updates the toolbar
 #   plus service connection indicator icon
 connected: bool = False  # connection status
-passwd: Optional[str] = None
+passwd: str|None = None
 # the session token
-token: Optional[str] = None
+token: str|None = None
 # login nickname assigned on login with session token
-nickname: Optional[str] = None
+nickname: str|None = None
