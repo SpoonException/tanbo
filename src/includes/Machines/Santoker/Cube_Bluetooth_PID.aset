@@ -7,7 +7,7 @@ specialeventplayback=false, false, true, false
 specialeventplaybackramp=false, false, true, false
 dropDuplicates=true
 dropDuplicatesLimit=0.1
-ramp_lookahead=5
+ramp_lookahead=2
 
 [Device]
 id=134
@@ -64,9 +64,9 @@ buttonactions=0, 5, 5, 0, 5, 0, 5, 0
 buttonactionstrings=, "santoker(81,1)", "santoker(82,1)", , "santoker(83,1)", , "santoker(84,1)", 
 buttonvisibility=true, true, true, true, true, false, true, false
 extrabuttonactions=5, 0, 0
-extrabuttonactionstrings="santoker(85,0)", , 
+extrabuttonactionstrings="santoker(85,0);sleep(4);santoker(80,1)", , 
 xextrabuttonactions=0, 5
-xextrabuttonactionstrings=, "santoker(80,1)"
+xextrabuttonactionstrings=, "santoker(85,0);sleep(4);santoker(80,1)"
 
 [Quantifiers]
 clusterEventsFlag=false
@@ -150,6 +150,8 @@ negativeTargetRangeLimit=false
 pidKp=1.2
 pidKi=0.109
 pidKd=3.45
+pidPsetpointWeight=1.3
+pidDsetpointWeight=0.9
 pidNegativeTarget=0
 pidOnCHARGE=true
 pidOffDROP=true
@@ -164,9 +166,10 @@ svSlider=false
 svSliderMax=220
 svSliderMin=0
 svValue=0
+sv_filter=0
 derivative_filter=1
+duty_filter=0
 pidDlimit=500
-pidDoE=true
 pidIRoC=false
 pidIRoCthreshold=15
 pidIWP=true

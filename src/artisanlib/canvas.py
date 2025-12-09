@@ -67,7 +67,7 @@ from artisanlib.util import (uchr, fill_gaps, deltaLabelPrefix, deltaLabelUTF8, 
         events_internal_to_external_value, events_external_to_internal_value)
 from artisanlib import pid
 from artisanlib.time import ArtisanTime
-from artisanlib.filters import LiveMedian
+#from artisanlib.filters import LiveMedian
 from artisanlib.dialogs import ArtisanMessageBox
 from artisanlib.atypes import SerialSettings, BTBreakParams, BbpCache, AlarmSet, EnergyMetrics
 
@@ -309,8 +309,9 @@ class tgraphcanvas(FigureCanvas):
         'filterDropOut_replaceRoR_period', 'filterDropOut_spikeRoR_period', 'filterDropOut_tmin_C_default', 'filterDropOut_tmax_C_default',
         'filterDropOut_tmin_F_default', 'filterDropOut_tmax_F_default', 'filterDropOut_spikeRoR_dRoR_limit_C_default', 'filterDropOut_spikeRoR_dRoR_limit_F_default',
         'filterDropOuts', 'filterDropOut_tmin', 'filterDropOut_tmax', 'filterDropOut_spikeRoR_dRoR_limit', 'minmaxLimits', 'median_filter_factor_RoR',
-        'dropSpikes', 'dropDuplicates', 'dropDuplicatesLimit', 'median_filter_factor', 'liveMedianETRoRfilter', 'liveMedianBTRoRfilter',
-        'liveMedianETfilter', 'liveMedianBTfilter', 'interpolatemax', 'swapETBT', 'wheelflag', 'wheelnames', 'segmentlengths', 'segmentsalpha',
+        'dropSpikes', 'dropDuplicates', 'dropDuplicatesLimit', 'median_filter_factor',
+#        'liveMedianETRoRfilter', 'liveMedianBTRoRfilter', 'liveMedianETfilter', 'liveMedianBTfilter',
+        'interpolatemax', 'swapETBT', 'wheelflag', 'wheelnames', 'segmentlengths', 'segmentsalpha',
         'wheellabelparent', 'wheelcolor', 'wradii', 'startangle', 'projection', 'wheeltextsize', 'wheelcolorpattern', 'wheeledge',
         'wheellinewidth', 'wheellinecolor', 'wheeltextcolor', 'wheelconnections', 'wheelx', 'wheelz', 'wheellocationx', 'wheellocationz',
         'wheelaspect', 'samplingSemaphore', 'updateGraphicsSemaphore', 'profileDataSemaphore', 'messagesemaphore', 'errorsemaphore', 'serialsemaphore', 'seriallogsemaphore',
@@ -945,11 +946,16 @@ class tgraphcanvas(FigureCanvas):
                        '+RoastSeeNEXT Agtron/Crack',    #187
                        '+RoastSeeNEXT RoR/FoR',         #188
                        '+RoastSeeNEXT Distance/Time',   #189
-                       '+RoastSeeNEXT Yellow'           #190
+                       '+RoastSeeNEXT Yellow',          #190
+                       '+Phidget TMP1000',           #191
+                       '+Phidget HUM1000 Hum/Temp',  #192
+                       '+Phidget PRE1000',           #193
+                       '+Yocto Meteo Hum/Temp',      #194
+                       '+Yocto Meteo Pressure'       #195
                        ]
 
         # ADD DEVICE:
-        # ids of (main) Phidget devices (without a + in front of their name string)
+        # ids of (main) Phidget devices (without a + in front of their name string) as well as Phidget TMP100, HUM100 or PRE1000
         self.phidgetDevices : Final[list[int]] = [
             34, # Phidget 1048
             37, # Phidget 1046
@@ -983,6 +989,9 @@ class tgraphcanvas(FigureCanvas):
             154, # Phidget DAQ1300 01
             156, # Phidget DAQ1301 01
             168, # Phidget TMP1202
+            191, # +Phidget TMP1000
+            192, # +Phidget HUM1000 Hum/Temp
+            193, # +Phidget PRE1000
         ]
 
         # ADD DEVICE:
@@ -1015,6 +1024,8 @@ class tgraphcanvas(FigureCanvas):
             174, # ColorTrack BT
             175, # Thermoworks BlueDOT
             176, # Aillio Bullet R2
+            194, # +Yocto Meteo Hum/Temp
+            195  # +Yocto Meteo Pressure
         ]
 
         # ADD DEVICE:
@@ -1099,7 +1110,12 @@ class tgraphcanvas(FigureCanvas):
             187, # +RoastSeeNEXT Agtron/Crack
             188, # +RoastSeeNEXT RoR/FOR
             189, # +RoastSeeNEXT Distance/Time
-            190  # +RoastSeeNEXT Yellow
+            190, # +RoastSeeNEXT Yellow
+            191, # +Phidget TMP1000
+            192, # +Phidget HUM1000 Hum/Temp
+            193, # +Phidget PRE1000
+            194, # +Yocto Meteo Hum/Temp
+            195  # +Yocto Meteo Pressure
         ]
 
         # ADD DEVICE:
@@ -2146,10 +2162,10 @@ class tgraphcanvas(FigureCanvas):
         # self.median_filter_factor: factor used for MedianFilter on both, temperature and RoR curves
         self.median_filter_factor:Final[int] = 5 # k=3 is conservative seems not to catch all spikes in all cases; k=5 and k=7 seems to be ok; 13 might be the maximum; k must be odd!
         self.median_filter_factor_RoR:Final[int] = 3
-        self.liveMedianETfilter:LiveMedian = LiveMedian(self.median_filter_factor)
-        self.liveMedianBTfilter:LiveMedian = LiveMedian(self.median_filter_factor)
-        self.liveMedianETRoRfilter:LiveMedian = LiveMedian(self.median_filter_factor_RoR)
-        self.liveMedianBTRoRfilter:LiveMedian = LiveMedian(self.median_filter_factor_RoR)
+#        self.liveMedianETfilter:LiveMedian = LiveMedian(self.median_filter_factor)
+#        self.liveMedianBTfilter:LiveMedian = LiveMedian(self.median_filter_factor)
+#        self.liveMedianETRoRfilter:LiveMedian = LiveMedian(self.median_filter_factor_RoR)
+#        self.liveMedianBTRoRfilter:LiveMedian = LiveMedian(self.median_filter_factor_RoR)
 
         self.interpolatemax:Final[int] = 3 # maximal number of dropped readings (-1) that will be interpolated
 
@@ -4832,10 +4848,11 @@ class tgraphcanvas(FigureCanvas):
                     # as now the software PID is also update while the PID is off (if configured).
                     if (self.Controlbuttonflag and \
                             not self.aw.pidcontrol.externalPIDControl()): # any device and + Artisan Software PID lib
+                        process_value:float = 0
                         if self.aw.pidcontrol.pidSource in {0, 1}:
-                            self.pid.update(st2) # smoothed BT
+                            process_value = st2 # smoothed BT
                         elif self.aw.pidcontrol.pidSource == 2:
-                            self.pid.update(st1) # smoothed ET
+                            process_value = st1 # smoothed ET
                         else:
                             # pidsource = 3 => extra device 1, channel 1 => sample_extratemp1[0]
                             # pidsource = 4 => extra device 1, channel 2 => sample_extratemp2[0]
@@ -4843,9 +4860,10 @@ class tgraphcanvas(FigureCanvas):
                             #...
                             ps = self.aw.pidcontrol.pidSource - 3
                             if ps % 2 == 0 and len(sample_extratemp1)>(ps // 2) and len(sample_extratemp1[ps // 2])>0:
-                                self.pid.update(sample_extratemp1[ps // 2][-1])
+                                process_value = sample_extratemp1[ps // 2][-1]
                             elif len(sample_extratemp1)>(ps // 2) and len(sample_extratemp2[ps // 2])>0:
-                                self.pid.update(sample_extratemp2[ps // 2][-1])
+                                process_value = sample_extratemp2[ps // 2][-1]
+                        self.pid.update(process_value)
 
                     rateofchange1plot:float|None
                     rateofchange2plot:float|None
@@ -6367,14 +6385,15 @@ class tgraphcanvas(FigureCanvas):
                                 # temperatures which are assumed to increase
                                 end_reached[event_type] = True
 
-                                if (event_type not in slider_events and               # only if there is no slider event of the corresponding type
+                                if (#event_type not in slider_events and  # only if there is no slider event of the corresponding type
+                                        # UPDATE: we also ramp if we are @ the event to avoid SV discontinuities if lookahead is active, otherwise non-linearities could occur
                                         self.specialeventplayback[event_type] and     # only replay event types activated for replay
                                         (str(self.etypesf(event_type) == str(self.Betypesf(event_type)))) and
                                         self.specialeventplaybackramp[event_type]):   # only calculate ramp for ramping events
 
                                     ## calculate ramping
 
-                                    # we pick the left event of the ramp the last event of type event_type either of the foreground or the background, whichever ever is closer
+                                    # we pick as left event of the ramp the last event of type event_type either of the foreground or the background, whichever ever is closer
                                     # NOTE: this last event was not necessarily replayed before and might have been manually entered instead
 
                                     last_registered_background_event_idx:int|None = None
@@ -6397,7 +6416,7 @@ class tgraphcanvas(FigureCanvas):
 
                                     last_event_idx:int|None = last_registered_background_event_idx
                                     last_event_time:float|None = last_registered_background_event_time
-                                    last_event_value:float|None = None
+                                    last_event_value:int|None = None
                                     last_event_temp1:float|None = None
                                     last_event_temp2:float|None = None
                                     last_event_temp:float|None = None
@@ -6430,12 +6449,14 @@ class tgraphcanvas(FigureCanvas):
                                         if (last_event_temp2 is not None and (self.replayType == 1 or (self.replayType == 3 and value_decreasing)) and len(self.temp2)>1 and self.temp2[-1] != -1 and
                                                 self.temp2[-2] != -1 and self.temp2[-1] >= self.temp2[-2] and
                                                 len(self.temp2B) > bge):
+                                            # if replayType is by BT or (replayType is by time/BT and value is decreasing)
                                             last_event_temp = last_event_temp2
                                             next_event_temp = self.temp2B[bge]
                                             current_temp = self.temp2[-1]
                                         elif (last_event_temp1 is not None and (self.replayType == 2 or (self.replayType == 4 and value_decreasing)) and len(self.temp1)>1 and self.temp1[-1] != -1 and
                                                 self.temp1[-2] != -1 and self.temp1[-1] >= self.temp1[-2] and
                                                 len(self.temp1B) > bge):
+                                            # if replayType is by ET or (replayType is by time/ET and value is decreasing)
                                             last_event_temp = last_event_temp1
                                             next_event_temp = self.temp1B[bge]
                                             current_temp = self.temp1[-1]
@@ -6443,6 +6464,7 @@ class tgraphcanvas(FigureCanvas):
                                         # compute ramp value if possible
                                         if ((self.replayType in {1,2} or (self.replayType in {3,4} and value_decreasing)) and last_event_temp is not None and next_event_temp is not None and
                                                 current_temp is not None):
+                                            # if replayType is BT or ET or (time/BT and value is decreasing) or (time/ET and value is decreasing)
                                             # if background event target temperature did increase (or decrease) as the foreground, we ramp by temperature
                                             if min(last_event_temp, next_event_temp) <= current_temp <= max(last_event_temp, next_event_temp) and last_event_value is not None:
                                                 # we ramp only within the limits
@@ -6459,10 +6481,35 @@ class tgraphcanvas(FigureCanvas):
                                             # we ramp by (absolute) time (ignoring relative shift by CHARGE)
                                             last_time = last_event_time
                                             next_time = self.timeB[bge]
+
                                             if last_time <= now <= next_time and last_event_value is not None:
                                                 # we ramp only within the limits
-                                                coefficients = numpy.polyfit([last_time, next_time], [last_event_value, next_event_value], 1)
-                                                ramps[event_type] = numpy.poly1d(coefficients)(now + self.aw.qmc.ramp_lookahead)
+                                                next_after_next_registered_background_event_idx:None|int = None
+                                                if (now + self.aw.qmc.ramp_lookahead) >= next_time:
+                                                    # with lookahead we are leaving the current ramp, lets check if there is a next one
+                                                    try:
+                                                        # next event is at i (@next_time), but we are looking for the one after that
+                                                        next_background_event_types = self.backgroundEtypes[i+1:] # check only events after NOW (events after the current checked index bge)
+                                                        next_after_next_registered_background_event_idx = i + 1 + next_background_event_types.index(event_type) # index of next background event if any; except otherwise
+                                                    except ValueError: # index access fails if there is no such event/index
+                                                        pass
+                                                if next_after_next_registered_background_event_idx is None:
+                                                    # incl. the lookahead we are still within the current ramp or there is no next ramp
+                                                    coefficients = numpy.polyfit([last_time, next_time], [last_event_value, next_event_value], 1)
+                                                    ramps[event_type] = numpy.poly1d(coefficients)(now + self.aw.qmc.ramp_lookahead)
+                                                else:
+                                                    try:
+                                                        next_after_next_idx:int = self.backgroundEvents[next_after_next_registered_background_event_idx]
+                                                        if self.timeindexB[6]==0 or next_after_next_idx < self.timeindexB[6]:
+                                                            # we don't ramp to events after DROP
+                                                            next_after_next_time:float = self.timeB[next_after_next_idx]
+                                                            next_after_next_event_value:int = self.eventsInternal2ExternalValue(self.backgroundEvalues[next_after_next_registered_background_event_idx])
+                                                            # we take the next ramp after the current one
+                                                            coefficients = numpy.polyfit([next_time, next_after_next_time], [next_event_value, next_after_next_event_value], 1)
+                                                            ramps[event_type] = numpy.poly1d(coefficients)(now + self.aw.qmc.ramp_lookahead)
+                                                    except IndexError:
+                                                        pass
+
 
                 # now move the sliders to the new values (if any)
                 for k,v in slider_events.items():
@@ -8168,12 +8215,9 @@ class tgraphcanvas(FigureCanvas):
                             return y
                     elif len(res) != len(y):
                         return y
-                    else:
-                        return res
-                else:
-                    return y
-            else:
+                    return res
                 return y
+            return y
         except Exception as ex: # pylint: disable=broad-except
             _log.exception(ex)
             _, _, exc_tb = sys.exc_info()
@@ -13146,6 +13190,7 @@ class tgraphcanvas(FigureCanvas):
             # warm up software PID (write current p-i-d settings,..) configured
             if self.aw.pidcontrol.externalPIDControl() == 0  and self.Controlbuttonflag:
                 self.aw.pidcontrol.confSoftwarePID()
+                self.aw.pidcontrol.setSV(self.aw.sliderSV.value())
 
             # ADD DEVICE: # start communication/connect
             if not bool(self.aw.simulator):
