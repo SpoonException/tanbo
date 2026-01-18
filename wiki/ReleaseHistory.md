@@ -2,28 +2,37 @@ Detailed Release History
 ========================
 
 ----
-v3.4.1
+v3.6.0 (Jan XX, 2026)
 ------------------
 
 * ADDITIONS
-  - adds support of the Lebrew RoastSee NEXT real-time Agtron and crack analyzer
-  - adds possibility to overwrite the event button value on alarm action `Event Button` by the number given after the button number and the `>` sign, like in `1>3,3>2,4 # activate button 1 with value 3, button 3 with value 2 and button 4`
+  - adds UI modes (production, standard, expert)
+  - adds support of the [Lebrew RoastSee NEXT](https://lebrewtech.com/products/roastsee-next) real-time Agtron and crack analyzer
   - adds support for [Acaia Pyxis Black (2025)](https://eu.acaia.co/products/pyxis-black)
+  - adds support for Yoccto Meteo as well as Phidget TMP1000, HUM1000 and PRE1000 as extra devices
+  - adds Kaleido CSV importer ([PR #2090](../../../pull/2090) contributed by [Terracotta-6](https://github.com/Terracotta-6))
+  - adds possibility to overwrite the event button value on alarm action `Event Button` by the number given after the button number and the `>` sign, like in `1>3,3>2,4 # activate button 1 with value 3, button 3 with value 2 and button 4`
+  - adds relative percent event types ([Issue #2086](../../../issues/2086))
   - adds visual clue to curve LCDs indicating hidden curves
   - adds Designer spline fitting ([PR #2050](../../../pull/2050) contributed by [Thomas](https://github.com/phreeza))
-  - adds 2DOF PID incl. classical DoE, PoE, DoM, and PoM PID variants, interpolated gain scheduling, bumpless transfer, duty and derivative IIR SOS filter respecting sampling interval, and SV FIR filter for background follow mode
+  - adds 2DOF PID implementation including classical DoE, PoE, DoM, and PoM PID variants, interpolated gain scheduling, bumpless transfer, duty and derivative IIR SOS filter respecting sampling interval, and SV FIR filter for background follow mode
   - adds Artisan Command `pidWeights` to set 2DOFPID parameters beta and gamma
-  - adds support for Yoccto Meteo as well as Phidget TMP1000, HUM1000 and PRE1000 as extra devices
+  - adds calculation of energy data from PID Duty %
+  - adds OPTION click on ET/BT or DeltaET/DeltaBT LCDs to hide/show the corresponding background curves
+  - adds title click shortcut to open Roast Properties dialog
+  - adds deselection of selected event using key ESC
+  - adds temporary autozoom gesture (double-click on the graph canvas) to scale the y-axis such that all data is rendered on screen
 
 * CHANGES
-  - removed the term `slave` from the project but for 2 lines (to be removed in later versions) to keep compatibility with older settings
-  - improved ramping event tracking with lookahead, avoiding non-linearities
+  - improved ramping event tracking with lookahead, avoiding non-linearities and bumps
+  - removed the term `slave` from the project but for 2 lines (to be removed in later versions) needed to keep compatibility with older settings
+  - removes support for Qt5, Python versions before v3.12 as well as previous legacy build infrastructure
 
 ----
 v3.4.0 (Oct 31, 2025)
 ------------------
 
-Last version featuring legacy builds supporting macOS 10.13+, Window 8 and Windows 9.
+Last version featuring legacy builds supporting macOS 10.13+, Window 8, as well as last version supporting macOS 13 and RPi OS bookworm.
 
 * ADDITIONS
   - adds tooltip to phases widget in Comparator displaying 2nd and 3rd phase bean temperatures (or RoR if ALT/Option key is pressed) limits ([Issue #1906](../../../issues/1906))
@@ -104,7 +113,7 @@ Last version featuring legacy builds supporting macOS 10.13+, Window 8 and Windo
 v3.2.0 (June 23, 2025)
 ------------------
 
-Last version supporting macOS 12, Ubuntu 22.04 and RedHat 8.4.
+Last version supporting macOS 12, Ubuntu 22.04 and RedHat 8.4 (glibc 2.3.5).
 
 * ADDITIONS
   - adds [batch manager](https://doc.artisan.plus/docs/batch-manager)

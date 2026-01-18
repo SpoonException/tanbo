@@ -62,7 +62,7 @@ def extractProfileRubasseCSV(file:str,
 
         i = 0
         for row in data:
-            items = list(zip(header, row, strict=False)) # ty:ignore
+            items = list(zip(header, row, strict=False))
             item:dict[str,str] = {}
             for (name, value) in items:
                 item[name] = value.strip()
@@ -243,6 +243,6 @@ def extractProfileRubasseCSV(file:str,
         res['specialeventsvalue'] = specialeventsvalue
         res['specialeventsStrings'] = specialeventsStrings
         if heater_event or fan_event:
-            res['etypes'] = alt_etypesdefault
+            res['etypes'] = [encodeLocalStrict(etype) for etype in alt_etypesdefault]
 
     return res

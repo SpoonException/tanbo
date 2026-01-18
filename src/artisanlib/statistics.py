@@ -435,10 +435,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
         if self.aw.qmc.autotimex and not self.aw.qmc.statssummary:
             self.aw.autoAdjustAxis()
         self.aw.qmc.redraw(recomputeAllDeltas=False)
-        if self.aw.qmc.statssummary and not self.aw.qmc.flagon and self.aw.saveStatisticsMenu is not None:
-            self.aw.saveStatisticsMenu.setEnabled(True)
-        elif self.aw.saveStatisticsMenu is not None:
-            self.aw.saveStatisticsMenu.setEnabled(False)
+        self.aw.saveStatisticsMenu.setEnabled(self.aw.qmc.statssummary and not self.aw.qmc.flagon)
 
     @pyqtSlot(int)
     def changeStatisticsflag(self, value:int) -> None:
@@ -719,7 +716,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
     def insertsummarystat(self, insert:bool = False) -> None:
         try:
             focusWidget = QApplication.focusWidget()
-            if focusWidget is not None and isinstance(focusWidget, QLineEdit): # pyrefly: ignore[invalid-argument]
+            if focusWidget is not None and isinstance(focusWidget, QLineEdit):
                 fw:QLineEdit = focusWidget
                 fw.editingFinished.emit()
         except Exception as e: # pylint: disable=broad-except

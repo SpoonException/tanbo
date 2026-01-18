@@ -43,9 +43,10 @@ import io
 import functools
 import dateutil.parser
 import copy as copyd
-import arabic_reshaper # type:ignore[import-untyped]
+import arabic_reshaper # type:ignore[import-untyped] # ty:ignore [ignore]
+from enum import IntEnum
 from pathlib import Path
-from bidi import get_display # type:ignore[import-untyped] # newer rust based implementation of the above Python implementation
+from bidi import get_display # type:ignore[import-untyped] # ty:ignore [ignore] # newer rust based implementation of the above Python implementation
 
 # links CTR-C signals to the system default (ignore)
 import signal
@@ -110,7 +111,7 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QMessageBox, QLabel, QMainWi
                          QLCDNumber, QSpinBox, QComboBox,
                          QSlider,
                          QColorDialog, QFrame, QScrollArea, QProgressDialog,
-                         QStyleFactory, QMenu, QLayout, QDockWidget)
+                         QStyleFactory, QMenuBar, QMenu, QLayout, QDockWidget)
 from PyQt6.QtGui import (QScreen, QPageLayout, QAction, QImageReader, QWindow,
                             QKeySequence, QShortcut,
                             QPixmap,QColor,QDesktopServices,QIcon,
@@ -135,30 +136,30 @@ from PyQt6 import sip
 from artisanlib.suppress_errors import suppress_stdout_stderr
 
 with suppress_stdout_stderr():
-    import matplotlib as mpl
-    from matplotlib import colormaps
-    import matplotlib.colors as mcolors
+    import matplotlib as mpl # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore]
+    from matplotlib import colormaps # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore]
+    import matplotlib.colors as mcolors # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore]
 
 #try:
 #    mpl_version = [int(i) for i in mpl.__version__.split('.')]
 #except Exception: # pylint: disable=broad-except
 #    mpl_version = [7,7,7] # a trunk version
 
-from matplotlib.backend_bases import _Mode as MPL_Mode  # pylint: disable=import-private-name,unknown-option-value # @UnresolvedImport
+from matplotlib.backend_bases import _Mode as MPL_Mode # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore] # pylint: disable=import-private-name,unknown-option-value # @UnresolvedImport
 
 svgsupport = next((x for x in QImageReader.supportedImageFormats() if x == b'svg'),None)
 
-from matplotlib.figure import Figure
-from matplotlib import rcParams, ticker
-from matplotlib.font_manager import FontProperties, fontManager
-from matplotlib.transforms import Bbox
+from matplotlib.figure import Figure # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore]
+from matplotlib import rcParams, ticker # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore]
+from matplotlib.font_manager import FontProperties, fontManager # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore]
+from matplotlib.transforms import Bbox # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore]
 
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas  # @Reimport
-from matplotlib.backends.backend_qt import NavigationToolbar2QT as NavigationToolbar  # @Reimport
-from matplotlib.backend_bases import LocationEvent as mplLocationevent
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore] # @Reimport
+from matplotlib.backends.backend_qt import NavigationToolbar2QT as NavigationToolbar # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore] # @Reimport
+from matplotlib.backend_bases import LocationEvent as mplLocationevent # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore]
 
-from matplotlib.backends.qt_editor import figureoptions
-import matplotlib.backends.qt_editor._formlayout as formlayout
+from matplotlib.backends.qt_editor import figureoptions # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore]
+import matplotlib.backends.qt_editor._formlayout as formlayout # type:ignore[untyped-import,unused-ignore] # ty:ignore [ignore]
 
 
 if TYPE_CHECKING:
@@ -178,19 +179,19 @@ if TYPE_CHECKING:
     from artisanlib.kaleido import KaleidoPort # pylint: disable=unused-import
     from artisanlib.phases_canvas import tphasescanvas # pylint: disable=unused-import
     try:
-        from artisanlib.ikawa import IKAWA_BLE # pylint: disable=unused-import # ty:ignore [possibly-missing-import]
+        from artisanlib.ikawa import IKAWA_BLE # pylint: disable=unused-import
     except Exception: # pylint: disable=broad-except
         pass
-    from matplotlib.text import Annotation # pylint: disable=unused-import
+    from matplotlib.text import Annotation # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore] # pylint: disable=unused-import
     from openpyxl.worksheet.worksheet import Worksheet # pylint: disable=unused-import
     import numpy.typing as npt # pylint: disable=unused-import
     from PyQt6.QtWidgets import QTableWidgetItem, QTableWidget, QScrollBar # pylint: disable=unused-import
     from PyQt6.QtGui import QStyleHints, QClipboard, QKeyEvent, QMouseEvent, QDropEvent, QDragEnterEvent, QCloseEvent, QResizeEvent, QValidator # pylint: disable=unused-import
     from PyQt6.QtCore import QFile, QObject, QPermission, QMessageLogContext  # noqa: F401 # pylint: disable=unused-import,reimported # QFile is reimported for mypy!?
     from PyQt6.QtWebEngineCore import QWebEnginePage  # noqa: F401 # pylint: disable=unused-import
-    from matplotlib.backend_bases import Event as MplEvent, MouseEvent # pylint: disable=unused-import
-    from matplotlib.artist import Artist # pylint: disable=unused-import
-    from matplotlib.lines import Line2D # pylint: disable=unused-import
+    from matplotlib.backend_bases import Event as MplEvent, MouseEvent # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore] # pylint: disable=unused-import
+    from matplotlib.artist import Artist # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore] # pylint: disable=unused-import
+    from matplotlib.lines import Line2D # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore] # pylint: disable=unused-import
     from xml.etree.ElementTree import Element as XMLElement
 
 # fix socket.inet_pton on Windows (used by pymodbus TCP/UDP)
@@ -219,14 +220,14 @@ from artisanlib.qtsingleapplication import QtSingleApplication
 
 try:
     # spanning a second multiprocessing instance (Hottop server) on macOS falils to import the YAPI interface
-    from yoctopuce.yocto_api import YAPI # type: ignore[import-untyped]
+    from yoctopuce.yocto_api import YAPI # type: ignore[import-untyped] # ty:ignore[ignore]
 except ImportError:
     pass
 
 # platform dependent imports:
 if sys.platform.startswith('darwin'):
     # control app napping on OS X >= 10.9
-    import appnope # type: ignore[import-untyped] # @UnresolvedImport # type: ignore # pylint: disable=import-error
+    import appnope # type: ignore[import-untyped]  # ty:ignore[ignore # @UnresolvedImport # pylint: disable=import-error
     appnope.nope()
 
 
@@ -532,7 +533,7 @@ class Artisan(QtSingleApplication):
             from PyQt6.QtCore import QBluetoothPermission # pylint: disable=no-name-in-module
             try:
                 def permissionUpdated(permission:'QPermission') -> None:
-                    if permission.status() == Qt.PermissionStatus.Granted: # type:ignore[union-attr,unused-ignore]
+                    if permission.status() == Qt.PermissionStatus.Granted: # type:ignore[union-attr,unused-ignore] # ty:ignore[ignore
                         _log.info('Bluetooth permission updated: granted')
                     else:
                         _log.info('Bluetooth permission updated: denied')
@@ -541,7 +542,7 @@ class Artisan(QtSingleApplication):
                 if res == Qt.PermissionStatus.Undetermined:
                     _log.info('Bluetooth permission not granted. Requesting permission...')
                     if request:
-                        self.requestPermission(bluetoothPermission, permissionUpdated) # type:ignore[arg-type]
+                        self.requestPermission(bluetoothPermission, permissionUpdated) # type:ignore[arg-type] # ty:ignore[ignore]
                     return None
                 return res == Qt.PermissionStatus.Granted
             except Exception as e:
@@ -609,7 +610,7 @@ if not appFrozen() and __revision__ in {'', '0'}:
         uncommittedChanges = subprocessrun(['git','status', '--porcelain=v1'], capture_output=True, check=True).stdout  #number of uncommitted changes
         uc = '+' if len(uncommittedChanges) > 0 else ''
         git_hash = subprocessrun(['git', 'rev-parse', 'HEAD'], capture_output=True, check=True).stdout.decode('ascii').strip()[:7]  #git hash
-        __revision__ = f'{git_hash}{uc}' # ty:ignore[invalid-assignment]
+        __revision__ = f'{git_hash}{uc}'
     except Exception: # pylint: disable=broad-except
         pass
 
@@ -674,7 +675,7 @@ if multiprocessing.current_process().name == 'MainProcess':
         str(__revision__),
         str(__build__),
     )
-    _log.info('date: %s', datetime.datetime.now(datetime.UTC)) # ty:ignore
+    _log.info('date: %s', datetime.datetime.now(datetime.UTC))
     _log.info('platform: %s',platform.platform())
     _log.info('exec: %s', sys.executable)
 else:
@@ -757,7 +758,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
         # holds the last known cursor event while mouse pointer is in canvas, set by mouse_move()
         self._last_event:mplLocationevent|None = None
 
-        NavigationToolbar.__init__(self, plotCanvas, parent) # type:ignore[no-untyped-call]
+        NavigationToolbar.__init__(self, plotCanvas, parent) # type:ignore[no-untyped-call] # ty:ignore[ignore]
 
         # lets make the font of the coordinates QLabel a little larger
         f = self.locLabel.font()
@@ -773,15 +774,10 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
 ##        f.setBold(True)
         self.locLabel.setFont(f)
 
+# WORK:
 
 # add green flag menu on matplotlib v2.0 and later
         self.edit_curve_parameters_action = None
-        if len(self.actions()) > 0: # pyright:ignore[reportUnknownArgumentType]
-            # insert the "Green Flag" menu item before the last one (which is the x/y coordinate display)
-            self.edit_curve_parameters_action = QAction(self._icon('qt4_editor_options.png'),QApplication.translate('Toolbar', 'Lines'), self) # pyrefly: ignore[bad-assignment]
-            self.edit_curve_parameters_action.triggered.connect(self.my_edit_parameters)
-            self.edit_curve_parameters_action.setToolTip(QApplication.translate('Tooltip', 'Line styles'))
-            self.insertAction(self.actions()[-1], self.edit_curve_parameters_action)
 
         # adjust for dark or light canvas and set hover/selection style
         for a in self.actions():
@@ -806,13 +802,13 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
 
         self.aw.updatePlusStatus(self)
 
-        self.update_view_org = self._update_view # type: ignore[has-type] # Cannot determine type of "_update_view"
+        self.update_view_org = self._update_view # type: ignore[has-type] # ty:ignore[ignore] # Cannot determine type of "_update_view"
         self._update_view = self.update_view_new # pyright: ignore # Cannot assign to a method  [method-assign]
 
         self.release_pan_org = self.release_pan
-        self.release_pan = self.release_pan_new # type: ignore[method-assign] # Cannot assign to a method  [method-assign]
+        self.release_pan = self.release_pan_new # type: ignore[method-assign] # ty:ignore[ignore] # Cannot assign to a method  [method-assign]
         self.release_zoom_org = self.release_zoom
-        self.release_zoom = self.release_zoom_new # type: ignore[method-assign] # Cannot assign to a method  [method-assign]
+        self.release_zoom = self.release_zoom_new # type: ignore[method-assign] # ty:ignore[ignore] # Cannot assign to a method  [method-assign]
 
 #        # monkey patch matplotlib figureoptions that links to svg icon by default (crashes Windows Qt4 builds!)
 #        if not svgsupport:
@@ -823,16 +819,27 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
         except Exception: # pylint: disable=broad-except
             # not yet monkey patched
             formlayout.fedit_org = formlayout.fedit # type: ignore[attr-defined]
-            formlayout.fedit = self.my_fedit  # pyright:ignore[reportPrivateImportUsage] # ty:ignore[invalid-assignment]
-#        # monkey patch _formlayout to work around a MPL3.5.1 issue on Qt6
-#        # (see https://github.com/matplotlib/matplotlib/issues/22471)
-#        if mpl_version in [[3,5,0], [3,5,1]]:
-#            formlayout.ColorButton = MPLColorButtonPatched
+            formlayout.fedit = self.my_fedit  # pyright:ignore[reportPrivateImportUsage]
 
 
 #######################################################################################
 #####   temporary hack for windows till better solution found about toolbar icon problem with py2exe and svg
 #######################################################################################
+
+    def add_toolbar_lines_configuration(self) -> None:
+        if len(self.actions()) > 0 and self.edit_curve_parameters_action is None: # pyright:ignore[reportUnknownArgumentType]
+            # insert the "Green Flag" menu item before the last one (which is the x/y coordinate display)
+            self.edit_curve_parameters_action = QAction(self._icon('qt4_editor_options.png'),QApplication.translate('Toolbar', 'Lines'), self)
+            self.edit_curve_parameters_action.triggered.connect(self.my_edit_parameters)
+            self.edit_curve_parameters_action.setToolTip(QApplication.translate('Tooltip', 'Line styles'))
+            self.insertAction(self.actions()[-1], self.edit_curve_parameters_action)
+
+    def remove_toolbar_lines_configuration(self) -> None:
+        if len(self.actions()) > 0 and self.edit_curve_parameters_action is not None: # pyright:ignore[reportUnknownArgumentType]
+            self.removeAction(self.edit_curve_parameters_action)
+            self.edit_curve_parameters_action = None
+
+
 
     def my_fedit(self, data:Any, title:str='', comment:str='', icon:QIcon|None = None,
             parent:QWidget|None = None, apply:Callable[..., None]|None = None) -> None:
@@ -895,7 +902,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
                                         translated_tpls.append(tuple(tpl_list))# pyright:ignore[reportUnknownArgumentType]
                                     else:
                                         translated_tpls.append(tpl) # pyright:ignore[reportUnknownArgumentType]
-                            l[0] = translated_tpls # type: ignore[index] # Unsupported target for indexed assignment ("List[Any]|tuple[Any,...]")
+                            l[0] = translated_tpls # type: ignore[index] # ty:ignore[ignore] # Unsupported target for indexed assignment ("List[Any]|tuple[Any,...]")
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
                 def my_apply(data:dict[Any,Any]) -> None:
@@ -926,7 +933,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
                                 tb.push_current()
                     except Exception as e: # pylint: disable=broad-except
                         _log.exception(e)
-                dialog = formlayout.FormDialog(data, QApplication.translate('Toolbar', 'Lines'), comment, icon, parent, my_apply) # type: ignore[no-untyped-call]
+                dialog = formlayout.FormDialog(data, QApplication.translate('Toolbar', 'Lines'), comment, icon, parent, my_apply) # type: ignore[no-untyped-call] # ty:ignore[ignore]
                 dialog.exec()
 
 #######################################################################################
@@ -980,7 +987,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
         return res
 
     @override
-    def press_pan(self, event:'MplEvent') -> None: # pyrefly:ignore[bad-override]
+    def press_pan(self, event:'MplEvent') -> None:
         try:
             if self.qmc.ai is not None:
                 # we remember the axis ranges before the pan-zoom to detect if it was zoomed
@@ -990,7 +997,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
         super().press_pan(event)
 
     @override
-    def forward(self, *args:Any) -> None: # pyrefly:ignore[bad-override]
+    def forward(self, *args:Any) -> None:
         try:
             if self.qmc.ai is not None:
                 self.qmc.ai.set_visible(False)  # whenever forward is pressed the image will be hidden
@@ -999,7 +1006,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
         super().forward(*args)
 
     @override
-    def back(self, *args:Any) -> None: # pyrefly:ignore[bad-override]
+    def back(self, *args:Any) -> None:
         try:
             if self.qmc.ai is not None and self._nav_stack._pos == 1: # pylint: disable=protected-access
                 self.qmc.ai.set_visible(True)
@@ -1008,7 +1015,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
         super().back(*args)
 
     @override
-    def home(self, *args:Any) -> None: # pyrefly:ignore[bad-override]
+    def home(self, *args:Any) -> None:
         """Restore the original view"""
         # show the background image again that was hidden on zoom-in
         try:
@@ -1031,7 +1038,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
             self.push_current()
 
     @override
-    def _icon(self, name:str) -> QIcon: # pyrefly:ignore[bad-override]
+    def _icon(self, name:str) -> QIcon:
         if name.startswith('plus'):
             basedir = os.path.join(getResourcePath(),'Icons')
         else:
@@ -1075,10 +1082,10 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
         backgroundtimeindex = None # caches the background timex index computed at x cursor position
         # update xy cursor position widget
         if self._last_event is None:
-            self.set_message(f'<PRE>{self.mode}</PRE>') # type:ignore[no-untyped-call]
+            self.set_message(f'<PRE>{self.mode}</PRE>') # type:ignore[no-untyped-call] # ty:ignore[ignore]
         else:
             if not self.qmc.fmt_data_ON:
-                self.set_message(f'<PRE>{self.mode}</PRE>') # type:ignore[no-untyped-call]
+                self.set_message(f'<PRE>{self.mode}</PRE>') # type:ignore[no-untyped-call] # ty:ignore[ignore]
             else:
                 try:
                     channel = ''
@@ -1091,14 +1098,14 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
                     else:
                         try:
                             if self.qmc.fmt_data_curve == 1 and self._last_event.xdata is not None: # BT
-                                timeindex = self.qmc.time2index(float(self._last_event.xdata), nearest=False)  # pyrefly: ignore[bad-argument-type]
+                                timeindex = self.qmc.time2index(float(self._last_event.xdata), nearest=False)
                                 if self.qmc.fmt_data_RoR:
                                     ys = self.qmc.delta2[timeindex]
                                 else:
                                     ys = self.qmc.temp2[timeindex]
                                 channel = self.aw.BTname
                             elif self.qmc.fmt_data_curve == 2 and self._last_event.xdata is not None: # ET
-                                timeindex = self.qmc.time2index(float(self._last_event.xdata), nearest=False)  # pyrefly: ignore[bad-argument-type]
+                                timeindex = self.qmc.time2index(float(self._last_event.xdata), nearest=False)
                                 if self.qmc.fmt_data_RoR:
                                     ys = self.qmc.delta1[timeindex]
                                 else:
@@ -1106,7 +1113,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
                                 channel = self.aw.ETname
                             elif (self.qmc.fmt_data_curve == 3 and self.qmc.backgroundprofile is not None and
                                      self._last_event.xdata is not None): # BTB
-                                backgroundtimeindex = self.qmc.backgroundtime2index(float(self._last_event.xdata), nearest=False) # pyrefly: ignore[bad-argument-type]
+                                backgroundtimeindex = self.qmc.backgroundtime2index(float(self._last_event.xdata), nearest=False)
                                 if self.qmc.fmt_data_RoR:
                                     ys = self.qmc.delta2B[backgroundtimeindex]
                                 else:
@@ -1114,7 +1121,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
                                 channel = 'BTB'
                             elif (self.qmc.fmt_data_curve == 4 and self.qmc.backgroundprofile is not None and
                                     self._last_event.xdata is not None): # ETB
-                                backgroundtimeindex = self.qmc.backgroundtime2index(float(self._last_event.xdata), nearest=False)  # pyrefly: ignore[bad-argument-type]
+                                backgroundtimeindex = self.qmc.backgroundtime2index(float(self._last_event.xdata), nearest=False)
                                 if self.qmc.fmt_data_RoR:
                                     ys = self.qmc.delta1B[backgroundtimeindex]
                                 else:
@@ -1131,20 +1138,20 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
                             if inaxes is not None and self._last_event.ydata is not None:
                                 ys = float(inaxes.format_ydata(self._last_event.ydata))
                 except Exception: # pylint: disable=broad-except
-                    self.set_message(f'<PRE>{self.mode}</PRE>') # type:ignore[no-untyped-call]
+                    self.set_message(f'<PRE>{self.mode}</PRE>') # type:ignore[no-untyped-call] # ty:ignore[ignore]
                 else:
                     min_temp_digits = 5 if self.qmc.LCDdecimalplaces else 3
                     if self.qmc.fmt_data_RoR:
                         min_temp_digits -= 1
                     if self.mode:
-                        self.set_message(f"<PRE>{self.mode}  {xs: >5}\n{channel} {'' if ys is None else ys: >{min_temp_digits}}\u00B0{self.qmc.mode}{'/min' if self.qmc.fmt_data_RoR else ''}</PRE>") # type:ignore[no-untyped-call]
+                        self.set_message(f"<PRE>{self.mode}  {xs: >5}\n{channel} {'' if ys is None else ys: >{min_temp_digits}}\u00B0{self.qmc.mode}{'/min' if self.qmc.fmt_data_RoR else ''}</PRE>") # type:ignore[no-untyped-call] # ty:ignore[ignore]
                     else:
-                        self.set_message(f"<PRE>{xs: >5}\n{channel} {'' if ys is None else ys: >{min_temp_digits}}\u00B0{self.qmc.mode}{'/min' if self.qmc.fmt_data_RoR else ''}</PRE>") # type:ignore[no-untyped-call]
+                        self.set_message(f"<PRE>{xs: >5}\n{channel} {'' if ys is None else ys: >{min_temp_digits}}\u00B0{self.qmc.mode}{'/min' if self.qmc.fmt_data_RoR else ''}</PRE>") # type:ignore[no-untyped-call] # ty:ignore[ignore]
             # update running LCDs
             if not self.qmc.flagon and self.aw.comparator is None and self._last_event.xdata is not None:
                 if self.qmc.running_LCDs == 1: # show foreground profile readings at cursor position in LCDs
                     if timeindex is None:
-                        timeindex = self.qmc.time2index(float(self._last_event.xdata), nearest=False) # pyrefly: ignore[bad-argument-type]
+                        timeindex = self.qmc.time2index(float(self._last_event.xdata), nearest=False)
                     time:float|None = self._last_event.xdata
                     if time is not None: # pyright:ignore[reportUnnecessaryComparison]
                         if self.qmc.timeindex[0] != -1 and self.qmc.timeindex[0] < len(self.qmc.timex):
@@ -1161,8 +1168,8 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
                 elif self.qmc.running_LCDs == 2:  # show background profile readings at cursor position in LCDs
                     try:
                         if backgroundtimeindex is None:
-                            backgroundtimeindex = self.qmc.backgroundtime2index(float(self._last_event.xdata), nearest=False) # pyrefly: ignore[bad-argument-type]
-                        time = float(self._last_event.xdata) # pyrefly: ignore[bad-argument-type]
+                            backgroundtimeindex = self.qmc.backgroundtime2index(float(self._last_event.xdata), nearest=False)
+                        time = float(self._last_event.xdata)
                         if self.qmc.timeindexB[0] != -1 and self.qmc.timeindexB[0] < len(self.qmc.timeB):
                             time -= self.qmc.timeB[self.qmc.timeindexB[0]]
                         self.qmc.updateLCDs(
@@ -1179,7 +1186,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
 
     # overwritten from MPL v3.2.2 to get rid of that extra data printed
     @override
-    def mouse_move(self, event:'MplEvent|None') -> None: # pyrefly: ignore[bad-override]
+    def mouse_move(self, event:'MplEvent|None') -> None:
         try:
             self._update_cursor(event) # not available in MPL v3.0.3 on Python3.5 for the RPi Stretch builds
         except Exception: # pylint: disable=broad-except
@@ -1297,7 +1304,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
 
                     with warnings.catch_warnings():
                         warnings.filterwarnings('ignore') # , category=numpy.VisibleDeprecationWarning)
-                        figureoptions.figure_edit(axes) # type:ignore[no-untyped-call]
+                        figureoptions.figure_edit(axes) # type:ignore[no-untyped-call] # ty:ignore[ignore]
 #                        for line in steps_post_lines:
 #                            line.set_drawstyle("steps-post")
 
@@ -1317,7 +1324,7 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
 ###     Event Action Thread
 #########################################################################################################
 
-class EventActionThread(QThread): # pyrefly:ignore[invalid-inheritance] # pylint: disable=too-few-public-methods # pyright: ignore [reportGeneralTypeIssues] # Argument to class must be a base class
+class EventActionThread(QThread):
 
     def __init__(self, aw:'ApplicationWindow', action:int, command:str, eventtype:int|None) -> None:
         super().__init__()
@@ -1336,10 +1343,10 @@ class EventActionThread(QThread): # pyrefly:ignore[invalid-inheritance] # pylint
 #########################################################################################################
 
 # applies comma2dot as fixup to automatically turn numbers like "1,2" into valid numbers like "1.0" and the empty entry into "0.0"
-class MyQDoubleValidator(QDoubleValidator): # pyrefly:ignore[invalid-inheritance] # pylint: disable=too-few-public-methods  # pyright: ignore [reportGeneralTypeIssues] # Argument to class must be a base class
+class MyQDoubleValidator(QDoubleValidator):
 
     def __init__(self, bottom:float, top:float, decimals:int, lineedit:QLineEdit, empty_default:str = '0') -> None:
-        super().__init__(bottom, top, decimals, lineedit) # pyrefly: ignore[bad-argument-count]
+        super().__init__(bottom, top, decimals, lineedit)
         self.lineedit = lineedit
         self.empty_default = empty_default
 
@@ -1381,11 +1388,15 @@ class MenuShortCutsDisabled:
 #################### MAIN APPLICATION WINDOW ###########################################
 ########################################################################################
 
+class UI_MODE(IntEnum):
+    EXPERT = 1
+    DEFAULT = 2
+    PRODUCTION = 3
 
 # NOTE: to have pylint to verify proper __slot__ definitions with pylint one has to remove the super class QMainWindow here temporarily
 #   as this class does not has __slot__ definitions and thus __dict__ is contained which suppresses the warnings
 #class ApplicationWindow():
-class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # pyright: ignore [reportGeneralTypeIssues] # Argument to class must be a base class
+class ApplicationWindow(QMainWindow):
 
     singleShotPhidgetsPulseOFF = pyqtSignal(int,int,str) # signal to be called from the eventaction thread to realise Phidgets pulse via QTimer in the main thread
     singleShotPhidgetsPulseOFFSerial = pyqtSignal(int,int,str,str)
@@ -1507,7 +1518,9 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         'bbp_begin_to_bottom_ror', 'bbp_bottom_to_charge_ror', 'bbp_time_added_from_prev', 'bbp_begin', 'bbp_endroast_epoch_msec', 'bbp_endevents',
         'bbp_dropevents', 'bbp_dropbt', 'bbp_dropet', 'bbp_drop_to_end', 'schedule_day_filter', 'schedule_user_filter', 'schedule_machine_filter',
         'schedule_visible_filter', 'scheduler_tasks_visible', 'scheduler_completed_details_visible', 'scheduler_filters_visible', 'scheduler_auto_open',
-        'main_menu_actions_with_shortcuts' ]
+        'main_menu_actions_with_shortcuts', 'ui_mode', 'UIModeMenu',  'productionModeAction', 'defaultModeAction', 'expertModeAction', 'calculatorAction',
+        'helpAboutAction', 'checkUpdateAction', 'errorAction', 'messageAction', 'serialAction', 'platformAction', 'aboutQtAction',
+        'helpDocumentationAction', 'KshortCAction' ]
 
     nLCDS: Final[int] = 10 # maximum number of LCDs and extra devices (2x10 => 20 in total!)
 
@@ -1520,6 +1533,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         self.locale_str:str = locale
         self.app:Artisan = app
         self.superusermode:bool = False
+        self.ui_mode:UI_MODE = UI_MODE.DEFAULT
 
         self.sample_loop_running:bool = True
         self.time_stopped:float = 0
@@ -1573,7 +1587,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         self.recentThemeActs:list[QAction] = []
         self.applicationDirectory =  QDir().current().absolutePath()
 
-        super().__init__(parent) # pyrefly: ignore[bad-argument-count]
+        super().__init__(parent)
         self.helpdialog:HelpDlg|None = None
 
         self.setAcceptDrops(True) # enable drag-and-drop
@@ -1867,12 +1881,14 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         #
         self.extraeventslabels: list[str] = []
         self.extraeventsdescriptions: list[str] = []
-        self.extraeventstypes: list[int] = []
         self.extraeventsvalues: list[float] = [] # internal eventvalues (see canvas.py:self.qmc.eventsExternal2InternalValue()/eventsInternal2ExternalValue()
-        # extraeventtypes:
+        self.extraeventstypes: list[int] = []
+        # extraeventstypes:
         #  0-3: custom event types (absolute value assignments)
-        #  4: no event type assigned
+        #  4: no event type assigned (does not add any event)
         #  5-8: custom event types (relative value assignments; +/- steps)
+        #  9: -- (untyped event)
+        #  10-13: custom event types (relative percent value assignments; +/- % steps)
         self.extraeventbuttoncolor:list[str] = []
         self.extraeventbuttontextcolor:list[str] = []
         self.extraeventsactionstrings:list[str] = []
@@ -1973,25 +1989,16 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
 
         # populate recent file menu
         for _ in range(self.MaxRecentFiles):
-#            self.recentFileActs.append(
-#                    QAction(self, visible=False,
-#                            triggered=self.openRecentFile))
             action = QAction(self)
             action.triggered.connect(self.openRecentFile)
             self.recentFileActs.append(action)
         # populate recent settings menu
         for _ in range(self.MaxRecentFiles):
-#            self.recentSettingActs.append(
-#                    QAction(self, visible=False,
-#                            triggered=self.openRecentSetting))
             action = QAction(self)
             action.triggered.connect(self.openRecentSetting)
             self.recentSettingActs.append(action)
         # populate recent themes menu
         for _ in range(self.MaxRecentFiles):
-#            self.recentThemeActs.append(
-#                    QAction(self, visible=False,
-#                            triggered=self.openRecentTheme))
             action = QAction(self)
             action.triggered.connect(self.openRecentTheme)
             self.recentThemeActs.append(action)
@@ -2012,8 +2019,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         _mac_quit = QApplication.translate('MAC_APPLICATION_MENU', 'Quit {0}')
         _mac_about = QApplication.translate('MAC_APPLICATION_MENU', 'About {0}')
 
-        # the & adds a short cut automatically
-        menuBar = self.menuBar()
+        # the & to menu titles adds a short cut automatically
         self.fileMenu: QMenu|None = None
         self.editMenu: QMenu|None = None
         self.RoastMenu: QMenu|None = None
@@ -2022,547 +2028,481 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         self.viewMenu: QMenu|None = None
         self.helpMenu: QMenu|None = None
 
-        if menuBar is not None:
-            self.fileMenu = menuBar.addMenu('&' + QApplication.translate('Menu', 'File'))
-            self.editMenu = menuBar.addMenu('&' + QApplication.translate('Menu', 'Edit'))
-            self.RoastMenu = menuBar.addMenu('&' + QApplication.translate('Menu', 'Roast'))
-            self.ConfMenu = menuBar.addMenu('&' + QApplication.translate('Menu', 'Config'))
-            self.ToolkitMenu = menuBar.addMenu('&' + QApplication.translate('Menu', 'Tools'))
-            self.viewMenu = menuBar.addMenu('&' + QApplication.translate('Menu', 'View'))
-            self.helpMenu = menuBar.addMenu('&' + QApplication.translate('Menu', 'Help'))
-
         # initialize the variables holding QActions with shortcuts
         self.fullscreenAction:QAction|None = None
         self.newRoastAction:QAction|None = None
 
         #FILE menu
-        if self.fileMenu is not None:
-            self.newRoastMenu: QMenu|None = self.fileMenu.addMenu(QApplication.translate('Menu', 'New'))
-
-            self.fileLoadAction = QAction(QApplication.translate('Menu', 'Open...'),self)
-            self.fileLoadAction.setMenuRole(QAction.MenuRole.NoRole)
-            self.fileLoadAction.setShortcut(QKeySequence.StandardKey.Open)
-            self.fileLoadAction.triggered.connect(self.fileLoad)
-            self.fileMenu.addAction(self.fileLoadAction)
-
-            self.openRecentMenu = self.fileMenu.addMenu(QApplication.translate('Menu', 'Open Recent'))
-            if self.openRecentMenu is not None:
-                orm_action = self.openRecentMenu.menuAction()
-                if orm_action is not None:
-                    orm_action.setMenuRole(QAction.MenuRole.NoRole)
-            if self.openRecentMenu is not None:
-                for i in range(self.MaxRecentFiles):
-                    self.openRecentMenu.addAction(self.recentFileActs[i])
-                self.updateRecentFileActions()
-
-            self.importMenu: QMenu|None = self.fileMenu.addMenu(QApplication.translate('Menu', 'Import'))
-            if self.importMenu is not None:
-                urlImportAction = QAction('Artisan URL...', self)
-                urlImportAction.triggered.connect(self.urlImport)
-                self.importMenu.addAction(urlImportAction)
-
-                fileImportCSVAction = QAction('Artisan CSV...', self)
-                fileImportCSVAction.triggered.connect(self.fileImportCSV)
-                self.importMenu.addAction(fileImportCSVAction)
-
-                fileImportJSONAction = QAction('Artisan JSON...', self)
-                fileImportJSONAction.triggered.connect(self.fileImportJSON)
-                self.importMenu.addAction(fileImportJSONAction)
-
-                self.importMenu.addSeparator()
-
-                importBulletAction = QAction('Aillio RoasTime...', self)
-#                importBulletAction.triggered.connect(self.importBullet)
-                self.importMenu.addAction(importBulletAction)
-                importBulletAction.setEnabled(False)
-
-                importBulletAction = QAction('Aillio Roast.World URL...', self)
-#                importBulletAction.triggered.connect(self.importBulletURL)
-                self.importMenu.addAction(importBulletAction)
-                importBulletAction.setEnabled(False)
-
-                importCropsterAction = QAction('Cropster XLS...', self)
-                importCropsterAction.triggered.connect(self.importCropster)
-                self.importMenu.addAction(importCropsterAction)
-
-                importGiesenAction = QAction('Giesen CSV...', self)
-                importGiesenAction.triggered.connect(self.importGiesen)
-                self.importMenu.addAction(importGiesenAction)
-
-                importHH506RAAction = QAction('HH506RA...', self)
-                importHH506RAAction.triggered.connect(self.importHH506RA)
-                self.importMenu.addAction(importHH506RAAction)
-
-                importHiBeanAction = QAction('HiBean JSON...', self)
-                importHiBeanAction.triggered.connect(self.importHiBean)
-                self.importMenu.addAction(importHiBeanAction)
-
-                importIkawaURLAction = QAction('IKAWA URL...', self)
-                importIkawaURLAction.triggered.connect(self.importIkawaURL)
-                self.importMenu.addAction(importIkawaURLAction)
-
-                importIkawaAction = QAction('IKAWA CSV...', self)
-                importIkawaAction.triggered.connect(self.importIkawa)
-                self.importMenu.addAction(importIkawaAction)
-
-                importK202Action = QAction('K202...', self)
-                importK202Action.triggered.connect(self.importK202)
-                self.importMenu.addAction(importK202Action)
-
-                importK204Action = QAction('K204...', self)
-                importK204Action.triggered.connect(self.importK204)
-                self.importMenu.addAction(importK204Action)
-
-                importLoringAction = QAction('Loring CSV...', self)
-                importLoringAction.triggered.connect(self.importLoring)
-                self.importMenu.addAction(importLoringAction)
-
-                importPetronciniAction = QAction('Petroncini CSV...', self)
-                importPetronciniAction.triggered.connect(self.importPetroncini)
-                self.importMenu.addAction(importPetronciniAction)
-
-                importROESTAction = QAction('ROEST CSV...', self)
-                importROESTAction.triggered.connect(self.importRoest)
-                self.importMenu.addAction(importROESTAction)
-
-                importRubasseAction = QAction('Rubasse CSV...', self)
-                importRubasseAction.triggered.connect(self.importRubasse)
-                self.importMenu.addAction(importRubasseAction)
-
-                importPilotAction = QAction('Probat Pilot...', self)
-                importPilotAction.triggered.connect(self.importPilot)
-                self.importMenu.addAction(importPilotAction)
-
-                fileImportRoastLoggerAction = QAction('RoastLogger...', self)
-                fileImportRoastLoggerAction.triggered.connect(self.fileImportRoastLogger)
-                self.importMenu.addAction(fileImportRoastLoggerAction)
-
-                importRoastLogAction = QAction('RoastLog URL...',self)
-                importRoastLogAction.triggered.connect(self.importRoastLog)
-                self.importMenu.addAction(importRoastLogAction)
+        self.newRoastMenu:QMenu = QMenu(QApplication.translate('Menu', 'New'))
+
+        self.fileLoadAction = QAction(QApplication.translate('Menu', 'Open...'),self)
+        self.fileLoadAction.setMenuRole(QAction.MenuRole.NoRole)
+        self.fileLoadAction.setShortcut(QKeySequence.StandardKey.Open)
+        self.fileLoadAction.triggered.connect(self.fileLoad)
+
+        self.openRecentMenu = QMenu(QApplication.translate('Menu', 'Open Recent'))
+        orm_action = self.openRecentMenu.menuAction()
+        if orm_action is not None:
+            orm_action.setMenuRole(QAction.MenuRole.NoRole)
+        for i in range(self.MaxRecentFiles):
+            self.openRecentMenu.addAction(self.recentFileActs[i])
+        self.updateRecentFileActions()
+
+        self.importMenu:QMenu = QMenu(QApplication.translate('Menu', 'Import'))
+        urlImportAction = QAction('Artisan URL...', self)
+        urlImportAction.triggered.connect(self.urlImport)
+        self.importMenu.addAction(urlImportAction)
+
+        fileImportCSVAction = QAction('Artisan CSV...', self)
+        fileImportCSVAction.triggered.connect(self.fileImportCSV)
+        self.importMenu.addAction(fileImportCSVAction)
+
+        fileImportJSONAction = QAction('Artisan JSON...', self)
+        fileImportJSONAction.triggered.connect(self.fileImportJSON)
+        self.importMenu.addAction(fileImportJSONAction)
+
+        self.importMenu.addSeparator()
+
+        importBulletAction = QAction('Aillio RoasTime...', self)
+        #importBulletAction.triggered.connect(self.importBullet)
+        self.importMenu.addAction(importBulletAction)
+        importBulletAction.setEnabled(False)
+
+        importBulletAction = QAction('Aillio Roast.World URL...', self)
+        #importBulletAction.triggered.connect(self.importBulletURL)
+        self.importMenu.addAction(importBulletAction)
+        importBulletAction.setEnabled(False)
+
+        importCropsterAction = QAction('Cropster XLS...', self)
+        importCropsterAction.triggered.connect(self.importCropster)
+        self.importMenu.addAction(importCropsterAction)
+
+        importGiesenAction = QAction('Giesen CSV...', self)
+        importGiesenAction.triggered.connect(self.importGiesen)
+        self.importMenu.addAction(importGiesenAction)
+
+        importHH506RAAction = QAction('HH506RA...', self)
+        importHH506RAAction.triggered.connect(self.importHH506RA)
+        self.importMenu.addAction(importHH506RAAction)
+
+        importHiBeanAction = QAction('HiBean JSON...', self)
+        importHiBeanAction.triggered.connect(self.importHiBean)
+        self.importMenu.addAction(importHiBeanAction)
+
+        importIkawaURLAction = QAction('IKAWA URL...', self)
+        importIkawaURLAction.triggered.connect(self.importIkawaURL)
+        self.importMenu.addAction(importIkawaURLAction)
+
+        importIkawaAction = QAction('IKAWA CSV...', self)
+        importIkawaAction.triggered.connect(self.importIkawa)
+        self.importMenu.addAction(importIkawaAction)
+
+        importKaleidoAction = QAction('Kaleido CSV...', self)
+        importKaleidoAction.triggered.connect(self.importKaleido)
+        self.importMenu.addAction(importKaleidoAction)
+
+        importK202Action = QAction('K202...', self)
+        importK202Action.triggered.connect(self.importK202)
+        self.importMenu.addAction(importK202Action)
+
+        importK204Action = QAction('K204...', self)
+        importK204Action.triggered.connect(self.importK204)
+        self.importMenu.addAction(importK204Action)
+
+        importLoringAction = QAction('Loring CSV...', self)
+        importLoringAction.triggered.connect(self.importLoring)
+        self.importMenu.addAction(importLoringAction)
+
+        importPetronciniAction = QAction('Petroncini CSV...', self)
+        importPetronciniAction.triggered.connect(self.importPetroncini)
+        self.importMenu.addAction(importPetronciniAction)
+
+        importROESTAction = QAction('ROEST CSV...', self)
+        importROESTAction.triggered.connect(self.importRoest)
+        self.importMenu.addAction(importROESTAction)
+
+        importRubasseAction = QAction('Rubasse CSV...', self)
+        importRubasseAction.triggered.connect(self.importRubasse)
+        self.importMenu.addAction(importRubasseAction)
+
+        importPilotAction = QAction('Probat Pilot...', self)
+        importPilotAction.triggered.connect(self.importPilot)
+        self.importMenu.addAction(importPilotAction)
+
+        fileImportRoastLoggerAction = QAction('RoastLogger...', self)
+        fileImportRoastLoggerAction.triggered.connect(self.fileImportRoastLogger)
+        self.importMenu.addAction(fileImportRoastLoggerAction)
+
+        importRoastLogAction = QAction('RoastLog URL...',self)
+        importRoastLogAction.triggered.connect(self.importRoastLog)
+        self.importMenu.addAction(importRoastLogAction)
 
-                importRoastPathAction = QAction('RoastPATH URL...',self)
-#                importRoastPathAction.triggered.connect(self.importRoastPATH)
-                self.importMenu.addAction(importRoastPathAction)
-                importRoastPathAction.setEnabled(False)
+        importRoastPathAction = QAction('RoastPATH URL...',self)
+        #importRoastPathAction.triggered.connect(self.importRoastPATH)
+        self.importMenu.addAction(importRoastPathAction)
+        importRoastPathAction.setEnabled(False)
 
-                importStrongholdAction = QAction('Stronghold XLSX...', self)
-                importStrongholdAction.triggered.connect(self.importStronghold)
-                self.importMenu.addAction(importStrongholdAction)
+        importStrongholdAction = QAction('Stronghold XLSX...', self)
+        importStrongholdAction.triggered.connect(self.importStronghold)
+        self.importMenu.addAction(importStrongholdAction)
 
-            self.convFromMenu: QMenu|None = self.fileMenu.addMenu(QApplication.translate('Menu', 'Convert From'))
-            if self.convFromMenu is not None:
-                fileConvertFromCropsterAction = QAction(QApplication.translate('Menu', 'Cropster XLS...'), self)
-                fileConvertFromCropsterAction.triggered.connect(self.convertFromCropster)
-                self.convFromMenu.addAction(fileConvertFromCropsterAction)
+        self.convFromMenu:QMenu = QMenu(QApplication.translate('Menu', 'Convert From'))
+        fileConvertFromCropsterAction = QAction(QApplication.translate('Menu', 'Cropster XLS...'), self)
+        fileConvertFromCropsterAction.triggered.connect(self.convertFromCropster)
+        self.convFromMenu.addAction(fileConvertFromCropsterAction)
 
-                fileConvertFromGiesenAction = QAction(QApplication.translate('Menu', 'Giesen CSV...'), self)
-                fileConvertFromGiesenAction.triggered.connect(self.convertFromGiesen)
-                self.convFromMenu.addAction(fileConvertFromGiesenAction)
+        fileConvertFromGiesenAction = QAction(QApplication.translate('Menu', 'Giesen CSV...'), self)
+        fileConvertFromGiesenAction.triggered.connect(self.convertFromGiesen)
+        self.convFromMenu.addAction(fileConvertFromGiesenAction)
 
-                fileConvertFromHiBeanAction = QAction(QApplication.translate('Menu', 'HiBean JSON...'), self)
-                fileConvertFromHiBeanAction.triggered.connect(self.convertFromHiBean)
-                self.convFromMenu.addAction(fileConvertFromHiBeanAction)
+        fileConvertFromHiBeanAction = QAction(QApplication.translate('Menu', 'HiBean JSON...'), self)
+        fileConvertFromHiBeanAction.triggered.connect(self.convertFromHiBean)
+        self.convFromMenu.addAction(fileConvertFromHiBeanAction)
 
-                fileConvertFromIKAWAAction = QAction(QApplication.translate('Menu', 'IKAWA CSV...'), self)
-                fileConvertFromIKAWAAction.triggered.connect(self.convertFromIKAWA)
-                self.convFromMenu.addAction(fileConvertFromIKAWAAction)
+        fileConvertFromIKAWAAction = QAction(QApplication.translate('Menu', 'IKAWA CSV...'), self)
+        fileConvertFromIKAWAAction.triggered.connect(self.convertFromIKAWA)
+        self.convFromMenu.addAction(fileConvertFromIKAWAAction)
 
-                fileConvertFromLoringAction = QAction(QApplication.translate('Menu', 'Loring CSV...'), self)
-                fileConvertFromLoringAction.triggered.connect(self.convertFromLoring)
-                self.convFromMenu.addAction(fileConvertFromLoringAction)
+        fileConvertFromKaleidoAction = QAction(QApplication.translate('Menu', 'Kaleido CSV...'), self)
+        fileConvertFromKaleidoAction.triggered.connect(self.convertFromKaleido)
+        self.convFromMenu.addAction(fileConvertFromKaleidoAction)
 
-                fileConvertFromPetronciniAction = QAction(QApplication.translate('Menu', 'Petroncini CSV...'), self)
-                fileConvertFromPetronciniAction.triggered.connect(self.convertFromPetroncini)
-                self.convFromMenu.addAction(fileConvertFromPetronciniAction)
+        fileConvertFromLoringAction = QAction(QApplication.translate('Menu', 'Loring CSV...'), self)
+        fileConvertFromLoringAction.triggered.connect(self.convertFromLoring)
+        self.convFromMenu.addAction(fileConvertFromLoringAction)
 
-                fileConvertFromROESTAction = QAction(QApplication.translate('Menu', 'ROEST CSV...'), self)
-                fileConvertFromROESTAction.triggered.connect(self.convertFromROEST)
-                self.convFromMenu.addAction(fileConvertFromROESTAction)
+        fileConvertFromPetronciniAction = QAction(QApplication.translate('Menu', 'Petroncini CSV...'), self)
+        fileConvertFromPetronciniAction.triggered.connect(self.convertFromPetroncini)
+        self.convFromMenu.addAction(fileConvertFromPetronciniAction)
 
-                fileConvertFromRubaseAction = QAction(QApplication.translate('Menu', 'Rubase CSV...'), self)
-                fileConvertFromRubaseAction.triggered.connect(self.convertFromRubase)
-                self.convFromMenu.addAction(fileConvertFromRubaseAction)
+        fileConvertFromROESTAction = QAction(QApplication.translate('Menu', 'ROEST CSV...'), self)
+        fileConvertFromROESTAction.triggered.connect(self.convertFromROEST)
+        self.convFromMenu.addAction(fileConvertFromROESTAction)
 
-                fileConvertFromStrongholdAction = QAction(QApplication.translate('Menu', 'Stronghold XLSX...'), self)
-                fileConvertFromStrongholdAction.triggered.connect(self.convertFromStronghold)
-                self.convFromMenu.addAction(fileConvertFromStrongholdAction)
+        fileConvertFromRubaseAction = QAction(QApplication.translate('Menu', 'Rubase CSV...'), self)
+        fileConvertFromRubaseAction.triggered.connect(self.convertFromRubase)
+        self.convFromMenu.addAction(fileConvertFromRubaseAction)
 
-            self.fileMenu.addSeparator()
+        fileConvertFromStrongholdAction = QAction(QApplication.translate('Menu', 'Stronghold XLSX...'), self)
+        fileConvertFromStrongholdAction.triggered.connect(self.convertFromStronghold)
+        self.convFromMenu.addAction(fileConvertFromStrongholdAction)
 
-            self.fileSaveAction = QAction(QApplication.translate('Menu', 'Save'), self)
-            self.fileSaveAction.setShortcut(QKeySequence.StandardKey.Save)
-            self.fileSaveAction.triggered.connect(self.fileSave_current_action)
-            self.fileMenu.addAction(self.fileSaveAction)
+        self.fileSaveAction = QAction(QApplication.translate('Menu', 'Save'), self)
+        self.fileSaveAction.setShortcut(QKeySequence.StandardKey.Save)
+        self.fileSaveAction.triggered.connect(self.fileSave_current_action)
 
-            self.fileSaveAsAction = QAction(QApplication.translate('Menu', 'Save As...'), self)
-            self.fileSaveAsAction.setShortcut(QKeySequence.StandardKey.SaveAs)
-            self.fileSaveAsAction.triggered.connect(self.fileSave_new_action)
-            self.fileMenu.addAction(self.fileSaveAsAction)
+        self.fileSaveAsAction = QAction(QApplication.translate('Menu', 'Save As...'), self)
+        self.fileSaveAsAction.setShortcut(QKeySequence.StandardKey.SaveAs)
+        self.fileSaveAsAction.triggered.connect(self.fileSave_new_action)
 
-            # same as SaveAs, just that the saved file gets a new roastUUID assigned
-            self.fileSaveCopyAsAction = QAction(QApplication.translate('Menu', 'Save a Copy As...'), self)
-            self.fileSaveCopyAsAction.triggered.connect(self.fileSave_copy_action)
-            self.fileMenu.addAction(self.fileSaveCopyAsAction)
+        # same as SaveAs, just that the saved file gets a new roastUUID assigned
+        self.fileSaveCopyAsAction = QAction(QApplication.translate('Menu', 'Save a Copy As...'), self)
+        self.fileSaveCopyAsAction.triggered.connect(self.fileSave_copy_action)
 
-            self.fileMenu.addSeparator()
+        self.exportMenu:QMenu = QMenu(QApplication.translate('Menu', 'Export'))
+        fileExportCSVAction = QAction(QApplication.translate('Menu', 'Artisan CSV...'), self)
+        fileExportCSVAction.triggered.connect(self.fileExportCSV)
+        self.exportMenu.addAction(fileExportCSVAction)
 
-            self.exportMenu = self.fileMenu.addMenu(QApplication.translate('Menu', 'Export'))
-            if self.exportMenu is not None:
-                fileExportCSVAction = QAction(QApplication.translate('Menu', 'Artisan CSV...'), self)
-                fileExportCSVAction.triggered.connect(self.fileExportCSV)
-                self.exportMenu.addAction(fileExportCSVAction)
-
-                fileExportJSONAction = QAction(QApplication.translate('Menu', 'Artisan JSON...'), self)
-                fileExportJSONAction.triggered.connect(self.fileExportJSON)
-                self.exportMenu.addAction(fileExportJSONAction)
-
-                self.exportMenu.addSeparator()
-
-                fileExportExcelAction = QAction(QApplication.translate('Menu', 'Excel...'), self)
-                fileExportExcelAction.triggered.connect(self.fileExportExcel)
-                self.exportMenu.addAction(fileExportExcelAction)
-
-                self.exportMenu.addSeparator()
-
-                fileExportPilotAction = QAction(QApplication.translate('Menu', 'Probat Pilot...'), self)
-                fileExportPilotAction.triggered.connect(self.fileExportPilot)
-                self.exportMenu.addAction(fileExportPilotAction)
-
-                fileExportRoastLoggerAction = QAction(QApplication.translate('Menu', 'RoastLogger...'), self)
-                fileExportRoastLoggerAction.triggered.connect(self.fileExportRoastLogger)
-                self.exportMenu.addAction(fileExportRoastLoggerAction)
-
-            self.convMenu: QMenu|None = self.fileMenu.addMenu(QApplication.translate('Menu', 'Convert To'))
-            if self.convMenu is not None:
-                fileConvertFahrenheitAction = QAction(QApplication.translate('Menu', 'Fahrenheit...'), self)
-                fileConvertFahrenheitAction.triggered.connect(self.fileConvertToFahrenheit)
-                self.convMenu.addAction(fileConvertFahrenheitAction)
-
-                fileConvertCelsiusAction = QAction(QApplication.translate('Menu', 'Celsius...'), self)
-                fileConvertCelsiusAction.triggered.connect(self.fileConvertToCelsius)
-                self.convMenu.addAction(fileConvertCelsiusAction)
-
-                self.convMenu.addSeparator()
-
-                fileConvertExcelAction = QAction(QApplication.translate('Menu', 'Excel...'), self)
-                fileConvertExcelAction.triggered.connect(self.fileConvertExcel)
-                self.convMenu.addAction(fileConvertExcelAction)
-
-                self.convMenu.addSeparator()
-
-                fileConvertCSVAction = QAction(QApplication.translate('Menu', 'Artisan CSV...'), self)
-                fileConvertCSVAction.triggered.connect(self.fileConvertCSV)
-                self.convMenu.addAction(fileConvertCSVAction)
-
-                fileConvertJSONAction = QAction(QApplication.translate('Menu', 'Artisan JSON...'), self)
-                fileConvertJSONAction.triggered.connect(self.fileConvertJSON)
-                self.convMenu.addAction(fileConvertJSONAction)
-
-                self.convMenu.addSeparator()
-
-                fileConvertProbatAction = QAction(QApplication.translate('Menu', 'Probat Pilot...'), self)
-                fileConvertProbatAction.triggered.connect(self.fileConvertPilot)
-                self.convMenu.addAction(fileConvertProbatAction)
-
-                fileConvertRoastLoggerAction = QAction(QApplication.translate('Menu', 'RoastLogger...'), self)
-                fileConvertRoastLoggerAction.triggered.connect(self.fileConvertRoastLogger)
-                self.convMenu.addAction(fileConvertRoastLoggerAction)
-
-                self.convMenu.addSeparator()
-
-                fileConvertPNGAction = QAction(QApplication.translate('Menu', 'PNG...'), self)
-                fileConvertPNGAction.triggered.connect(self.fileConvertPNG)
-                self.convMenu.addAction(fileConvertPNGAction)
-
-                fileConvertJPEGAction = QAction(QApplication.translate('Menu', 'JPEG...'), self)
-                fileConvertJPEGAction.triggered.connect(self.fileConvertJPEG)
-                self.convMenu.addAction(fileConvertJPEGAction)
-
-                fileConvertSVGAction = QAction(QApplication.translate('Menu', 'SVG...'), self)
-                fileConvertSVGAction.triggered.connect(self.fileConvertSVG)
-                self.convMenu.addAction(fileConvertSVGAction)
-
-                fileConvertPDFAction = QAction(QApplication.translate('Menu', 'PDF...'), self)
-                fileConvertPDFAction.triggered.connect(self.fileConvertPDF)
-                self.convMenu.addAction(fileConvertPDFAction)
-
-                fileConvertReportPDFAction = QAction(QApplication.translate('Menu', 'Roast Report PDF...'), self)
-                fileConvertReportPDFAction.triggered.connect(self.fileConvertReportPDF)
-                self.convMenu.addAction(fileConvertReportPDFAction)
-                if not self.QtWebEngineSupport:
-                    fileConvertReportPDFAction.setEnabled(False)
-
-            self.fileMenu.addSeparator()
-
-            self.saveGraphMenu: QMenu|None = self.fileMenu.addMenu(QApplication.translate('Menu', 'Save Graph'))
-            if self.saveGraphMenu is not None:
-                PDFAction = QAction('PDF...', self)
-                PDFAction.triggered.connect(self.saveVectorGraph_PDF)
-                self.saveGraphMenu.addAction(PDFAction)
-
-                SVGAction = QAction('SVG...',self)
-                SVGAction.triggered.connect(self.saveVectorGraph_SVG)
-                self.saveGraphMenu.addAction(SVGAction)
-
-                fullsizeAction = QAction(QApplication.translate('Menu', 'PNG...'), self)
-                fullsizeAction.triggered.connect(self.resizeImg_0_1)
-                self.saveGraphMenu.addAction(fullsizeAction)
-
-                JPEGAction = QAction('JPEG...',self)
-                JPEGAction.triggered.connect(self.resizeImg_0_1_JPEG)
-                self.saveGraphMenu.addAction(JPEGAction)
-
-                self.saveGraphMenu.addSeparator()
-
-                HomeBaristaAction = QAction('Home-Barista.com (1200x?)...', self)
-                HomeBaristaAction.triggered.connect(self.resizeImg_1200_1)
-                self.saveGraphMenu.addAction(HomeBaristaAction)
-
-                KaffeeNetzAction = QAction('Kaffee-Netz.de (800x?)...', self)
-                KaffeeNetzAction.triggered.connect(self.resizeImg_800_1)
-                self.saveGraphMenu.addAction(KaffeeNetzAction)
-
-                RiktigtKaffeAction = QAction('RiktigtKaffe.se (620x?)...', self)
-                RiktigtKaffeAction.triggered.connect(self.resizeImg_620_1)
-                self.saveGraphMenu.addAction(RiktigtKaffeAction)
-
-                PlanetCafeAction = QAction('PlanetCafe.fr (600x?)...', self)
-                PlanetCafeAction.triggered.connect(self.resizeImg_600_1)
-                self.saveGraphMenu.addAction(PlanetCafeAction)
-
-                CoffeeGeekAction = QAction('CoffeeGeek.com (500x?)...', self)
-                CoffeeGeekAction.triggered.connect(self.resizeImg_500_1)
-                self.saveGraphMenu.addAction(CoffeeGeekAction)
-
-                self.saveGraphMenu.addSeparator()
-
-                facebookSizeAction = QAction('Facebook (1200x628)...',self)
-                facebookSizeAction.triggered.connect(self.resizeImgSize_1200_628)
-                self.saveGraphMenu.addAction(facebookSizeAction)
-
-                instagramSizeAction = QAction('Instagram (1080x608)...', self)
-                instagramSizeAction.triggered.connect(self.resizeImgSize_1080_608)
-                self.saveGraphMenu.addAction(instagramSizeAction)
-
-            self.reportMenu: QMenu|None = self.fileMenu.addMenu(QApplication.translate('Menu', 'Report'))
-            if self.reportMenu is not None:
-
-                self.roastReportMenu: QMenu|None = self.reportMenu.addMenu(QApplication.translate('Menu', 'Roast'))
-                if self.roastReportMenu is not None:
-                    self.roastReportPDFAction = QAction(QApplication.translate('Menu', 'PDF...'), self)
-                    self.roastReportPDFAction.triggered.connect(self.pdfReport)
-                    self.roastReportMenu.addAction(self.roastReportPDFAction)
-                    if not self.QtWebEngineSupport:
-                        self.roastReportPDFAction.setEnabled(False)
-
-                    self.htmlAction = QAction(QApplication.translate('Menu', 'Web...'), self)
-                    self.htmlAction.triggered.connect(self.htmlReport)
-                    self.htmlAction.setShortcut('Ctrl+R')
-                    self.roastReportMenu.addAction(self.htmlAction)
-
-                self.productionMenu: QMenu|None = self.reportMenu.addMenu(QApplication.translate('Menu', 'Batches'))
-                if self.productionMenu is not None:
-                    self.productionPDFAction = QAction(QApplication.translate('Menu', 'PDF...'), self)
-                    self.productionPDFAction.triggered.connect(self.productionPDFReport)
-                    self.productionMenu.addAction(self.productionPDFAction)
-                    if not self.QtWebEngineSupport:
-                        self.productionPDFAction.setEnabled(False)
-                    self.productionWebAction = QAction(QApplication.translate('Menu', 'Web...'), self)
-                    self.productionWebAction.triggered.connect(self.productionHTMLReport)
-                    self.productionMenu.addAction(self.productionWebAction)
-                    self.productionCsvAction = QAction(QApplication.translate('Menu', 'CSV...'), self)
-                    self.productionCsvAction.triggered.connect(self.productionCSVReport)
-                    self.productionMenu.addAction(self.productionCsvAction)
-                    self.productionExcelAction = QAction(QApplication.translate('Menu', 'Excel...'), self)
-                    self.productionExcelAction.triggered.connect(self.productionExcelReport)
-                    self.productionMenu.addAction(self.productionExcelAction)
-
-                self.rankingMenu: QMenu|None = self.reportMenu.addMenu(QApplication.translate('Menu', 'Ranking'))
-                if self.rankingMenu is not None:
-                    self.rankingPDFAction = QAction(QApplication.translate('Menu', 'PDF...'), self)
-                    self.rankingPDFAction.triggered.connect(self.rankingPDFReport)
-                    self.rankingMenu.addAction(self.rankingPDFAction)
-                    if not self.QtWebEngineSupport:
-                        self.rankingPDFAction.setEnabled(False)
-                    self.rankingWebAction = QAction(QApplication.translate('Menu', 'Web...'), self)
-                    self.rankingWebAction.triggered.connect(self.rankingHTMLReport)
-                    self.rankingMenu.addAction(self.rankingWebAction)
-                    self.rankingCsvAction = QAction(QApplication.translate('Menu', 'CSV...'), self)
-                    self.rankingCsvAction.triggered.connect(self.rankingCSVReport)
-                    self.rankingMenu.addAction(self.rankingCsvAction)
-                    self.rankingExcelAction = QAction(QApplication.translate('Menu', 'Excel...'), self)
-                    self.rankingExcelAction.triggered.connect(self.rankingExcelReport)
-                    self.rankingMenu.addAction(self.rankingExcelAction)
-
-            self.saveStatisticsMenu: QMenu|None = self.fileMenu.addMenu(QApplication.translate('Message', 'Save Statistics'))
-            if self.saveStatisticsMenu is not None:
-                savestatisticsIMGAction = QAction(f"{QApplication.translate('Menu', 'PDF...')}", self)
-                savestatisticsIMGAction.triggered.connect(self.saveStatistics_IMG)
-                self.saveStatisticsMenu.addAction(savestatisticsIMGAction)
-                savestatisticsTXTAction = QAction(f"{QApplication.translate('Button', 'Text')}...",self)
-                savestatisticsTXTAction.triggered.connect(self.saveStatistics_TXT)
-                self.saveStatisticsMenu.addAction(savestatisticsTXTAction)
-
-            self.fileMenu.addSeparator()
-
-            self.printAction:QAction = QAction(QApplication.translate('Menu', 'Print...'), self)
-            self.printAction.setShortcut(QKeySequence.StandardKey.Print)
-            self.printAction.triggered.connect(self.filePrint)
-            self.fileMenu.addAction(self.printAction)
-
-            self.quitAction:QAction
-            if platform.system() == 'Darwin':
-                self.quitAction = QAction('Quit', self) # automatically translated by Qt Translators
-            else:
-                self.quitAction = QAction(QApplication.translate('MAC_APPLICATION_MENU', 'Quit {0}').format(application_name), self)
-            self.quitAction.setMenuRole(QAction.MenuRole.QuitRole)
-            self.quitAction.setShortcut(QKeySequence.StandardKey.Quit)
-            self.quitAction.triggered.connect(self.fileQuit)
-            self.fileMenu.addAction(self.quitAction)
+        fileExportJSONAction = QAction(QApplication.translate('Menu', 'Artisan JSON...'), self)
+        fileExportJSONAction.triggered.connect(self.fileExportJSON)
+        self.exportMenu.addAction(fileExportJSONAction)
+
+        self.exportMenu.addSeparator()
+
+        fileExportExcelAction = QAction(QApplication.translate('Menu', 'Excel...'), self)
+        fileExportExcelAction.triggered.connect(self.fileExportExcel)
+        self.exportMenu.addAction(fileExportExcelAction)
+
+        self.exportMenu.addSeparator()
+
+        fileExportPilotAction = QAction(QApplication.translate('Menu', 'Probat Pilot...'), self)
+        fileExportPilotAction.triggered.connect(self.fileExportPilot)
+        self.exportMenu.addAction(fileExportPilotAction)
+
+        fileExportRoastLoggerAction = QAction(QApplication.translate('Menu', 'RoastLogger...'), self)
+        fileExportRoastLoggerAction.triggered.connect(self.fileExportRoastLogger)
+        self.exportMenu.addAction(fileExportRoastLoggerAction)
+
+        self.convMenu:QMenu = QMenu(QApplication.translate('Menu', 'Convert To'))
+        fileConvertFahrenheitAction = QAction(QApplication.translate('Menu', 'Fahrenheit...'), self)
+        fileConvertFahrenheitAction.triggered.connect(self.fileConvertToFahrenheit)
+        self.convMenu.addAction(fileConvertFahrenheitAction)
+
+        fileConvertCelsiusAction = QAction(QApplication.translate('Menu', 'Celsius...'), self)
+        fileConvertCelsiusAction.triggered.connect(self.fileConvertToCelsius)
+        self.convMenu.addAction(fileConvertCelsiusAction)
+
+        self.convMenu.addSeparator()
+
+        fileConvertExcelAction = QAction(QApplication.translate('Menu', 'Excel...'), self)
+        fileConvertExcelAction.triggered.connect(self.fileConvertExcel)
+        self.convMenu.addAction(fileConvertExcelAction)
+
+        self.convMenu.addSeparator()
+
+        fileConvertCSVAction = QAction(QApplication.translate('Menu', 'Artisan CSV...'), self)
+        fileConvertCSVAction.triggered.connect(self.fileConvertCSV)
+        self.convMenu.addAction(fileConvertCSVAction)
+
+        fileConvertJSONAction = QAction(QApplication.translate('Menu', 'Artisan JSON...'), self)
+        fileConvertJSONAction.triggered.connect(self.fileConvertJSON)
+        self.convMenu.addAction(fileConvertJSONAction)
+
+        self.convMenu.addSeparator()
+
+        fileConvertProbatAction = QAction(QApplication.translate('Menu', 'Probat Pilot...'), self)
+        fileConvertProbatAction.triggered.connect(self.fileConvertPilot)
+        self.convMenu.addAction(fileConvertProbatAction)
+
+        fileConvertRoastLoggerAction = QAction(QApplication.translate('Menu', 'RoastLogger...'), self)
+        fileConvertRoastLoggerAction.triggered.connect(self.fileConvertRoastLogger)
+        self.convMenu.addAction(fileConvertRoastLoggerAction)
+
+        self.convMenu.addSeparator()
+
+        fileConvertPNGAction = QAction(QApplication.translate('Menu', 'PNG...'), self)
+        fileConvertPNGAction.triggered.connect(self.fileConvertPNG)
+        self.convMenu.addAction(fileConvertPNGAction)
+
+        fileConvertJPEGAction = QAction(QApplication.translate('Menu', 'JPEG...'), self)
+        fileConvertJPEGAction.triggered.connect(self.fileConvertJPEG)
+        self.convMenu.addAction(fileConvertJPEGAction)
+
+        fileConvertSVGAction = QAction(QApplication.translate('Menu', 'SVG...'), self)
+        fileConvertSVGAction.triggered.connect(self.fileConvertSVG)
+        self.convMenu.addAction(fileConvertSVGAction)
+
+        fileConvertPDFAction = QAction(QApplication.translate('Menu', 'PDF...'), self)
+        fileConvertPDFAction.triggered.connect(self.fileConvertPDF)
+        self.convMenu.addAction(fileConvertPDFAction)
+
+        fileConvertReportPDFAction = QAction(QApplication.translate('Menu', 'Roast Report PDF...'), self)
+        fileConvertReportPDFAction.triggered.connect(self.fileConvertReportPDF)
+        self.convMenu.addAction(fileConvertReportPDFAction)
+        if not self.QtWebEngineSupport:
+            fileConvertReportPDFAction.setEnabled(False)
+
+        self.saveGraphMenu:QMenu = QMenu(QApplication.translate('Menu', 'Save Graph'))
+        PDFAction = QAction('PDF...', self)
+        PDFAction.triggered.connect(self.saveVectorGraph_PDF)
+        self.saveGraphMenu.addAction(PDFAction)
+
+        SVGAction = QAction('SVG...',self)
+        SVGAction.triggered.connect(self.saveVectorGraph_SVG)
+        self.saveGraphMenu.addAction(SVGAction)
+
+        fullsizeAction = QAction(QApplication.translate('Menu', 'PNG...'), self)
+        fullsizeAction.triggered.connect(self.resizeImg_0_1)
+        self.saveGraphMenu.addAction(fullsizeAction)
+
+        JPEGAction = QAction('JPEG...',self)
+        JPEGAction.triggered.connect(self.resizeImg_0_1_JPEG)
+        self.saveGraphMenu.addAction(JPEGAction)
+
+#        self.saveGraphMenu.addSeparator()
+#
+#        HomeBaristaAction = QAction('Home-Barista.com (1200x?)...', self)
+#        HomeBaristaAction.triggered.connect(self.resizeImg_1200_1)
+#        self.saveGraphMenu.addAction(HomeBaristaAction)
+#
+#        KaffeeNetzAction = QAction('Kaffee-Netz.de (800x?)...', self)
+#        KaffeeNetzAction.triggered.connect(self.resizeImg_800_1)
+#        self.saveGraphMenu.addAction(KaffeeNetzAction)
+#
+#        RiktigtKaffeAction = QAction('RiktigtKaffe.se (620x?)...', self)
+#        RiktigtKaffeAction.triggered.connect(self.resizeImg_620_1)
+#        self.saveGraphMenu.addAction(RiktigtKaffeAction)
+#
+#        PlanetCafeAction = QAction('PlanetCafe.fr (600x?)...', self)
+#        PlanetCafeAction.triggered.connect(self.resizeImg_600_1)
+#        self.saveGraphMenu.addAction(PlanetCafeAction)
+#
+#        CoffeeGeekAction = QAction('CoffeeGeek.com (500x?)...', self)
+#        CoffeeGeekAction.triggered.connect(self.resizeImg_500_1)
+#        self.saveGraphMenu.addAction(CoffeeGeekAction)
+#
+#        self.saveGraphMenu.addSeparator()
+#
+#        facebookSizeAction = QAction('Facebook (1200x628)...',self)
+#        facebookSizeAction.triggered.connect(self.resizeImgSize_1200_628)
+#        self.saveGraphMenu.addAction(facebookSizeAction)
+#
+#        instagramSizeAction = QAction('Instagram (1080x608)...', self)
+#        instagramSizeAction.triggered.connect(self.resizeImgSize_1080_608)
+#        self.saveGraphMenu.addAction(instagramSizeAction)
+
+        self.reportMenu:QMenu = QMenu(QApplication.translate('Menu', 'Report'))
+        self.roastReportMenu: QMenu = QMenu(QApplication.translate('Menu', 'Roast'))
+        self.reportMenu.addMenu(self.roastReportMenu)
+        self.roastReportPDFAction = QAction(QApplication.translate('Menu', 'PDF...'), self)
+        self.roastReportPDFAction.triggered.connect(self.pdfReport)
+        self.roastReportMenu.addAction(self.roastReportPDFAction)
+        if not self.QtWebEngineSupport:
+            self.roastReportPDFAction.setEnabled(False)
+
+        self.htmlAction = QAction(QApplication.translate('Menu', 'Web...'), self)
+        self.htmlAction.triggered.connect(self.htmlReport)
+        self.htmlAction.setShortcut('Ctrl+R')
+        self.roastReportMenu.addAction(self.htmlAction)
+
+        self.productionMenu:QMenu = QMenu(QApplication.translate('Menu', 'Batches'))
+        self.reportMenu.addMenu(self.productionMenu)
+        self.productionPDFAction = QAction(QApplication.translate('Menu', 'PDF...'), self)
+        self.productionPDFAction.triggered.connect(self.productionPDFReport)
+        self.productionMenu.addAction(self.productionPDFAction)
+        if not self.QtWebEngineSupport:
+            self.productionPDFAction.setEnabled(False)
+        self.productionWebAction = QAction(QApplication.translate('Menu', 'Web...'), self)
+        self.productionWebAction.triggered.connect(self.productionHTMLReport)
+        self.productionMenu.addAction(self.productionWebAction)
+        self.productionCsvAction = QAction(QApplication.translate('Menu', 'CSV...'), self)
+        self.productionCsvAction.triggered.connect(self.productionCSVReport)
+        self.productionMenu.addAction(self.productionCsvAction)
+        self.productionExcelAction = QAction(QApplication.translate('Menu', 'Excel...'), self)
+        self.productionExcelAction.triggered.connect(self.productionExcelReport)
+        self.productionMenu.addAction(self.productionExcelAction)
+
+        self.rankingMenu:QMenu = QMenu(QApplication.translate('Menu', 'Ranking'))
+        self.reportMenu.addMenu(self.rankingMenu)
+        self.rankingPDFAction = QAction(QApplication.translate('Menu', 'PDF...'), self)
+        self.rankingPDFAction.triggered.connect(self.rankingPDFReport)
+        self.rankingMenu.addAction(self.rankingPDFAction)
+        if not self.QtWebEngineSupport:
+            self.rankingPDFAction.setEnabled(False)
+        self.rankingWebAction = QAction(QApplication.translate('Menu', 'Web...'), self)
+        self.rankingWebAction.triggered.connect(self.rankingHTMLReport)
+        self.rankingMenu.addAction(self.rankingWebAction)
+        self.rankingCsvAction = QAction(QApplication.translate('Menu', 'CSV...'), self)
+        self.rankingCsvAction.triggered.connect(self.rankingCSVReport)
+        self.rankingMenu.addAction(self.rankingCsvAction)
+        self.rankingExcelAction = QAction(QApplication.translate('Menu', 'Excel...'), self)
+        self.rankingExcelAction.triggered.connect(self.rankingExcelReport)
+        self.rankingMenu.addAction(self.rankingExcelAction)
+
+        self.saveStatisticsMenu: QMenu = QMenu(QApplication.translate('Message', 'Save Statistics'))
+        savestatisticsIMGAction = QAction(f"{QApplication.translate('Menu', 'PDF...')}", self)
+        savestatisticsIMGAction.triggered.connect(self.saveStatistics_IMG)
+        self.saveStatisticsMenu.addAction(savestatisticsIMGAction)
+        savestatisticsTXTAction = QAction(f"{QApplication.translate('Button', 'Text')}...",self)
+        savestatisticsTXTAction.triggered.connect(self.saveStatistics_TXT)
+        self.saveStatisticsMenu.addAction(savestatisticsTXTAction)
+
+        self.printAction:QAction = QAction(QApplication.translate('Menu', 'Print...'), self)
+        self.printAction.setShortcut(QKeySequence.StandardKey.Print)
+        self.printAction.triggered.connect(self.filePrint)
+
+        self.quitAction:QAction
+        if platform.system() == 'Darwin':
+            self.quitAction = QAction('Quit', self) # automatically translated by Qt Translators
+        else:
+            self.quitAction = QAction(QApplication.translate('MAC_APPLICATION_MENU', 'Quit {0}').format(application_name), self)
+        self.quitAction.setMenuRole(QAction.MenuRole.QuitRole)
+        self.quitAction.setShortcut(QKeySequence.StandardKey.Quit)
+        self.quitAction.triggered.connect(self.fileQuit)
 
         # EDIT menu
-        if self.editMenu is not None:
-            self.cutAction:QAction = QAction(QApplication.translate('Menu', 'Cut'), self)
-            self.cutAction.setShortcut(QKeySequence.StandardKey.Cut)
-            self.editMenu.addAction(self.cutAction)
-            self.cutAction.triggered.connect(self.on_actionCut_triggered)
-            self.copyAction:QAction = QAction(QApplication.translate('Menu', 'Copy'), self)
-            self.copyAction.setShortcut(QKeySequence.StandardKey.Copy)
-            self.editMenu.addAction(self.copyAction)
-            self.copyAction.triggered.connect(self.on_actionCopy_triggered)
-            self.pasteAction:QAction = QAction(QApplication.translate('Menu', 'Paste'), self)
-            self.pasteAction.setShortcut(QKeySequence.StandardKey.Paste)
-            self.editMenu.addAction(self.pasteAction)
-            self.pasteAction.triggered.connect(self.on_actionPaste_triggered)
+        self.cutAction:QAction = QAction(QApplication.translate('Menu', 'Cut'), self)
+        self.cutAction.setShortcut(QKeySequence.StandardKey.Cut)
+        self.cutAction.triggered.connect(self.on_actionCut_triggered)
+        self.copyAction:QAction = QAction(QApplication.translate('Menu', 'Copy'), self)
+        self.copyAction.setShortcut(QKeySequence.StandardKey.Copy)
+        self.copyAction.triggered.connect(self.on_actionCopy_triggered)
+        self.pasteAction:QAction = QAction(QApplication.translate('Menu', 'Paste'), self)
+        self.pasteAction.setShortcut(QKeySequence.StandardKey.Paste)
+        self.pasteAction.triggered.connect(self.on_actionPaste_triggered)
 
         # ROAST menu
-        if self.RoastMenu is not None:
-            self.editGraphAction:QAction = QAction(QApplication.translate('Menu', 'Properties...'), self)
-            self.editGraphAction.setMenuRole(QAction.MenuRole.NoRole) # without this, this item is not shown in he
-            self.editGraphAction.triggered.connect(self.editgraph)
-            self.RoastMenu.addAction(self.editGraphAction)
-            self.editGraphAction.setShortcut('Ctrl+T')
+        self.editGraphAction:QAction = QAction(QApplication.translate('Menu', 'Properties...'), self)
+        self.editGraphAction.setMenuRole(QAction.MenuRole.NoRole) # without this, this item is not shown in he
+        self.editGraphAction.triggered.connect(self.editgraph)
+        self.editGraphAction.setShortcut('Ctrl+T')
 
-            self.backgroundAction:QAction = QAction(QApplication.translate('Menu', 'Background...'), self)
-            self.backgroundAction.triggered.connect(self.background)
-            self.RoastMenu.addAction(self.backgroundAction)
-            self.backgroundAction.setShortcut('Ctrl+B')
+        self.backgroundAction:QAction = QAction(QApplication.translate('Menu', 'Background...'), self)
+        self.backgroundAction.triggered.connect(self.background)
+        self.backgroundAction.setShortcut('Ctrl+B')
 
-            self.flavorAction:QAction = QAction(QApplication.translate('Menu', 'Cup Profile...'), self)
-            self.flavorAction.triggered.connect(self.flavorchart)
-            self.RoastMenu.addAction(self.flavorAction)
+        self.flavorAction:QAction = QAction(QApplication.translate('Menu', 'Cup Profile...'), self)
+        self.flavorAction.triggered.connect(self.flavorchart)
 
-            self.RoastMenu.addSeparator()
+        self.switchAction:QAction = QAction(QApplication.translate('Menu', 'Switch Profiles'), self)
+        self.switchAction.setShortcut(QKeySequence.StandardKey.Close)
+        self.switchAction.triggered.connect(self.switch)
 
-            self.switchAction:QAction = QAction(QApplication.translate('Menu', 'Switch Profiles'), self)
-            self.switchAction.setShortcut(QKeySequence.StandardKey.Close)
-            self.switchAction.triggered.connect(self.switch)
-            self.RoastMenu.addAction(self.switchAction)
+        self.switchETBTAction:QAction = QAction(QApplication.translate('Menu', 'Switch ET<->BT'), self)
+        self.switchETBTAction.triggered.connect(self.switchETBT)
 
-            self.switchETBTAction:QAction = QAction(QApplication.translate('Menu', 'Switch ET<->BT'), self)
-            self.switchETBTAction.triggered.connect(self.switchETBT)
-            self.RoastMenu.addAction(self.switchETBTAction)
 
         # CONFIGURATION menu
-        if self.ConfMenu is not None:
-            self.machineMenu:QMenu = QMenu(QApplication.translate('Menu', 'Machine'))
-            # populated in populateMachineMenu/populateListMenu if not empty
-            # using a QTimer to speed up startup a bit
-            QTimer.singleShot(500,self.populateMachineMenu)
-            self.ConfMenu.addMenu(self.machineMenu)
 
-            self.deviceAction:QAction = QAction(QApplication.translate('Menu', 'Device...'), self)
-            self.deviceAction.triggered.connect(self.deviceassigment)
-            self.ConfMenu.addAction(self.deviceAction)
-            self.deviceAction.setShortcut('Ctrl+D')
+        self.machineMenu:QMenu = QMenu(QApplication.translate('Menu', 'Machine'))
+        # populated in populateMachineMenu/populateListMenu if not empty
+        # using a QTimer to speed up startup a bit
+        QTimer.singleShot(500,self.populateMachineMenu)
 
-            self.commportAction:QAction = QAction(QApplication.translate('Menu', 'Port...'), self)
-            self.commportAction.triggered.connect(self.setcommport)
-            self.ConfMenu.addAction(self.commportAction)
+        self.deviceAction:QAction = QAction(QApplication.translate('Menu', 'Device...'), self)
+        self.deviceAction.triggered.connect(self.deviceassigment)
+        self.deviceAction.setShortcut('Ctrl+D')
 
-            self.ConfMenu.addSeparator()
+        self.commportAction:QAction = QAction(QApplication.translate('Menu', 'Port...'), self)
+        self.commportAction.triggered.connect(self.setcommport)
 
-            self.calibrateDelayAction:QAction = QAction(QApplication.translate('Menu', 'Sampling...'), self)
-            self.calibrateDelayAction.triggered.connect(self.calibratedelay)
-            self.ConfMenu.addAction(self.calibrateDelayAction)
+        self.calibrateDelayAction:QAction = QAction(QApplication.translate('Menu', 'Sampling...'), self)
+        self.calibrateDelayAction.triggered.connect(self.calibratedelay)
 
-            self.ConfMenu.addSeparator()
+        self.curvesAction:QAction = QAction(QApplication.translate('Menu', 'Curves...'), self)
+        self.curvesAction.triggered.connect(self.setCurves)
+        self.curvesAction.setShortcut('Ctrl+U')
 
-            self.curvesAction:QAction = QAction(QApplication.translate('Menu', 'Curves...'), self)
-            self.curvesAction.triggered.connect(self.setCurves)
-            self.curvesAction.setShortcut('Ctrl+U')
-            self.ConfMenu.addAction(self.curvesAction)
+        self.eventsAction:QAction = QAction(QApplication.translate('Menu', 'Events...'), self)
+        self.eventsAction.triggered.connect(self.eventsconf)
+        self.eventsAction.setShortcut('Ctrl+E')
 
-            self.ConfMenu.addSeparator()
+        self.alarmAction:QAction = QAction(QApplication.translate('Menu', 'Alarms...'), self)
+        self.alarmAction.triggered.connect(self.alarmconfig)
+        self.alarmAction.setShortcut('Ctrl+A')
+        #self.alarmAction.setShortcutContext(Qt.ShortcutContext.WidgetShortcut)
+        #self.alarmAction.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        #self.alarmAction.setShortcutContext(Qt.ShortcutContext.WindowShortcut)
+        self.alarmAction.setShortcutContext(Qt.ShortcutContext.ApplicationShortcut)
 
-            self.eventsAction:QAction = QAction(QApplication.translate('Menu', 'Events...'), self)
-            self.eventsAction.triggered.connect(self.eventsconf)
-            self.ConfMenu.addAction(self.eventsAction)
-            self.eventsAction.setShortcut('Ctrl+E')
+        self.phasesGraphAction:QAction = QAction(QApplication.translate('Menu', 'Phases...'), self)
+        self.phasesGraphAction.triggered.connect(self.editphases)
 
-            self.alarmAction:QAction = QAction(QApplication.translate('Menu', 'Alarms...'), self)
-            self.alarmAction.triggered.connect(self.alarmconfig)
-            self.alarmAction.setShortcut('Ctrl+A')
-#            self.alarmAction.setShortcutContext(Qt.ShortcutContext.WidgetShortcut)
-#            self.alarmAction.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
-#            self.alarmAction.setShortcutContext(Qt.ShortcutContext.WindowShortcut)
-            self.alarmAction.setShortcutContext(Qt.ShortcutContext.ApplicationShortcut)
-            self.ConfMenu.addAction(self.alarmAction)
+        self.StatisticsAction:QAction = QAction(QApplication.translate('Menu', 'Statistics...'), self)
+        self.StatisticsAction.triggered.connect(self.showstatistics)
 
-            self.ConfMenu.addSeparator()
+        self.WindowconfigAction:QAction = QAction(QApplication.translate('Menu', 'Axes...'), self)
+        self.WindowconfigAction.triggered.connect(self.Windowconfig)
+        self.WindowconfigAction.setShortcut('Ctrl+Shift+A')
 
-            self.phasesGraphAction:QAction = QAction(QApplication.translate('Menu', 'Phases...'), self)
-            self.phasesGraphAction.triggered.connect(self.editphases)
-            self.ConfMenu.addAction(self.phasesGraphAction)
+        self.colorsAction:QAction = QAction(QApplication.translate('Menu', 'Colors...'), self)
+        self.colorsAction.triggered.connect(self.qmc.changeGColor3)
 
-            self.StatisticsAction:QAction = QAction(QApplication.translate('Menu', 'Statistics...'), self)
-            self.StatisticsAction.triggered.connect(self.showstatistics)
-            self.ConfMenu.addAction(self.StatisticsAction)
+        self.themeMenu:QMenu = QMenu(QApplication.translate('Menu', 'Themes'))
+        self.loadThemeAction:QAction|None = None
+        self.saveAsThemeAction:QAction|None = None
+        self.populateThemeMenu()
+        self.updateRecentThemeActions()
 
-            self.WindowconfigAction:QAction = QAction(QApplication.translate('Menu', 'Axes...'), self)
-            self.WindowconfigAction.triggered.connect(self.Windowconfig)
-            self.WindowconfigAction.setShortcut('Ctrl+Shift+A')
-            self.ConfMenu.addAction(self.WindowconfigAction)
+        self.autosaveAction:QAction = QAction(QApplication.translate('Menu', 'Autosave...'), self)
+        self.autosaveAction.triggered.connect(self.autosaveconf)
 
-            self.ConfMenu.addSeparator()
+        self.batchAction:QAction = QAction(QApplication.translate('Menu', 'Batch...'), self)
+        self.batchAction.triggered.connect(self.batchconf)
 
-            self.colorsAction:QAction = QAction(QApplication.translate('Menu', 'Colors...'), self)
-            self.colorsAction.triggered.connect(self.qmc.changeGColor3)
-            self.ConfMenu.addAction(self.colorsAction)
+        self.temperatureConfMenu:QMenu = QMenu(QApplication.translate('Menu', 'Temperature'))
 
-            self.themeMenu:QMenu = QMenu(QApplication.translate('Menu', 'Themes'))
-            self.loadThemeAction:QAction|None = None
-            self.saveAsThemeAction:QAction|None = None
-            self.populateThemeMenu()
-            self.ConfMenu.addMenu(self.themeMenu)
-            self.updateRecentThemeActions()
+        self.FahrenheitAction: QAction
+        self.CelsiusAction: QAction
+        self.FahrenheitAction = QAction(QApplication.translate('Menu', 'Fahrenheit Mode'), self)
+        self.FahrenheitAction.triggered.connect(self.qmc.fahrenheitModeRedraw)
+        self.temperatureConfMenu.addAction(self.FahrenheitAction)
+        self.CelsiusAction = QAction(QApplication.translate('Menu', 'Celsius Mode'), self)
+        self.CelsiusAction.triggered.connect(self.qmc.celsiusModeRedraw)
+        self.temperatureConfMenu.addAction(self.CelsiusAction)
 
-            self.ConfMenu.addSeparator()
-
-            self.autosaveAction:QAction = QAction(QApplication.translate('Menu', 'Autosave...'), self)
-            self.autosaveAction.triggered.connect(self.autosaveconf)
-            self.ConfMenu.addAction(self.autosaveAction)
-
-            self.batchAction:QAction = QAction(QApplication.translate('Menu', 'Batch...'), self)
-            self.batchAction.triggered.connect(self.batchconf)
-            self.ConfMenu.addAction(self.batchAction)
-
-            self.ConfMenu.addSeparator()
-
-            self.temperatureConfMenu: QMenu|None = self.ConfMenu.addMenu(QApplication.translate('Menu', 'Temperature'))
-            self.FahrenheitAction: QAction
-            self.CelsiusAction: QAction
-            if self.temperatureConfMenu is not None:
-                self.FahrenheitAction = QAction(QApplication.translate('Menu', 'Fahrenheit Mode'), self)
-                self.FahrenheitAction.triggered.connect(self.qmc.fahrenheitModeRedraw)
-                self.temperatureConfMenu.addAction(self.FahrenheitAction)
-                self.CelsiusAction = QAction(QApplication.translate('Menu', 'Celsius Mode'), self)
-                self.CelsiusAction.triggered.connect(self.qmc.celsiusModeRedraw)
-                self.temperatureConfMenu.addAction(self.CelsiusAction)
-
-            self.languageMenu: QMenu|None
-            self.languageMenu = self.ConfMenu.addMenu(QApplication.translate('Menu', 'Language'))
+        self.languageMenu:QMenu = QMenu(QApplication.translate('Menu', 'Language'))
 
         # language_menu_actions holds a dict associating iso2 locale strings to language menu actions
         self.language_menu_actions:dict[str, QAction] = {}
@@ -2604,298 +2544,262 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             self.addLanguage(iso, name)
 
 
+        self.UIModeMenu:QMenu = QMenu(QApplication.translate('Menu', 'Mode'))
+        self.productionModeAction:QAction = QAction(QApplication.translate('Menu', 'Production'), self)
+        self.productionModeAction.triggered.connect(self.setProductionMode)
+        self.productionModeAction.setCheckable(True)
+        self.productionModeAction.setChecked(False)
+        self.UIModeMenu.addAction(self.productionModeAction)
+        #
+        self.defaultModeAction:QAction = QAction(QApplication.translate('Menu', 'Standard'), self)
+        self.defaultModeAction.triggered.connect(self.setDefaultMode)
+        self.defaultModeAction.setCheckable(True)
+        self.defaultModeAction.setChecked(True)
+        self.UIModeMenu.addAction(self.defaultModeAction)
+        #
+        self.expertModeAction:QAction = QAction(QApplication.translate('Menu', 'Expert'), self)
+        self.expertModeAction.triggered.connect(self.setExpertMode)
+        self.expertModeAction.setCheckable(True)
+        self.expertModeAction.setChecked(False)
+        self.UIModeMenu.addAction(self.expertModeAction)
+
+
         # TOOLKIT menu
 
-        if self.ToolkitMenu is not None:
-            self.analyzeMenu: QMenu|None = self.ToolkitMenu.addMenu(QApplication.translate('Menu', 'Analyzer'))
-            if self.analyzeMenu is not None:
-                self.fitIdealautoAction = QAction(QApplication.translate('Menu','Auto All'),self)
-                self.fitIdealautoAction.triggered.connect(self.analysisfitCurvesALL)
-                self.fitIdealautoAction.setShortcut('Ctrl+K')
-                self.analyzeMenu.addAction(self.fitIdealautoAction)
-                self.analyzeMenu.addSeparator()
-                self.fitIdealx2Action = QAction(QApplication.translate('Menu','Fit BT to') + ' x\xb2',self)
-                self.fitIdealx2Action.triggered.connect(self.analysisfitCurvesX2)
-                self.analyzeMenu.addAction(self.fitIdealx2Action)
-                self.fitIdealx3Action = QAction(QApplication.translate('Menu','Fit BT to') + ' x\xb3',self)
-                self.fitIdealx3Action.triggered.connect(self.analysisfitCurvesX3)
-                self.analyzeMenu.addAction(self.fitIdealx3Action)
-                self.fitIdealx0Action = QAction(QApplication.translate('Menu','Fit BT to') + ' ln()',self)
-                self.fitIdealx0Action.triggered.connect(self.analysisfitCurvesLN)
-                self.analyzeMenu.addAction(self.fitIdealx0Action)
-                self.analyzeMenu.addSeparator()
-                self.fitBkgndAction = QAction(QApplication.translate('Menu','Fit BT to Bkgnd'),self)
-                self.fitBkgndAction.triggered.connect(self.analysisfitCurvesBkgnd)
-                self.analyzeMenu.addAction(self.fitBkgndAction)
-                self.analyzeMenu.addSeparator()
-                self.clearresultsAction = QAction(QApplication.translate('Menu','Clear results'),self)
-                self.clearresultsAction.triggered.connect(self.clearResults)
-                self.clearresultsAction.setShortcut('Ctrl+Alt+K') # COMMAND+OPTION on macOS
-                self.analyzeMenu.addAction(self.clearresultsAction)
+        self.analyzeMenu: QMenu = QMenu(QApplication.translate('Menu', 'Analyzer'))
+        self.fitIdealautoAction = QAction(QApplication.translate('Menu','Auto All'),self)
+        self.fitIdealautoAction.triggered.connect(self.analysisfitCurvesALL)
+        self.fitIdealautoAction.setShortcut('Ctrl+K')
+        self.analyzeMenu.addAction(self.fitIdealautoAction)
+        self.analyzeMenu.addSeparator()
+        self.fitIdealx2Action = QAction(QApplication.translate('Menu','Fit BT to') + ' x\xb2',self)
+        self.fitIdealx2Action.triggered.connect(self.analysisfitCurvesX2)
+        self.analyzeMenu.addAction(self.fitIdealx2Action)
+        self.fitIdealx3Action = QAction(QApplication.translate('Menu','Fit BT to') + ' x\xb3',self)
+        self.fitIdealx3Action.triggered.connect(self.analysisfitCurvesX3)
+        self.analyzeMenu.addAction(self.fitIdealx3Action)
+        self.fitIdealx0Action = QAction(QApplication.translate('Menu','Fit BT to') + ' ln()',self)
+        self.fitIdealx0Action.triggered.connect(self.analysisfitCurvesLN)
+        self.analyzeMenu.addAction(self.fitIdealx0Action)
+        self.analyzeMenu.addSeparator()
+        self.fitBkgndAction = QAction(QApplication.translate('Menu','Fit BT to Bkgnd'),self)
+        self.fitBkgndAction.triggered.connect(self.analysisfitCurvesBkgnd)
+        self.analyzeMenu.addAction(self.fitBkgndAction)
+        self.analyzeMenu.addSeparator()
+        self.clearresultsAction = QAction(QApplication.translate('Menu','Clear results'),self)
+        self.clearresultsAction.triggered.connect(self.clearResults)
+        self.clearresultsAction.setShortcut('Ctrl+Alt+K') # COMMAND+OPTION on macOS
+        self.analyzeMenu.addAction(self.clearresultsAction)
 
-            self.roastCompareAction: QAction = QAction(QApplication.translate('Menu', 'Comparator'), self)
-            self.roastCompareAction.triggered.connect(self.roastCompare)
-            self.roastCompareAction.setCheckable(True)
-            self.roastCompareAction.setChecked(bool(self.comparator))
-            self.ToolkitMenu.addAction(self.roastCompareAction)
+        self.roastCompareAction: QAction = QAction(QApplication.translate('Menu', 'Comparator'), self)
+        self.roastCompareAction.triggered.connect(self.roastCompare)
+        self.roastCompareAction.setCheckable(True)
+        self.roastCompareAction.setChecked(bool(self.comparator))
 
-            self.designerAction: QAction = QAction(QApplication.translate('Menu', 'Designer') , self)
-            self.designerAction.triggered.connect(self.designerTriggered)
-            self.designerAction.setCheckable(True)
-            self.designerAction.setChecked(self.qmc.designerflag)
-            self.ToolkitMenu.addAction(self.designerAction)
+        self.designerAction: QAction = QAction(QApplication.translate('Menu', 'Designer') , self)
+        self.designerAction.triggered.connect(self.designerTriggered)
+        self.designerAction.setCheckable(True)
+        self.designerAction.setChecked(self.qmc.designerflag)
 
-            self.simulatorAction: QAction = QAction(QApplication.translate('Menu', 'Simulator') , self)
-            self.simulatorAction.triggered.connect(self.simulate)
-            self.simulatorAction.setCheckable(True)
-            self.simulatorAction.setChecked(bool(self.simulator))
-            self.ToolkitMenu.addAction(self.simulatorAction)
+        self.simulatorAction: QAction = QAction(QApplication.translate('Menu', 'Simulator') , self)
+        self.simulatorAction.triggered.connect(self.simulate)
+        self.simulatorAction.setCheckable(True)
+        self.simulatorAction.setChecked(bool(self.simulator))
 
-            self.wheeleditorAction: QAction = QAction(QApplication.translate('Menu', 'Wheel Graph'), self)
-            self.wheeleditorAction.triggered.connect(self.graphwheel)
-            self.wheeleditorAction.setCheckable(True)
-            self.wheeleditorAction.setChecked(self.qmc.wheelflag)
-            self.ToolkitMenu.addAction(self.wheeleditorAction)
+        self.wheeleditorAction: QAction = QAction(QApplication.translate('Menu', 'Wheel Graph'), self)
+        self.wheeleditorAction.triggered.connect(self.graphwheel)
+        self.wheeleditorAction.setCheckable(True)
+        self.wheeleditorAction.setChecked(self.qmc.wheelflag)
 
-            self.ToolkitMenu.addSeparator()
+        self.transformAction: QAction = QAction(QApplication.translate('Menu', 'Transposer'), self)
+        self.transformAction.triggered.connect(self.transform)
 
-            self.transformAction: QAction = QAction(QApplication.translate('Menu', 'Transposer'), self)
-            self.transformAction.triggered.connect(self.transform)
-            self.ToolkitMenu.addAction(self.transformAction)
+        self.temperatureMenu:QMenu = QMenu(QApplication.translate('Menu', 'Convert Profile Temperature'))
+        self.ConvertToFahrenheitAction = QAction(QApplication.translate('Menu', 'Convert to Fahrenheit'), self)
+        self.ConvertToFahrenheitAction.triggered.connect(self.qmc.convertTemperatureF)
+        self.temperatureMenu.addAction(self.ConvertToFahrenheitAction)
+        self.ConvertToCelsiusAction = QAction(QApplication.translate('Menu', 'Convert to Celsius'), self)
+        self.ConvertToCelsiusAction.triggered.connect(self.qmc.convertTemperatureC)
+        self.temperatureMenu.addAction(self.ConvertToCelsiusAction)
 
-            self.temperatureMenu: QMenu|None = self.ToolkitMenu.addMenu(QApplication.translate('Menu', 'Convert Profile Temperature'))
+        if self.qmc.mode == 'F':
+            self.FahrenheitAction.setDisabled(True)
+            self.ConvertToFahrenheitAction.setDisabled(True)
+        else:
+            self.CelsiusAction.setDisabled(True)
+            self.ConvertToCelsiusAction.setDisabled(True)
 
-            self.ConvertToFahrenheitAction: QAction
-            self.ConvertToCelsiusAction: QAction
-            if self.temperatureMenu is not None:
-                self.ConvertToFahrenheitAction = QAction(QApplication.translate('Menu', 'Convert to Fahrenheit'), self)
-                self.ConvertToFahrenheitAction.triggered.connect(self.qmc.convertTemperatureF)
-                self.temperatureMenu.addAction(self.ConvertToFahrenheitAction)
-
-                self.ConvertToCelsiusAction = QAction(QApplication.translate('Menu', 'Convert to Celsius'), self)
-                self.ConvertToCelsiusAction.triggered.connect(self.qmc.convertTemperatureC)
-                self.temperatureMenu.addAction(self.ConvertToCelsiusAction)
-
-                if self.qmc.mode == 'F':
-                    self.FahrenheitAction.setDisabled(True)
-                    self.ConvertToFahrenheitAction.setDisabled(True)
-                else:
-                    self.CelsiusAction.setDisabled(True)
-                    self.ConvertToCelsiusAction.setDisabled(True)
-
-            self.ToolkitMenu.addSeparator()
-
-            calculatorAction = QAction(QApplication.translate('Menu', 'Calculator'), self)
-            calculatorAction.triggered.connect(self.calculator)
-            self.ToolkitMenu.addAction(calculatorAction)
+        self.calculatorAction = QAction(QApplication.translate('Menu', 'Calculator'), self)
+        self.calculatorAction.triggered.connect(self.calculator)
 
         # VIEW menu
 
-        if self.viewMenu is not None:
-            self.controlsAction = QAction(QApplication.translate('Menu', 'Controls'), self)
-            self.controlsAction.setShortcut('C')
-            self.controlsAction.triggered.connect(self.toggleControls)
-            self.controlsAction.setCheckable(True)
-            self.controlsAction.setChecked(True)
-            self.viewMenu.addAction(self.controlsAction)
+        self.controlsAction = QAction(QApplication.translate('Menu', 'Controls'), self)
+        self.controlsAction.setShortcut('C')
+        self.controlsAction.triggered.connect(self.toggleControls)
+        self.controlsAction.setCheckable(True)
+        self.controlsAction.setChecked(True)
 
-            self.readingsAction = QAction(QApplication.translate('Menu', 'Readings'), self)
-            self.readingsAction.setShortcut('X')
-            self.readingsAction.triggered.connect(self.toggleReadings)
-            self.readingsAction.setCheckable(True)
-            self.readingsAction.setChecked(False)
-            self.viewMenu.addAction(self.readingsAction)
+        self.readingsAction = QAction(QApplication.translate('Menu', 'Readings'), self)
+        self.readingsAction.setShortcut('X')
+        self.readingsAction.triggered.connect(self.toggleReadings)
+        self.readingsAction.setCheckable(True)
+        self.readingsAction.setChecked(False)
 
-            self.eventsEditorAction = QAction(QApplication.translate('Menu', 'Events Editor'), self)
-            self.eventsEditorAction.triggered.connect(self.toggle_minieventline)
-            self.eventsEditorAction.setCheckable(True)
-            self.eventsEditorAction.setChecked(False)
-            self.viewMenu.addAction(self.eventsEditorAction)
+        self.eventsEditorAction = QAction(QApplication.translate('Menu', 'Events Editor'), self)
+        self.eventsEditorAction.setShortcut('Y')
+        self.eventsEditorAction.triggered.connect(self.toggle_minieventline)
+        self.eventsEditorAction.setCheckable(True)
+        self.eventsEditorAction.setChecked(False)
 
-            self.buttonsAction = QAction(QApplication.translate('Menu', 'Buttons'), self)
-            self.buttonsAction.setShortcut('B')
-            self.buttonsAction.triggered.connect(self.toggleExtraButtons)
-            self.buttonsAction.setCheckable(True)
-            self.buttonsAction.setChecked(False)
-            self.viewMenu.addAction(self.buttonsAction)
+        self.buttonsAction = QAction(QApplication.translate('Menu', 'Buttons'), self)
+        self.buttonsAction.setShortcut('B')
+        self.buttonsAction.triggered.connect(self.toggleExtraButtons)
+        self.buttonsAction.setCheckable(True)
+        self.buttonsAction.setChecked(False)
 
-            self.slidersAction: QAction = QAction(QApplication.translate('Menu', 'Sliders'), self)
-            self.slidersAction.setShortcut('S')
-            self.slidersAction.triggered.connect(self.toggleSliders)
-            self.slidersAction.setCheckable(True)
-            self.slidersAction.setChecked(False)
-            self.viewMenu.addAction(self.slidersAction)
+        self.slidersAction: QAction = QAction(QApplication.translate('Menu', 'Sliders'), self)
+        self.slidersAction.setShortcut('S')
+        self.slidersAction.triggered.connect(self.toggleSliders)
+        self.slidersAction.setCheckable(True)
+        self.slidersAction.setChecked(False)
 
-            self.scheduleAction: QAction = QAction(QApplication.translate('Menu', 'Schedule'), self)
-            self.scheduleAction.triggered.connect(self.schedule)
-            self.scheduleAction.setCheckable(True)
-            self.scheduleAction.setChecked(False)
-            self.viewMenu.addSeparator()
-            self.viewMenu.addAction(self.scheduleAction)
-            if self.app.artisanviewerMode:
-                self.scheduleAction.setEnabled(False) # no scheduler in ArtisanViewer mode
+        self.scheduleAction: QAction = QAction(QApplication.translate('Menu', 'Schedule'), self)
+        self.scheduleAction.triggered.connect(self.schedule)
+        self.scheduleAction.setCheckable(True)
+        self.scheduleAction.setChecked(False)
+        if self.app.artisanviewerMode:
+            self.scheduleAction.setEnabled(False) # no scheduler in ArtisanViewer mode
 
-            self.viewMenu.addSeparator()
+        self.lcdsAction: QAction = QAction(QApplication.translate('Menu', 'Main LCDs'), self)
+        self.lcdsAction.setShortcut('Ctrl+L')
+        self.lcdsAction.triggered.connect(self.largeLCDs)
+        self.lcdsAction.setCheckable(True)
+        self.lcdsAction.setChecked(False)
 
-            self.lcdsAction: QAction = QAction(QApplication.translate('Menu', 'Main LCDs'), self)
-            self.lcdsAction.triggered.connect(self.largeLCDs)
-            self.lcdsAction.setCheckable(True)
-            self.lcdsAction.setChecked(False)
-            self.lcdsAction.setShortcut('Ctrl+L')
-            self.viewMenu.addAction(self.lcdsAction)
+        self.deltalcdsAction: QAction = QAction(QApplication.translate('Menu', 'Delta LCDs'), self)
+        self.deltalcdsAction.triggered.connect(self.largeDeltaLCDs)
+        self.deltalcdsAction.setCheckable(True)
+        self.deltalcdsAction.setChecked(False)
 
-            self.deltalcdsAction: QAction = QAction(QApplication.translate('Menu', 'Delta LCDs'), self)
-            self.deltalcdsAction.triggered.connect(self.largeDeltaLCDs)
-            self.deltalcdsAction.setCheckable(True)
-            self.deltalcdsAction.setChecked(False)
-            self.viewMenu.addAction(self.deltalcdsAction)
+        self.pidlcdsAction: QAction = QAction(QApplication.translate('Menu', 'PID LCDs'), self)
+        self.pidlcdsAction.triggered.connect(self.largePIDLCDs)
+        self.pidlcdsAction.setCheckable(True)
+        self.pidlcdsAction.setChecked(False)
 
-            self.pidlcdsAction: QAction = QAction(QApplication.translate('Menu', 'PID LCDs'), self)
-            self.pidlcdsAction.triggered.connect(self.largePIDLCDs)
-            self.pidlcdsAction.setCheckable(True)
-            self.pidlcdsAction.setChecked(False)
-            self.viewMenu.addAction(self.pidlcdsAction)
+        self.extralcdsAction: QAction = QAction(QApplication.translate('Menu', 'Extra LCDs'), self)
+        self.extralcdsAction.triggered.connect(self.largeExtraLCDs)
+        self.extralcdsAction.setCheckable(True)
+        self.extralcdsAction.setChecked(False)
 
-            self.extralcdsAction: QAction = QAction(QApplication.translate('Menu', 'Extra LCDs'), self)
-            self.extralcdsAction.triggered.connect(self.largeExtraLCDs)
-            self.extralcdsAction.setCheckable(True)
-            self.extralcdsAction.setChecked(False)
-            self.viewMenu.addAction(self.extralcdsAction)
+        self.phaseslcdsAction: QAction = QAction(QApplication.translate('Menu', 'Phases LCDs'), self)
+        self.phaseslcdsAction.triggered.connect(self.largePhasesLCDs)
+        self.phaseslcdsAction.setCheckable(True)
+        self.phaseslcdsAction.setChecked(False)
 
-            self.phaseslcdsAction: QAction = QAction(QApplication.translate('Menu', 'Phases LCDs'), self)
-            self.phaseslcdsAction.triggered.connect(self.largePhasesLCDs)
-            self.phaseslcdsAction.setCheckable(True)
-            self.phaseslcdsAction.setChecked(False)
-            self.viewMenu.addAction(self.phaseslcdsAction)
+        self.scalelcdsAction: QAction = QAction(QApplication.translate('Menu', 'Scale LCDs'), self)
+        self.scalelcdsAction.triggered.connect(self.largeScaleLCDs)
+        self.scalelcdsAction.setCheckable(True)
+        self.scalelcdsAction.setChecked(False)
 
-            self.scalelcdsAction: QAction = QAction(QApplication.translate('Menu', 'Scale LCDs'), self)
-            self.scalelcdsAction.triggered.connect(self.largeScaleLCDs)
-            self.scalelcdsAction.setCheckable(True)
-            self.scalelcdsAction.setChecked(False)
-            self.viewMenu.addAction(self.scalelcdsAction)
+        self.fullscreenAction = QAction(QApplication.translate('Menu', 'Full Screen'), self)
+        self.fullscreenAction.triggered.connect(self.toggleFullscreen)
+        self.fullscreenAction.setCheckable(True)
+        self.fullscreenAction.setChecked(False)
+        self.fullscreenAction.setShortcut('Ctrl+F')
+        self.fullscreenAction.setMenuRole(QAction.MenuRole.NoRole)
 
-            self.viewMenu.addSeparator()
-
-            if not (platform.system() == 'Darwin' and self.qmc.locale_str == 'en'): # macOS automatically adds the fullscreen action to View menu
-                self.fullscreenAction = QAction(QApplication.translate('Menu', 'Full Screen'), self)
-                self.fullscreenAction.triggered.connect(self.toggleFullscreen)
-                self.fullscreenAction.setCheckable(True)
-                self.fullscreenAction.setChecked(False)
-                self.fullscreenAction.setShortcut('Ctrl+F')
-                self.fullscreenAction.setMenuRole(QAction.MenuRole.NoRole)
-                self.viewMenu.addAction(self.fullscreenAction)
 
         # HELP menu
-        if self.helpMenu is not None:
-            if self.app.artisanviewerMode:
-                helpAboutAction = QAction(QApplication.translate('MAC_APPLICATION_MENU', 'About {0}').format(application_viewer_name), self)
-            else:
-                helpAboutAction = QAction(QApplication.translate('MAC_APPLICATION_MENU', 'About {0}').format(application_name), self)
-            helpAboutAction.setMenuRole(QAction.MenuRole.AboutRole)
-            helpAboutAction.triggered.connect(self.helpAbout)
-            self.helpMenu.addAction(helpAboutAction)
 
-            aboutQtAction = QAction(QApplication.translate('Menu', 'About Qt'), self)
-            aboutQtAction.setMenuRole(QAction.MenuRole.AboutQtRole)
-            aboutQtAction.triggered.connect(self.showAboutQt)
-            self.helpMenu.addAction(aboutQtAction)
+        if self.app.artisanviewerMode:
+            self.helpAboutAction = QAction(QApplication.translate('MAC_APPLICATION_MENU', 'About {0}').format(application_viewer_name), self)
+        else:
+            self.helpAboutAction = QAction(QApplication.translate('MAC_APPLICATION_MENU', 'About {0}').format(application_name), self)
+        self.helpAboutAction.setMenuRole(QAction.MenuRole.AboutRole)
+        self.helpAboutAction.triggered.connect(self.helpAbout)
 
-            helpDocumentationAction = QAction(QApplication.translate('Menu', 'Documentation'), self)
-            helpDocumentationAction.triggered.connect(self.helpHelp)
-            helpDocumentationAction.setShortcut(QKeySequence.StandardKey.HelpContents)
-            self.helpMenu.addAction(helpDocumentationAction)
+        self.aboutQtAction = QAction(QApplication.translate('Menu', 'About Qt'), self)
+        self.aboutQtAction.setMenuRole(QAction.MenuRole.AboutQtRole)
+        self.aboutQtAction.triggered.connect(self.showAboutQt)
 
-            KshortCAction = QAction(QApplication.translate('Menu', 'Keyboard Shortcuts'), self)
-            KshortCAction.triggered.connect(self.viewKshortcuts)
-            self.helpMenu.addAction(KshortCAction)
+        self.helpDocumentationAction = QAction(QApplication.translate('Menu', 'Documentation'), self)
+        self.helpDocumentationAction.triggered.connect(self.helpHelp)
+        self.helpDocumentationAction.setShortcut(QKeySequence.StandardKey.HelpContents)
 
-            self.helpMenu.addSeparator()
+        self.KshortCAction = QAction(QApplication.translate('Menu', 'Keyboard Shortcuts'), self)
+        self.KshortCAction.triggered.connect(self.viewKshortcuts)
 
-            checkUpdateAction = QAction(QApplication.translate('Menu', 'Check for Updates'), self)
-            checkUpdateAction.setMenuRole(QAction.MenuRole.NoRole)
-            checkUpdateAction.triggered.connect(self.checkUpdate)
-            self.helpMenu.addAction(checkUpdateAction)
+        self.checkUpdateAction = QAction(QApplication.translate('Menu', 'Check for Updates'), self)
+        self.checkUpdateAction.setMenuRole(QAction.MenuRole.NoRole)
+        self.checkUpdateAction.triggered.connect(self.checkUpdate)
 
-            self.helpMenu.addSeparator()
+        self.errorAction = QAction(QApplication.translate('Menu', 'Errors'), self)
+        self.errorAction.triggered.connect(self.viewErrorLog)
 
-            errorAction = QAction(QApplication.translate('Menu', 'Errors'), self)
-            errorAction.triggered.connect(self.viewErrorLog)
-            self.helpMenu.addAction(errorAction)
+        self.messageAction = QAction(QApplication.translate('Menu', 'Messages'), self)
+        self.messageAction.triggered.connect(self.viewMessageLog)
 
-            messageAction = QAction(QApplication.translate('Menu', 'Messages'), self)
-            messageAction.triggered.connect(self.viewMessageLog)
-            self.helpMenu.addAction(messageAction)
+        self.serialAction = QAction(QApplication.translate('Menu', 'Serial'), self)
+        self.serialAction.triggered.connect(self.viewSerialLog)
+        self.serialAction.setMenuRole(QAction.MenuRole.NoRole)
 
-            serialAction = QAction(QApplication.translate('Menu', 'Serial'), self)
-            serialAction.triggered.connect(self.viewSerialLog)
-            serialAction.setMenuRole(QAction.MenuRole.NoRole)
-            self.helpMenu.addAction(serialAction)
-
-            platformAction = QAction(QApplication.translate('Menu', 'Platform'), self)
-            platformAction.triggered.connect(self.viewplatform)
-            self.helpMenu.addAction(platformAction)
+        self.platformAction = QAction(QApplication.translate('Menu', 'Platform'), self)
+        self.platformAction.triggered.connect(self.viewplatform)
 
 
-            # SETTINGS submenu
-            self.helpMenu.addSeparator()
+        # SETTINGS submenu
 
-            self.loadSettingsAction = QAction(QApplication.translate('Menu', 'Load Settings...'), self)
-            self.loadSettingsAction.triggered.connect(self.loadSettings_triggered)
-            self.loadSettingsAction.setMenuRole(QAction.MenuRole.NoRole) # avoid specific handling of settings menu
-            self.helpMenu.addAction(self.loadSettingsAction)
+        self.loadSettingsAction = QAction(QApplication.translate('Menu', 'Load Settings...'), self)
+        self.loadSettingsAction.triggered.connect(self.loadSettings_triggered)
+        self.loadSettingsAction.setMenuRole(QAction.MenuRole.NoRole) # avoid specific handling of settings menu
 
-            self.openRecentSettingMenu: QMenu|None = self.helpMenu.addMenu(QApplication.translate('Menu', 'Load Recent Settings'))
-            if self.openRecentSettingMenu is not None:
-                for i in range(self.MaxRecentFiles):
-                    self.openRecentSettingMenu.addAction(self.recentSettingActs[i])
-                self.updateRecentSettingActions()
+        self.openRecentSettingMenu:QMenu = QMenu(QApplication.translate('Menu', 'Load Recent Settings'))
+        for i in range(self.MaxRecentFiles):
+            self.openRecentSettingMenu.addAction(self.recentSettingActs[i])
+        self.updateRecentSettingActions()
 
-            self.saveAsSettingsAction = QAction(QApplication.translate('Menu', 'Save Settings...'), self)
-            self.saveAsSettingsAction.triggered.connect(self.saveSettings)
-            self.saveAsSettingsAction.setMenuRole(QAction.MenuRole.NoRole)  # avoid specific handling of settings menu
+        self.saveAsSettingsAction = QAction(QApplication.translate('Menu', 'Save Settings...'), self)
+        self.saveAsSettingsAction.triggered.connect(self.saveSettings)
+        self.saveAsSettingsAction.setMenuRole(QAction.MenuRole.NoRole)  # avoid specific handling of settings menu
 
-            self.helpMenu.addAction(self.saveAsSettingsAction)
-            self.helpMenu.addSeparator()
-            self.resetAction = QAction(QApplication.translate('Menu', 'Factory Reset'), self)
-            self.resetAction.setMenuRole(QAction.MenuRole.NoRole)
-            self.resetAction.triggered.connect(self.resetApplication)
-            self.helpMenu.addAction(self.resetAction)
-
-        self.displayonlymenus()
-
+        self.resetAction = QAction(QApplication.translate('Menu', 'Factory Reset'), self)
+        self.resetAction.setMenuRole(QAction.MenuRole.NoRole)
+        self.resetAction.triggered.connect(self.resetApplication)
 
         self.main_menu_actions_with_shortcuts:list[QAction|None] = [
+            # file menu
+            self.newRoastAction,
             self.fileLoadAction,
             self.fileSaveAction,
             self.fileSaveAsAction,
-            self.fileSaveCopyAsAction,
             self.htmlAction,
             self.printAction,
             self.quitAction,
-            #
+            # edit menu
             self.cutAction,
             self.copyAction,
             self.pasteAction,
-            #
+            # roast menu
             self.editGraphAction,
             self.backgroundAction,
             self.switchAction,
+            # config menu
             self.deviceAction,
             self.curvesAction,
             self.eventsAction,
             self.alarmAction,
             self.WindowconfigAction,
-            #
+            # tools menu
             self.fitIdealautoAction,
             self.clearresultsAction,
-            #
+            # view menu
             self.controlsAction,
             self.readingsAction,
             self.buttonsAction,
             self.slidersAction,
             self.lcdsAction,
             self.fullscreenAction,
-            self.newRoastAction,
         ]
 
 
@@ -4278,6 +4182,8 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         mainlayout.setContentsMargins(0,0,0,0)
         mainlayout.setSpacing(0)
 
+        self.displayonlymenus() # enable/disable menu items as needed
+
         if self.qmc.mode == 'C':
             self.qmc.mode = 'F'
             self.qmc.celsiusMode()
@@ -4388,6 +4294,245 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         self.zoomInShortcut.activated.connect(self.zoomIn)
         self.zoomOutShortcut = QShortcut(QKeySequence.StandardKey.ZoomOut, self)
         self.zoomOutShortcut.activated.connect(self.zoomOut)
+
+    #
+
+    def create_file_menu(self, ui_mode:UI_MODE) -> QMenu:
+        file_menu = QMenu(f"&{QApplication.translate('Menu', 'File')}")
+        file_menu.addMenu(self.newRoastMenu)
+        file_menu.addAction(self.fileLoadAction)       # Open
+        file_menu.addMenu(self.openRecentMenu)         # Open recent
+        if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
+            file_menu.addMenu(self.importMenu)         # Import
+            file_menu.addMenu(self.convFromMenu)       # Convert from
+        file_menu.addSeparator()                       # ---
+        file_menu.addAction(self.fileSaveAction)       # Save
+        file_menu.addAction(self.fileSaveAsAction)     # SaveAs
+        if ui_mode is UI_MODE.EXPERT:
+            file_menu.addAction(self.fileSaveCopyAsAction) # SaveAs Copy
+        file_menu.addSeparator()
+        if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
+            file_menu.addMenu(self.exportMenu)         # Export
+            file_menu.addMenu(self.convMenu)           # Convert to
+        file_menu.addSeparator()                       # ---
+        if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
+            file_menu.addMenu(self.saveGraphMenu)      # Save Graph
+            file_menu.addMenu(self.reportMenu)         # Report
+            if ui_mode is UI_MODE.EXPERT:    # Save Statistics
+                file_menu.addMenu(self.saveStatisticsMenu)
+        file_menu.addSeparator()                       # ---
+        file_menu.addAction(self.printAction)          # Print
+        file_menu.addAction(self.quitAction)           # Quit
+        return file_menu
+
+    def create_edit_menu(self, ui_mode:UI_MODE) -> QMenu:
+        del ui_mode
+        edit_menu = QMenu(f"&{QApplication.translate('Menu', 'Edit')}")
+        edit_menu.addAction(self.cutAction)
+        edit_menu.addAction(self.copyAction)
+        edit_menu.addAction(self.pasteAction)
+        return edit_menu
+
+    def create_roast_menu(self, ui_mode:UI_MODE) -> QMenu:
+        roast_menu = QMenu(f"&{QApplication.translate('Menu', 'Roast')}")
+        roast_menu.addAction(self.editGraphAction)
+        roast_menu.addAction(self.backgroundAction)
+        roast_menu.addAction(self.flavorAction)
+        if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
+            roast_menu.addSeparator()
+            roast_menu.addAction(self.switchAction)
+            if ui_mode is UI_MODE.EXPERT:
+                roast_menu.addAction(self.switchETBTAction)
+        return roast_menu
+
+    def create_config_menu(self, ui_mode:UI_MODE) -> QMenu:
+        config_menu = QMenu(f"&{QApplication.translate('Menu', 'Config')}")
+        if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
+            config_menu.addMenu(self.machineMenu)
+        if ui_mode is UI_MODE.EXPERT:
+            config_menu.addAction(self.deviceAction)
+            config_menu.addAction(self.commportAction)
+            config_menu.addSeparator()
+            config_menu.addAction(self.calibrateDelayAction)
+            config_menu.addSeparator()
+            config_menu.addAction(self.curvesAction)
+        if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
+            config_menu.addSeparator()
+            config_menu.addAction(self.eventsAction)
+            config_menu.addAction(self.alarmAction)
+            config_menu.addSeparator()
+            config_menu.addAction(self.phasesGraphAction)
+            if ui_mode is UI_MODE.EXPERT:
+                config_menu.addAction(self.StatisticsAction)
+            config_menu.addAction(self.WindowconfigAction)
+        config_menu.addSeparator()
+        if ui_mode is UI_MODE.EXPERT:
+            config_menu.addAction(self.colorsAction)
+        if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
+            config_menu.addMenu(self.themeMenu)
+            config_menu.addSeparator()
+            config_menu.addAction(self.autosaveAction)
+            config_menu.addAction(self.batchAction)
+            config_menu.addSeparator()
+            config_menu.addMenu(self.temperatureConfMenu)
+        if ui_mode is not UI_MODE.PRODUCTION:
+            config_menu.addMenu(self.languageMenu)
+        # the UI mode selector should always be present
+        config_menu.addSeparator()
+        config_menu.addMenu(self.UIModeMenu)
+        return config_menu
+
+    def create_tools_menu(self, ui_mode:UI_MODE) -> QMenu:
+        tools_menu = QMenu(f"&{QApplication.translate('Menu', 'Tools')}")
+        if ui_mode is not UI_MODE.PRODUCTION:
+            if ui_mode is UI_MODE.EXPERT:
+                tools_menu.addMenu(self.analyzeMenu)
+            tools_menu.addAction(self.roastCompareAction)
+            tools_menu.addAction(self.designerAction)
+            if ui_mode is UI_MODE.EXPERT:
+                tools_menu.addAction(self.simulatorAction)
+                tools_menu.addAction(self.wheeleditorAction)
+            tools_menu.addSeparator()
+            if ui_mode is UI_MODE.EXPERT:
+                tools_menu.addAction(self.transformAction)
+            tools_menu.addMenu(self.temperatureMenu)
+            tools_menu.addSeparator()
+            tools_menu.addAction(self.calculatorAction)
+        return tools_menu
+
+    def create_view_menu(self, ui_mode:UI_MODE) -> QMenu:
+        del ui_mode
+        view_menu = QMenu(f"&{QApplication.translate('Menu', 'View')}")
+        view_menu.addAction(self.controlsAction)
+        view_menu.addAction(self.readingsAction)
+        view_menu.addAction(self.eventsEditorAction)
+        if self.ui_mode is not UI_MODE.PRODUCTION or len(self.extraeventslabels) > 0:
+            view_menu.addAction(self.buttonsAction)
+        if self.ui_mode is not UI_MODE.PRODUCTION or self.slidersVisible():
+            view_menu.addAction(self.slidersAction)
+        view_menu.addSeparator()
+        view_menu.addAction(self.scheduleAction)
+        if self.app.artisanviewerMode:
+            self.scheduleAction.setEnabled(False) # no scheduler in ArtisanViewer mode
+        view_menu.addSeparator()
+        view_menu.addAction(self.lcdsAction)
+        view_menu.addAction(self.deltalcdsAction)
+        if self.ui_mode is not UI_MODE.PRODUCTION or self.qmc.Controlbuttonflag:
+            view_menu.addAction(self.pidlcdsAction)
+        if self.ui_mode is not UI_MODE.PRODUCTION or len(self.qmc.extradevices)>0:
+            view_menu.addAction(self.extralcdsAction)
+        view_menu.addAction(self.phaseslcdsAction)
+        if self.ui_mode is not UI_MODE.PRODUCTION or self.scale1_model is not None:
+            view_menu.addAction(self.scalelcdsAction)
+        view_menu.addSeparator()
+        if not (platform.system() == 'Darwin' and self.qmc.locale_str == 'en'): # macOS automatically adds the fullscreen action to View menu
+#            self.fullscreenAction = QAction(QApplication.translate('Menu', 'Full Screen'), self)
+#            self.fullscreenAction.triggered.connect(self.toggleFullscreen)
+#            self.fullscreenAction.setCheckable(True)
+#            self.fullscreenAction.setChecked(False)
+#            self.fullscreenAction.setShortcut('Ctrl+F')
+#            self.fullscreenAction.setMenuRole(QAction.MenuRole.NoRole)
+            view_menu.addAction(self.fullscreenAction)
+        return view_menu
+
+
+    def create_help_menu(self, ui_mode:UI_MODE) -> QMenu:
+        help_menu = QMenu(f"&{QApplication.translate('Menu', 'Help')}")
+        help_menu.addAction(self.helpAboutAction)
+        help_menu.addAction(self.aboutQtAction)
+        help_menu.addAction(self.helpDocumentationAction)
+        help_menu.addAction(self.KshortCAction)
+        if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
+            help_menu.addSeparator()
+            help_menu.addAction(self.checkUpdateAction)
+        if ui_mode is UI_MODE.EXPERT:
+            help_menu.addSeparator()
+            help_menu.addAction(self.errorAction)
+            help_menu.addAction(self.messageAction)
+            help_menu.addAction(self.serialAction)
+            help_menu.addAction(self.platformAction)
+        if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
+            help_menu.addSeparator()
+            help_menu.addAction(self.loadSettingsAction)
+            help_menu.addMenu(self.openRecentSettingMenu)
+            help_menu.addAction(self.saveAsSettingsAction)
+            help_menu.addSeparator()
+            help_menu.addAction(self.resetAction)
+        return help_menu
+
+    #
+
+    def set_menu(self, ui_mode:UI_MODE) -> None:
+        menuBar:QMenuBar|None = self.menuBar()
+        if menuBar is not None:
+            menuBar.clear()
+            # File menu
+            self.fileMenu = self.create_file_menu(ui_mode)
+            menuBar.addMenu(self.fileMenu)
+            # Edit menu
+            self.editMenu = self.create_edit_menu(ui_mode)
+            menuBar.addMenu(self.editMenu)
+            # Roast menu
+            self.RoastMenu = self.create_roast_menu(ui_mode)
+            menuBar.addMenu(self.RoastMenu)
+            # Config menu
+            self.ConfMenu = self.create_config_menu(ui_mode)
+            menuBar.addMenu(self.ConfMenu)
+            # Tools menu
+            if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}: # no Tools menu in Production mode
+                self.ToolkitMenu = self.create_tools_menu(ui_mode)
+                menuBar.addMenu(self.ToolkitMenu)
+            # View menu
+            self.viewMenu = self.create_view_menu(ui_mode)
+            menuBar.addMenu(self.viewMenu)
+            # Help menu
+            self.helpMenu = self.create_help_menu(ui_mode)
+            menuBar.addMenu(self.helpMenu)
+
+    def set_toolbar(self, ui_mode:UI_MODE) -> None:
+        if ui_mode is UI_MODE.EXPERT:
+            self.ntb.add_toolbar_lines_configuration()
+        else:
+            self.ntb.remove_toolbar_lines_configuration()
+
+
+    @pyqtSlot()
+    @pyqtSlot(bool)
+    def setProductionMode(self, _:bool = False) -> None:
+        if self.ui_mode is not UI_MODE.PRODUCTION:
+            self.set_ui_mode(UI_MODE.PRODUCTION)
+    @pyqtSlot()
+    @pyqtSlot(bool)
+    def setDefaultMode(self, _:bool = False) -> None:
+        if self.ui_mode is not UI_MODE.DEFAULT:
+            self.set_ui_mode(UI_MODE.DEFAULT)
+    @pyqtSlot()
+    @pyqtSlot(bool)
+    def setExpertMode(self, _:bool = False) -> None:
+        if self.ui_mode is not UI_MODE.EXPERT:
+            self.set_ui_mode(UI_MODE.EXPERT)
+
+    # configures apps UI for different usage scenario by adjusting menus, dialogs, and shortcuts
+    def set_ui_mode(self, ui_mode:UI_MODE) -> None:
+        self.ui_mode = ui_mode
+        self.productionModeAction.setChecked(ui_mode is UI_MODE.PRODUCTION)
+        self.defaultModeAction.setChecked(ui_mode is UI_MODE.DEFAULT)
+        self.expertModeAction.setChecked(ui_mode is UI_MODE.EXPERT)
+        # configure menus
+        self.set_menu(ui_mode)
+        # configure toolbar
+        self.set_toolbar(ui_mode)
+        # send message
+        if ui_mode is UI_MODE.PRODUCTION:
+            mode_name = QApplication.translate('Menu', 'Production')
+        elif ui_mode is UI_MODE.EXPERT:
+            mode_name = QApplication.translate('Menu', 'Expert')
+        else:
+            mode_name = QApplication.translate('Menu', 'Standard')
+        self.sendmessageSignal.emit(
+            f"{QApplication.translate('Menu', 'Mode')}: {mode_name}",True,None)
+
+    #
 
     def establish_phasescanvas(self) -> None:
         if self.qpc is None:
@@ -4607,17 +4752,27 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
 
     @pyqtSlot()
     def toggleBTlcdCurve(self) -> None:
-        _log.debug('PRINT toggleBTlcdCurve')
+        modifiers = QApplication.keyboardModifiers()
         if self.qmc.swaplcds:
-            self.toggleETCurve()
+            if modifiers == Qt.KeyboardModifier.AltModifier:
+                self.toggleETBackgroundCurve()
+            else:
+                self.toggleETCurve()
+        elif modifiers == Qt.KeyboardModifier.AltModifier:
+            self.toggleBTBackgroundCurve()
         else:
             self.toggleBTCurve()
-        _log.debug('PRINT self.qmc.BTcurve: %s',self.qmc.BTcurve)
 
     @pyqtSlot()
     def toggleETlcdCurve(self) -> None:
+        modifiers = QApplication.keyboardModifiers()
         if self.qmc.swaplcds:
-            self.toggleBTCurve()
+            if modifiers == Qt.KeyboardModifier.AltModifier:
+                self.toggleBTBackgroundCurve()
+            else:
+                self.toggleBTCurve()
+        elif modifiers == Qt.KeyboardModifier.AltModifier:
+            self.toggleETBackgroundCurve()
         else:
             self.toggleETCurve()
 
@@ -4642,19 +4797,57 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             self.qmc.redraw_keep_view(recomputeAllDeltas=False)
         self.setLabelColor(self.label2,self.qmc.palette['et'], self.qmc.ETcurve)
 
+    def toggleETBackgroundCurve(self) -> None:
+        if self.qmc.backgroundprofile is not None and self.qmc.background:
+            self.qmc.backgroundETcurve = not self.qmc.backgroundETcurve
+            self.qmc.l_annotations_dict = {}
+            self.qmc.redraw_keep_view(recomputeAllDeltas=False)
+
+    def toggleBTBackgroundCurve(self) -> None:
+        if self.qmc.backgroundprofile is not None and self.qmc.background:
+            self.qmc.backgroundBTcurve = not self.qmc.backgroundBTcurve
+            self.qmc.l_annotations_dict = {}
+            self.qmc.redraw_keep_view(recomputeAllDeltas=False)
+
     @pyqtSlot()
     def toggleDeltaETlcdCurve(self) -> None:
+        modifiers = QApplication.keyboardModifiers()
         if self.qmc.swapdeltalcds:
-            self.toggleDeltaBTCurve()
+            if modifiers == Qt.KeyboardModifier.AltModifier:
+                self.toggleBackgroundDeltaBTCurve()
+            else:
+                self.toggleDeltaBTCurve()
+        elif modifiers == Qt.KeyboardModifier.AltModifier:
+            self.toggleBackgroundDeltaETCurve()
         else:
             self.toggleDeltaETCurve()
 
     @pyqtSlot()
     def toggleDeltaBTlcdCurve(self) -> None:
+        modifiers = QApplication.keyboardModifiers()
         if self.qmc.swapdeltalcds:
-            self.toggleDeltaETCurve()
+            if modifiers == Qt.KeyboardModifier.AltModifier:
+                self.toggleBackgroundDeltaETCurve()
+            else:
+                self.toggleDeltaETCurve()
+        elif modifiers == Qt.KeyboardModifier.AltModifier:
+            self.toggleBackgroundDeltaBTCurve()
         else:
             self.toggleDeltaBTCurve()
+
+    def toggleBackgroundDeltaETCurve(self) -> None:
+        if self.qmc.backgroundprofile is not None and self.qmc.background:
+            twoAxis_before = self.qmc.twoAxisMode()
+            self.qmc.DeltaETBflag = not self.qmc.DeltaETBflag
+            twoAxis_after = self.qmc.twoAxisMode()
+            self.qmc.redraw_keep_view(recomputeAllDeltas=False, forceRenewAxis=twoAxis_before != twoAxis_after)
+
+    def toggleBackgroundDeltaBTCurve(self) -> None:
+        if self.qmc.backgroundprofile is not None and self.qmc.background:
+            twoAxis_before = self.qmc.twoAxisMode()
+            self.qmc.DeltaBTBflag = not self.qmc.DeltaBTBflag
+            twoAxis_after = self.qmc.twoAxisMode()
+            self.qmc.redraw_keep_view(recomputeAllDeltas=False, forceRenewAxis=twoAxis_before != twoAxis_after)
 
     def toggleDeltaETCurve(self) -> None:
         if len(self.qmc.delta1) > 5:
@@ -4718,8 +4911,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         languageAction.setCheckable(True)
         languageAction.triggered.connect(self.change_local_action)
         self.language_menu_actions[locale] = languageAction
-        if self.languageMenu is not None:
-            self.languageMenu.addAction(languageAction)
+        self.languageMenu.addAction(languageAction)
         if self.locale_str == locale:
             languageAction.setChecked(True)
 
@@ -4962,7 +5154,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             sign = '+'
             fit = fit[::-1]
             try:
-                for i, fiti in enumerate(fit): # type:ignore[reportArgumentType, unused-ignore] # pyright falsely reports since numpy 2.1: Argument of type "Unknown | None" cannot be assigned to parameter "iterable" of type "Iterable
+                for i, fiti in enumerate(fit):
                     v = abs(fiti)
                     if round(v,3) != 0.0:
                         if i == 0:
@@ -4995,9 +5187,9 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     return r
                 if cellWidget is not None:
                     cellWidgetLayout = cellWidget.layout()
-                if cellWidgetLayout is not None and isinstance(widget, QWidget): # pyrefly: ignore[invalid-argument]
+                if cellWidgetLayout is not None and isinstance(widget, QWidget):
                     cw:QWidget = widget
-                    if cellWidgetLayout.indexOf(cw) > -1: # ty: ignore[no-matching-overload]
+                    if cellWidgetLayout.indexOf(cw) > -1:
                         return r
         return None
 
@@ -5013,9 +5205,9 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     return c
                 if cellWidget is not None:
                     cellWidgetLayout = cellWidget.layout()
-                if cellWidgetLayout is not None and isinstance(widget, QWidget): # pyrefly: ignore[invalid-argument]
+                if cellWidgetLayout is not None and isinstance(widget, QWidget):
                     cw:QWidget = widget
-                    if cellWidgetLayout.indexOf(cw) > -1: # ty: ignore[no-matching-overload]
+                    if cellWidgetLayout.indexOf(cw) > -1:
                         return c
         return None
 
@@ -5136,7 +5328,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     if self.plus_subscription == 'HOME':
                         subscription_icon = 'plus-home'
                         if self.plus_paidUntil is not None:
-                            remaining_days = (self.plus_paidUntil.date() - datetime.datetime.now(datetime.UTC).date()).days # ty:ignore
+                            remaining_days = (self.plus_paidUntil.date() - datetime.datetime.now(datetime.UTC).date()).days
                             if remaining_days <= 0:
                                 subscription_icon = 'plus-home-off'
                             elif remaining_days < 31:
@@ -5150,7 +5342,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     elif self.plus_subscription == 'PRO':
                         subscription_icon = 'plus-pro'
                         if self.plus_paidUntil is not None:
-                            remaining_days = (self.plus_paidUntil.date() - datetime.datetime.now(datetime.UTC).date()).days # ty:ignore
+                            remaining_days = (self.plus_paidUntil.date() - datetime.datetime.now(datetime.UTC).date()).days
                             if remaining_days <= 0:
                                 subscription_icon = 'plus-pro-off'
                             elif remaining_days < 31:
@@ -5393,9 +5585,9 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         if 'colorSystem' in rr:
             if rr['colorSystem'] in self.qmc.color_systems:
                 self.qmc.color_system_idx = self.qmc.color_systems.index(rr['colorSystem'])
-            elif isinstance(rr['colorSystem'], int) and rr['colorSystem'] < len(self.qmc.color_systems): # type: ignore[unreachable]
+            elif isinstance(rr['colorSystem'], int) and rr['colorSystem'] < len(self.qmc.color_systems): # type: ignore[unreachable] # ty:ignore[ignore]
                 # to stay compatible with older versions were rr['colorSystem'] was an index instead of the name of a system
-                self.qmc.color_system_idx = rr['colorSystem'] # type: ignore[unreachable]
+                self.qmc.color_system_idx = rr['colorSystem'] # type: ignore[unreachable] # ty:ignore[ignore]
 
         # Note: the background profile will not be changed if recent roast is activated from Roast Properties
 #PLUS
@@ -5501,24 +5693,23 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
 
 
     def updateNewMenuRecentRoasts(self) -> None:
-        if self.newRoastMenu is not None:
-            self.newRoastMenu.clear()
-            # add NEW menu item
-            self.newRoastAction = QAction(QApplication.translate('Menu', 'New'), self)
-            self.newRoastAction.setShortcut(QKeySequence.StandardKey.New)
-            self.newRoastAction.triggered.connect(self.newRoast)  # pyright: ignore [reportGeneralTypeIssues] # error: Argument of type "(_: bool = False) -> bool" cannot be assigned to parameter "slot" of type "PYQT_SLOT" in function "connect"
-            self.newRoastMenu.addAction(self.newRoastAction)
-            # add recent roasts items
-            if len(self.recentRoasts) > 0:
-                self.newRoastMenu.addSeparator()
-                for rr in self.recentRoasts:
-    #                act = QAction(self, visible=True,
-    #                                triggered=self.newRecentRoast)
-                    act = QAction(self)
-                    act.triggered.connect(self.newRecentRoast)
-                    act.setData(rr)
-                    act.setText(self.recentRoastLabel(rr))
-                    self.newRoastMenu.addAction(act)
+        self.newRoastMenu.clear()
+        # add NEW menu item
+        self.newRoastAction = QAction(QApplication.translate('Menu', 'New'), self)
+        self.newRoastAction.setShortcut(QKeySequence.StandardKey.New)
+        self.newRoastAction.triggered.connect(self.newRoast)  # pyright: ignore [reportGeneralTypeIssues] # error: Argument of type "(_: bool = False) -> bool" cannot be assigned to parameter "slot" of type "PYQT_SLOT" in function "connect"
+        self.newRoastMenu.addAction(self.newRoastAction)
+        # add recent roasts items
+        if len(self.recentRoasts) > 0:
+            self.newRoastMenu.addSeparator()
+            for rr in self.recentRoasts:
+    #            act = QAction(self, visible=True,
+    #                            triggered=self.newRecentRoast)
+                act = QAction(self)
+                act.triggered.connect(self.newRecentRoast)
+                act.setData(rr)
+                act.setText(self.recentRoastLabel(rr))
+                self.newRoastMenu.addAction(act)
 
     def recentRoastsMenuList(self) -> list[str]:
         return [self.recentRoastLabel(rr) for rr in self.recentRoasts]
@@ -6050,7 +6241,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
     def colorDifference(self, color1:str|None, color2:str|None) -> float:
         cDiff = 100
         try:
-            from colorspacious import deltaE # type: ignore[import-untyped]
+            from colorspacious import deltaE # type: ignore[import-untyped] # ty:ignore[ignore]
             if color1 is None or color1 == 'None':
                 color1 = '#f0f0f0'
             if color2 is None or color2 == 'None':
@@ -6263,9 +6454,9 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             self.level1layout.removeWidget(self.ntb) # remove current bar
 
             if self.ntb.mode == MPL_Mode.PAN:
-                self.ntb.pan() # type:ignore[no-untyped-call] # PAN is active, we deactivate it before changing the ToolBar
+                self.ntb.pan() # type:ignore[no-untyped-call] # ty:ignore[ignore] # PAN is active, we deactivate it before changing the ToolBar
             if self.ntb.mode == MPL_Mode.ZOOM:
-                self.ntb.zoom() # type:ignore[no-untyped-call] # ZOOM is active, we deactivate it before changing the ToolBar
+                self.ntb.zoom() # type:ignore[no-untyped-call] # ty:ignore[ignore] # ZOOM is active, we deactivate it before changing the ToolBar
             self.removeToolBar(self.ntb)
 #            self.ntb.hide() # seems not to be necessary anymore with the removeToolBar() above
             self.ntb.destroy()
@@ -6961,7 +7152,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             factor = 10
         elif coarse == 2: # slider step size 5
             factor = 5
-        r = float(((numpy.digitize([v],ls)[0] - 1) * factor + self.eventslidermin[i]) / 10.) # ty:ignore
+        r = float(((numpy.digitize([v],ls)[0] - 1) * factor + self.eventslidermin[i]) / 10.)
         return max(self.eventslidermin[i]/10., min(self.eventslidermax[i] / 10., r))
 
     def curveSimilarity2(self,exp:int=-1,analysis_starttime:float=0,analysis_endtime:float=0) -> 'CurveSimilarity': # pylint: disable=no-self-use
@@ -7172,7 +7363,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         tra = numpy.trapezoid(segment_abs_deltas, x=segment_times)
                     except Exception:  # pylint: disable=broad-except
                         tra = numpy.trapz(segment_abs_deltas, x=segment_times) # type:ignore [attr-defined, unused-ignore]
-                    segment_abc_deltas = numpy.append(segment_abc_deltas, tra)
+                    segment_abc_deltas = numpy.append(segment_abc_deltas, tra) # pyright:ignore[reportUnknownArgumentType]
 
 
                 # interval of interest metrics
@@ -7185,7 +7376,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     tra = numpy.trapezoid(ioi_abs_deltas, x=times_all)
                 except Exception:  # pylint: disable=broad-except
                     tra = numpy.trapz(ioi_abs_deltas, x=times_all) # type:ignore [attr-defined, unused-ignore]
-                ioi_abc_deltas = float(numpy.sum(tra))
+                ioi_abc_deltas = float(numpy.sum(tra)) # pyright:ignore[reportUnknownArgumentType]
                 ioi_abcprime = ioi_abc_deltas / ioi_seconds
 
                 # fit RoR in C/min/min
@@ -7265,7 +7456,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
             _, _, exc_tb = sys.exc_info()
-            self.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' curveSimilatrity2(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
+            self.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' curveSimilarity2(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
         # build the dict to return
         result['mse_BT'] = float(mse_BT)
@@ -7337,34 +7528,57 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                 np_btb = numpy.array(self.qmc.temp2B)
                 np_timeB = numpy.array(self.qmc.timeB) + dropTimeDelta # shift background times such that they are aligned with foreground profile @ DROP
 
-                # we masked the -1 error values
-                np_etb_masked = numpy.ma.masked_equal(np_etb, -1) # type:ignore[no-untyped-call]
-                np_btb_masked = numpy.ma.masked_equal(np_btb, -1) # type:ignore[no-untyped-call]
-                np_timeB_etb_masked = numpy.ma.masked_array(np_timeB, np_etb_masked.mask) # type:ignore[no-untyped-call] # pylint:disable=no-member
-                np_timeB_btb_masked = numpy.ma.masked_array(np_timeB, np_btb_masked.mask) # type:ignore[no-untyped-call] # pylint:disable=no-member
-                # ignore the masked error values on computing the interpolation and fill (especially on the left) with -1 values
-                interp_np_etb = numpy.interp(np_timex,np_timeB_etb_masked.compressed(),np_etb_masked.compressed(),left=-1,right=-1) # pyright:ignore[reportUnknownArgumentType]  # pylint:disable=no-member
-                interp_np_btb = numpy.interp(np_timex,np_timeB_btb_masked.compressed(),np_btb_masked.compressed(),left=-1,right=-1) # pyright:ignore[reportUnknownArgumentType]  # pylint:disable=no-member
+                RMSE_et:float|None = None
+                RMSE_bt:float|None = None
+                try:
+                    # we masked the -1 error values
+                    np_etb_masked = numpy.ma.masked_equal(np_etb, -1)
+                    np_timeB_etb_masked = numpy.ma.masked_array(np_timeB, np_etb_masked.mask) # pylint:disable=no-member
+                    # ignore the masked error values on computing the interpolation and fill (especially on the left) with -1 values
+                    interp_np_etb = numpy.interp(np_timex,np_timeB_etb_masked.compressed(),np_etb_masked.compressed(),left=-1,right=-1) # pyright:ignore[reportUnknownArgumentType]  # pylint:disable=no-member
 
-                # at his point the background arrays interp_np_etb/interp_np_btb have the same length then their foreground counter parts np_et/np_bt
-                # however, all those errors may contain -1 error values and inf/nan readings. Let's mask them to be ignored in the computation.
+                    # at his point the background arrays interp_np_etb/interp_np_btb have the same length then their foreground counter parts np_et/np_bt
+                    # however, all those errors may contain -1 error values and inf/nan readings. Let's mask them to be ignored in the computation.
 
-                # mask the -1 padding resulting from interpolating the background data as well as the inf/nan readings
-                interp_np_etb_masked = numpy.ma.masked_equal(numpy.ma.masked_invalid(interp_np_etb), -1) # type:ignore[no-untyped-call] # mask -1, inf, nan to be ignored
-                interp_np_btb_masked = numpy.ma.masked_equal(numpy.ma.masked_invalid(interp_np_btb), -1) # type:ignore[no-untyped-call] # mask -1, inf, nan to be ignored
+                    # mask the -1 padding resulting from interpolating the background data as well as the inf/nan readings
+                    interp_np_etb_masked = numpy.ma.masked_equal(numpy.ma.masked_invalid(interp_np_etb), -1) # mask -1, inf, nan to be ignored
 
-                # mask the -1 error values as well as the inf/nan readings
-                np_et_masked = numpy.ma.masked_equal(numpy.ma.masked_invalid(np_et), -1) # type:ignore[no-untyped-call] # mask -1, inf, nan to be ignored
-                np_bt_masked = numpy.ma.masked_equal(numpy.ma.masked_invalid(np_bt), -1) # type:ignore[no-untyped-call] # mask -1, inf, nan to be ignored
+                    # mask the -1 error values as well as the inf/nan readings
+                    np_et_masked = numpy.ma.masked_equal(numpy.ma.masked_invalid(np_et), -1) # mask -1, inf, nan to be ignored
 
-                # all readings that are masked in the one or the other array are ignored and do not contribute in the following
-                RMSE_et = numpy.sqrt(numpy.mean(numpy.square(np_et_masked - interp_np_etb_masked))) # pyright:ignore[reportUnknownArgumentType]
-                RMSE_bt = numpy.sqrt(numpy.mean(numpy.square(np_bt_masked - interp_np_btb_masked))) # pyright:ignore[reportUnknownArgumentType]
+                    # all readings that are masked in the one or the other array are ignored and do not contribute in the following
+                    RMSE_et = numpy.sqrt(numpy.mean(numpy.square(np_et_masked - interp_np_etb_masked))) # pyright:ignore[reportUnknownArgumentType]
 
-                if numpy.isnan(RMSE_et):
-                    RMSE_et = None
-                if numpy.isnan(RMSE_bt):
-                    RMSE_bt = None
+                    if RMSE_et is not None and numpy.isnan(RMSE_et):
+                        RMSE_et = None
+                except Exception: # pylint: disable=broad-except
+                    # numpy.interp and numpy.sqrt fail with "array of sample points is empty" on empty input
+                    pass
+
+                try:
+                    # we masked the -1 error values
+                    np_btb_masked = numpy.ma.masked_equal(np_btb, -1)
+                    np_timeB_btb_masked = numpy.ma.masked_array(np_timeB, np_btb_masked.mask) # pylint:disable=no-member
+                    # ignore the masked error values on computing the interpolation and fill (especially on the left) with -1 values
+                    interp_np_btb = numpy.interp(np_timex,np_timeB_btb_masked.compressed(),np_btb_masked.compressed(),left=-1,right=-1) # pyright:ignore[reportUnknownArgumentType]  # pylint:disable=no-member
+
+                    # at his point the background arrays interp_np_etb/interp_np_btb have the same length then their foreground counter parts np_et/np_bt
+                    # however, all those errors may contain -1 error values and inf/nan readings. Let's mask them to be ignored in the computation.
+
+                    # mask the -1 padding resulting from interpolating the background data as well as the inf/nan readings
+                    interp_np_btb_masked = numpy.ma.masked_equal(numpy.ma.masked_invalid(interp_np_btb), -1) # mask -1, inf, nan to be ignored
+
+                    # mask the -1 error values as well as the inf/nan readings
+                    np_bt_masked = numpy.ma.masked_equal(numpy.ma.masked_invalid(np_bt), -1) # mask -1, inf, nan to be ignored
+
+                    # all readings that are masked in the one or the other array are ignored and do not contribute in the following
+                    RMSE_bt = numpy.sqrt(numpy.mean(numpy.square(np_bt_masked - interp_np_btb_masked))) # pyright:ignore[reportUnknownArgumentType]
+
+                    if RMSE_bt is not None and numpy.isnan(RMSE_bt):
+                        RMSE_bt = None
+                except Exception: # pylint: disable=broad-except
+                    # numpy.interp and numpy.sqrt fail with "array of sample points is empty" on empty input
+                    pass
 
                 return RMSE_et,RMSE_bt
 
@@ -7373,7 +7587,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
             _, _, exc_tb = sys.exc_info()
-            self.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' curveSimilatrity(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
+            self.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' curveSimilarity(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
             return None, None
 
     def setLCDsDigitCount(self, n:int) -> None:
@@ -8317,7 +8531,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
     pyqtSlot()
     def sliderfocusIn(self) -> None:
         sender = self.sender()
-        if not self.qmc.designerflag and self.comparator is None and sender is not None and isinstance(sender, QSlider): # pyrefly: ignore[invalid-argument]
+        if not self.qmc.designerflag and self.comparator is None and sender is not None and isinstance(sender, QSlider):
             try:
                 n:int = [self.slider1,self.slider2,self.slider3,self.slider4,self.sliderSV].index(sender)
                 self.quickEventShortCut = (n,'')
@@ -8582,7 +8796,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         self.qmc.fig.canvas.draw()
 #                        self.qmc.fig.canvas.update()
                     self.qmc.canvas.adjustSize()
-                    FigureCanvas.updateGeometry(self.qmc)  #@UndefinedVariable
+                    FigureCanvas.updateGeometry(self.qmc.canvas)
                     QApplication.processEvents()
                     if self.qmc.statssummary:
                         self.qmc.redraw(recomputeAllDeltas=False)
@@ -9801,7 +10015,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                                     dbnr,s,si = cs[len('getDBbool('):-1].split(',')
                                     resb:bool|None = self.s7.readBool(5,int(dbnr),int(s),int(si),force=True)
                                     if resb is not None:
-                                        self.s7.lastReadResult = resb  # pyrefly: ignore[bad-assignment]
+                                        self.s7.lastReadResult = resb
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
 
@@ -10999,7 +11213,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
 #                                    (k, _, value) = line.partition('=') # pyright: ignore [reportGeneralTypeIssues] # "Never" is not iterable
                                     # don't copy PYTHONHOME nor PYTHONPATH if it points to the Artisan.app
                                     if not ((k in {'PYTHONHOME','PYTHONPATH'}) and (('Artisan.app' in value) or 'artisan' in value)):
-                                        my_env[k] = value.rstrip('\n') # pyrefly: ignore[bad-assignment]
+                                        my_env[k] = value.rstrip('\n')
                             proc.communicate()
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
@@ -11157,7 +11371,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
     def recordextraevent_slot(self, _:bool) -> None:
         try:
             sender = self.sender()
-            assert isinstance(sender, QPushButton) # pyrefly: ignore[invalid-argument]
+            assert isinstance(sender, QPushButton)
             self.recordextraevent(self.buttonlist.index(sender))
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
@@ -11211,7 +11425,11 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                 #if eventtype < 4: # absolute values
                 etype = eventtype
                 new_value = cmdvalue
-                if eventtype > 4: # relative values for +/- actions
+                if eventtype > 9: # relative % values for % +/- actions
+                    etype = eventtype-10 # the real event type has a offset of 10 in this case
+                    p = self.extraeventsactionslastvalue[etype]
+                    new_value = cmdvalue if p is None else p + int(round(p*cmdvalue/100))
+                elif eventtype > 4: # relative values for +/- actions
                     etype = eventtype-5 # the real event type has a offset of 5 in this case
                     p = self.extraeventsactionslastvalue[etype]
                     new_value = cmdvalue if p is None else p + cmdvalue
@@ -11486,7 +11704,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                 self.eventslidersflags[0] = 0
 
     def slidersVisible(self) -> bool:
-        return any(v != 0 for v in self.eventslidervisibilities) or bool(self.pidcontrol.svSlider)
+        return not self.app.artisanviewerMode and (any(v != 0 for v in self.eventslidervisibilities) or bool(self.pidcontrol.svSlider))
 
     def showSliders(self, changeDefault:bool = True) -> None:
         if self.slidersVisible():
@@ -11524,7 +11742,6 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
     @pyqtSlot()
     @pyqtSlot(bool)
     def toggleSliders(self,_:bool = False) -> None:
-#        if self.sliderFrame.isVisible():
         if self.sliderDock.isVisible():
             self.hideSliders()
         else:
@@ -11713,73 +11930,53 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
 
     def disableLoadImportConvertMenus(self) -> None:
         self.fileLoadAction.setEnabled(False) # open
-        if self.openRecentMenu is not None:
-            self.openRecentMenu.setEnabled(False) # open recent
-        if self.importMenu is not None:
-            self.importMenu.setEnabled(False) # import
-        if self.convMenu is not None:
-            self.convMenu.setEnabled(False) # convert
+        self.openRecentMenu.setEnabled(False) # open recent
+        self.importMenu.setEnabled(False) # import
+        self.convMenu.setEnabled(False) # convert
 
     def enableLoadImportConvertMenus(self) -> None:
         self.fileLoadAction.setEnabled(True) # open
-        if self.openRecentMenu is not None:
-            self.openRecentMenu.setEnabled(True) # open recent
-        if self.importMenu is not None:
-            self.importMenu.setEnabled(True) # import
-        if self.convMenu is not None:
-            self.convMenu.setEnabled(True) # convert
+        self.openRecentMenu.setEnabled(True) # open recent
+        self.importMenu.setEnabled(True) # import
+        self.convMenu.setEnabled(True) # convert
 
     def enableEditMenus(self) -> None:
-        if self.newRoastMenu is not None:
-            self.newRoastMenu.setEnabled(True)
+        self.newRoastMenu.setEnabled(True)
         self.fileLoadAction.setEnabled(True) # open
-        if self.openRecentMenu is not None:
-            self.openRecentMenu.setEnabled(True) # open recent
-        if self.importMenu is not None:
-            self.importMenu.setEnabled(True) # import
+        self.openRecentMenu.setEnabled(True) # open recent
+        self.importMenu.setEnabled(True) # import
         self.fileSaveAction.setEnabled(True)
         self.fileSaveAsAction.setEnabled(True)
         self.fileSaveCopyAsAction.setEnabled(True)
-        if self.exportMenu is not None:
-            self.exportMenu.setEnabled(True)
-        if self.convMenu is not None:
-            self.convMenu.setEnabled(True)
-        if self.saveGraphMenu is not None:
-            self.saveGraphMenu.setEnabled(True)
+        self.exportMenu.setEnabled(True)
+        self.convMenu.setEnabled(True)
+        self.saveGraphMenu.setEnabled(True)
         self.htmlAction.setEnabled(True)
         if self.QtWebEngineSupport:
             self.roastReportPDFAction.setEnabled(True)
-        if self.reportMenu is not None:
-            self.reportMenu.setEnabled(True)
-        if self.productionMenu is not None:
-            self.productionMenu.setEnabled(True)
-        if self.rankingMenu is not None:
-            self.rankingMenu.setEnabled(True)
+        self.reportMenu.setEnabled(True)
+        self.productionMenu.setEnabled(True)
+        self.rankingMenu.setEnabled(True)
         self.printAction.setEnabled(True)
         self.editGraphAction.setEnabled(True)
         self.backgroundAction.setEnabled(True)
         self.switchAction.setEnabled(True)
         self.switchETBTAction.setEnabled(True)
         self.flavorAction.setEnabled(True)
-        if self.temperatureMenu is not None:
-            self.temperatureMenu.setEnabled(True)
-        if self.temperatureConfMenu is not None:
-            self.temperatureConfMenu.setEnabled(True)
-        if self.languageMenu is not None:
-            self.languageMenu.setEnabled(True)
+        self.temperatureMenu.setEnabled(True)
+        self.temperatureConfMenu.setEnabled(True)
+        self.languageMenu.setEnabled(True)
         self.deviceAction.setEnabled(True)
         self.commportAction.setEnabled(True)
         self.curvesAction.setEnabled(True)
-        if self.analyzeMenu is not None:
-            self.analyzeMenu.setEnabled(True)
+        self.analyzeMenu.setEnabled(True)
         self.roastCompareAction.setEnabled(True)
         self.designerAction.setEnabled(True)
         self.simulatorAction.setEnabled(True)
         self.wheeleditorAction.setEnabled(True)
         self.transformAction.setEnabled(True)
         self.loadSettingsAction.setEnabled(True)
-        if self.openRecentSettingMenu is not None:
-            self.openRecentSettingMenu.setEnabled(True)
+        self.openRecentSettingMenu.setEnabled(True)
         self.saveAsSettingsAction.setEnabled(True)
         self.resetAction.setEnabled(True)
         self.switchAction.setEnabled(True)
@@ -11796,52 +11993,48 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         self.controlsAction.setEnabled(True)
         self.readingsAction.setEnabled(True)
         self.eventsEditorAction.setEnabled(True)
-        self.buttonsAction.setEnabled(True)
-        self.slidersAction.setEnabled(True)
+        self.buttonsAction.setEnabled(len(self.extraeventslabels) > 0)
+        if not self.buttonsAction.isEnabled():
+            # hide buttons widget and reset the flag
+            self.hideExtraButtons()
+        self.slidersAction.setEnabled(self.slidersVisible())
+        if not self.slidersAction.isEnabled():
+            # hide slider widget and reset the flag
+            self.hideSliders()
 
-        if self.qmc.statssummary and self.saveStatisticsMenu is not None:
+        if self.qmc.statssummary:
             self.saveStatisticsMenu.setEnabled(True)
         self.displayonlymenus()
 
     def disableEditMenus(self, designer:bool = False, wheel:bool = False, compare:bool = False, sampling:bool = False) -> None:
         # FILE menu
-        if self.newRoastMenu is not None:
-            if designer or wheel or compare:
-                self.newRoastMenu.setEnabled(False)
-            else:
-                self.newRoastMenu.setEnabled(True)
+        if designer or wheel or compare:
+            self.newRoastMenu.setEnabled(False)
+        else:
+            self.newRoastMenu.setEnabled(True)
         if compare:
             self.fileLoadAction.setEnabled(True) # open
-            if self.openRecentMenu is not None:
-                self.openRecentMenu.setEnabled(True) # open recent
+            self.openRecentMenu.setEnabled(True) # open recent
         else:
             self.fileLoadAction.setEnabled(False) # open
-            if self.openRecentMenu is not None:
-                self.openRecentMenu.setEnabled(False) # open recent
-        if self.importMenu is not None:
-            self.importMenu.setEnabled(False) # import
+            self.openRecentMenu.setEnabled(False) # open recent
+        self.importMenu.setEnabled(False) # import
         if not sampling:
             self.fileSaveAction.setEnabled(False)
             self.fileSaveAsAction.setEnabled(False)
             self.fileSaveCopyAsAction.setEnabled(False)
-            if self.exportMenu is not None:
-                self.exportMenu.setEnabled(False)
-        if self.convMenu is not None:
-            self.convMenu.setEnabled(False)
-        if self.saveGraphMenu is not None and not wheel and not compare and not sampling:
+            self.exportMenu.setEnabled(False)
+        self.convMenu.setEnabled(False)
+        if not wheel and not compare and not sampling:
             self.saveGraphMenu.setEnabled(False)
         self.htmlAction.setEnabled(False)
         self.roastReportPDFAction.setEnabled(False)
-        if self.reportMenu is not None:
-            self.reportMenu.setEnabled(False)
-        if self.productionMenu is not None:
-            self.productionMenu.setEnabled(False)
-        if self.rankingMenu is not None:
-            self.rankingMenu.setEnabled(False)
+        self.reportMenu.setEnabled(False)
+        self.productionMenu.setEnabled(False)
+        self.rankingMenu.setEnabled(False)
         if not compare and not sampling:
             self.printAction.setEnabled(False)
-        if self.saveStatisticsMenu is not None:
-            self.saveStatisticsMenu.setEnabled(False)
+        self.saveStatisticsMenu.setEnabled(False)
         # EDIT menu
         # ROAST menu
         if compare or wheel:
@@ -11866,13 +12059,10 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             self.WindowconfigAction.setEnabled(False)
             self.colorsAction.setEnabled(False)
         self.themeMenu.setEnabled(False)
-        if self.temperatureConfMenu is not None:
-            self.temperatureConfMenu.setEnabled(False)
-        if self.languageMenu is not None:
-            self.languageMenu.setEnabled(False)
+        self.temperatureConfMenu.setEnabled(False)
+        self.languageMenu.setEnabled(False)
         # TOOLS menu
-        if self.analyzeMenu is not None:
-            self.analyzeMenu.setEnabled(False)
+        self.analyzeMenu.setEnabled(False)
         if not compare:
             self.roastCompareAction.setEnabled(False)
         else:
@@ -11887,8 +12077,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         else:
             self.wheeleditorAction.setEnabled(True)
         self.transformAction.setEnabled(False)
-        if self.temperatureMenu is not None:
-            self.temperatureMenu.setEnabled(False)
+        self.temperatureMenu.setEnabled(False)
         # VIEW menu
         if wheel:
             self.controlsAction.setEnabled(False)
@@ -11896,11 +12085,12 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             self.readingsAction.setEnabled(False)
             self.eventsEditorAction.setEnabled(False)
             self.buttonsAction.setEnabled(False)
+            self.hideExtraButtons()
             self.slidersAction.setEnabled(False)
+            self.hideSliders()
         # HELP menu
         self.loadSettingsAction.setEnabled(False)
-        if self.openRecentSettingMenu is not None:
-            self.openRecentSettingMenu.setEnabled(False)
+        self.openRecentSettingMenu.setEnabled(False)
         self.saveAsSettingsAction.setEnabled(False)
         self.resetAction.setEnabled(False)
         #
@@ -11908,8 +12098,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
 
     def displayonlymenus(self) -> None:
         if self.app.artisanviewerMode:
-            if self.newRoastMenu is not None:
-                self.newRoastMenu.setEnabled(False)
+            self.newRoastMenu.setEnabled(False)
             self.calibrateDelayAction.setEnabled(False)
             self.saveAsSettingsAction.setEnabled(False)
             self.machineMenu.setEnabled(False)
@@ -11918,7 +12107,9 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             self.batchAction.setEnabled(False)
             self.buttonsAction.setChecked(False)
             self.buttonsAction.setEnabled(False)
+            self.hideExtraButtons()
             self.slidersAction.setChecked(False)
+            self.hideSliders()
             self.slidersAction.setEnabled(False)
             self.simulatorAction.setEnabled(False)
 
@@ -12080,8 +12271,10 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                 control_modifier = modifiers == Qt.KeyboardModifier.ControlModifier # command/apple k on macOS, CONTROL on Windows
                 alt_modifier = modifiers == Qt.KeyboardModifier.AltModifier # OPTION on macOS, ALT on Windows
                 shift_modifier = modifiers == Qt.KeyboardModifier.ShiftModifier # SHIFT
+                keypad_modifier = modifiers == Qt.KeyboardModifier.KeypadModifier # keypad
                 control_alt_modifier = modifiers == (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier)
                 control_shift_modifier = modifiers == (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier)
+                no_modifier = modifiers == Qt.KeyboardModifier.NoModifier
                 #meta_modifier = modifiers == Qt.KeyboardModifier.MetaModifier # Control on macOS, Meta on Windows
                 #uncomment next line to find the integer value of a k
                 #print(k,a0.text())
@@ -12093,9 +12286,9 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     Qt.Key.Key_5, Qt.Key.Key_6, Qt.Key.Key_7, Qt.Key.Key_8, Qt.Key.Key_9
                     ] # keycodes for number keys 0,1,...,9
 
-                if k == Qt.Key.Key_F: # 70:                         #F (enters full screen mode)
+                if k == Qt.Key.Key_F and no_modifier: # 70:         #F (enters full screen mode)
                     self.toggleFullscreen()
-                elif k == Qt.Key.Key_G: # 71:                       #G (toggle time auto axis mode)
+                elif k == Qt.Key.Key_G and no_modifier: # 71:       #G (toggle time auto axis mode)
                     if not self.qmc.designerflag and not self.qmc.wheelflag:
                         if self.comparator is not None:
                             self.comparator.modeComboBox.setCurrentIndex((self.comparator.modeComboBox.currentIndex()+1) % 3)
@@ -12115,11 +12308,11 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                             self.sendmessage(QApplication.translate('Message','Auto Axis Graph Mode is off'))
                 elif self.buttonpalette_shortcuts and control_modifier and k in numberkeys: # palette switch via COMMAND-NUM-Keys
                     self.setbuttonsfrom(numberkeys.index(Qt.Key(k)), only_non_empty=True)
-                elif k == Qt.Key.Key_J: # 74:                       #J (toggle Playback Events)
+                elif k == Qt.Key.Key_J and no_modifier and self.ui_mode is not UI_MODE.PRODUCTION: # 74:       #J (toggle Playback Events)
                     self.togglePlaybackEvents()
-                elif k == Qt.Key.Key_I: # 73:                       #I (toggle foreground showfull flag)
+                elif k == Qt.Key.Key_I and no_modifier: # 73:       #I (toggle foreground showfull flag)
                     self.toggleForegroundShowfullFlag()
-                elif k == Qt.Key.Key_O: # 79:                       #O (toggle background showfull flag)
+                elif k == Qt.Key.Key_O and no_modifier: # 79:       #O (toggle background showfull flag)
                     self.toggleBackroundShowfullFlag()
                 elif k == Qt.Key.Key_H: # 72:                       #H  (load / delete background profile)
                     if self.comparator is None:
@@ -12130,11 +12323,11 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                                 self.autoAdjustAxis()
                             self.qmc.redraw()
                         # load background when there are no modifiers
-                        else:
+                        elif no_modifier or control_modifier:
                             filename = self.ArtisanOpenFileDialog(msg=QApplication.translate('Message','Load Background'),ext='*.alog')
                             if len(filename) != 0:
                                 self.loadBackgroundSignal.emit(filename)
-                elif k == Qt.Key.Key_L: # 76:                       #L (load alarms)
+                elif k == Qt.Key.Key_L and no_modifier and self.ui_mode is not UI_MODE.PRODUCTION: # 76:       #L (load alarms)
                     if not self.qmc.designerflag and self.comparator is None:
                         filename = self.ArtisanOpenFileDialog(msg=QApplication.translate('Message','Load Alarms'),ext='*.alrm')
                         if len(filename) == 0:
@@ -12143,7 +12336,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                             self.loadAlarms(filename)
                         except Exception as e: # pylint: disable=broad-except
                             _log.exception(e)
-                elif k == Qt.Key.Key_P: # 80:                       #P
+                elif k == Qt.Key.Key_P and no_modifier: # 80:       #P
                     # switch PID mode
                     if self.qmc.device == 0 and self.qmc.Controlbuttonflag: # FUJI PID
                         # toggle mode: manual => RS => background
@@ -12170,7 +12363,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                             self.sendmessage(QApplication.translate('Message','PID Mode: Ramp/Soak'))
                         elif  self.pidcontrol.svMode == 2:
                             self.sendmessage(QApplication.translate('Message','PID Mode: Background'))
-                elif k_txt == '-': #k == Qt.Key.Key_Minus: k == 45:          #- (decrease dpi, zoom out / decrease PID lookahead)
+                elif k_txt == '-' and no_modifier: #k == Qt.Key.Key_Minus: k == 45:          #- (decrease dpi, zoom out / decrease PID lookahead)
 #                    # the following does not work on US keyboards, we use shortcuts instead, see above self.zoomInShortcut()/self.zoomOutShortcut()
 #                    if control_modifier or control_shift_modifier:
 #                        self.setdpi(self.dpi-10)
@@ -12181,14 +12374,13 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     elif self.qmc.background_event_last_picked_ind is not None and self.qmc.background_event_last_picked_pos is not None:
                         # a background event is selected; move it up
                         self.qmc.move_custom_event(False, self.qmc.background_event_last_picked_ind, self.qmc.background_event_last_picked_pos, ystep=-1)
-                    elif not(control_modifier or control_shift_modifier):
-                        if self.qmc.device == 0 and self.qmc.Controlbuttonflag: # FUJI PID
-                            self.fujipid.lookahead = max(0,self.fujipid.lookahead-1)
-                            self.sendmessage(QApplication.translate('Message','PID Lookahead: {0}').format(self.fujipid.lookahead))
-                        elif self.qmc.Controlbuttonflag: # MODBUS hardware PID
-                            self.pidcontrol.svLookahead = max(0,self.pidcontrol.svLookahead-1)
-                            self.sendmessage(QApplication.translate('Message','PID Lookahead: {0}').format(self.pidcontrol.svLookahead))
-                elif k_txt == '+': #k == Qt.Key.Key_Plus: k == 43:         #+ (increase dpi, zoom in / increase PID lookahead)
+                    elif self.qmc.device == 0 and self.qmc.Controlbuttonflag and self.ui_mode is not UI_MODE.PRODUCTION: # FUJI PID
+                        self.fujipid.lookahead = max(0,self.fujipid.lookahead-1)
+                        self.sendmessage(QApplication.translate('Message','PID Lookahead: {0}').format(self.fujipid.lookahead))
+                    elif self.qmc.Controlbuttonflag and self.ui_mode is not UI_MODE.PRODUCTION: # MODBUS hardware PID
+                        self.pidcontrol.svLookahead = max(0,self.pidcontrol.svLookahead-1)
+                        self.sendmessage(QApplication.translate('Message','PID Lookahead: {0}').format(self.pidcontrol.svLookahead))
+                elif k_txt == '+'and no_modifier: #k == Qt.Key.Key_Plus: k == 43:         #+ (increase dpi, zoom in / increase PID lookahead)
 #                    # the following does not work on US keyboards, we use shortcuts instead, see above self.zoomInShortcut()/self.zoomOutShortcut()
 #                    if control_modifier or control_shift_modifier:
 #                        self.setdpi(self.dpi+10)
@@ -12199,14 +12391,13 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     elif self.qmc.background_event_last_picked_ind is not None and self.qmc.background_event_last_picked_pos is not None:
                         # a background event is selected; move it up
                         self.qmc.move_custom_event(False, self.qmc.background_event_last_picked_ind, self.qmc.background_event_last_picked_pos, ystep=1)
-                    elif not(control_modifier or control_shift_modifier):
-                        if self.qmc.device == 0 and self.qmc.Controlbuttonflag: # FUJI PID
-                            self.fujipid.lookahead = self.fujipid.lookahead+1
-                            self.sendmessage(QApplication.translate('Message','PID Lookahead: {0}').format(self.fujipid.lookahead))
-                        elif self.qmc.Controlbuttonflag: # MODBUS hardware PID
-                            self.pidcontrol.svLookahead = self.pidcontrol.svLookahead+1
-                            self.sendmessage(QApplication.translate('Message','PID Lookahead: {0}').format(self.pidcontrol.svLookahead))
-                elif k == Qt.Key.Key_Space: # 32:                       #SPACE (selects active button)
+                    elif self.qmc.device == 0 and self.qmc.Controlbuttonflag and self.ui_mode is not UI_MODE.PRODUCTION: # FUJI PID
+                        self.fujipid.lookahead = self.fujipid.lookahead+1
+                        self.sendmessage(QApplication.translate('Message','PID Lookahead: {0}').format(self.fujipid.lookahead))
+                    elif self.qmc.Controlbuttonflag and self.ui_mode is not UI_MODE.PRODUCTION: # MODBUS hardware PID
+                        self.pidcontrol.svLookahead = self.pidcontrol.svLookahead+1
+                        self.sendmessage(QApplication.translate('Message','PID Lookahead: {0}').format(self.pidcontrol.svLookahead))
+                elif k == Qt.Key.Key_Space and no_modifier: # 32:                       #SPACE (selects active button)
                     if self.qmc.flagstart:
                         if self.keyboardmoveflag:
                             # if recording and manual keyboard move mode is on and
@@ -12222,7 +12413,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     elif self.qmc.flagon:
                         self.qmc.toggleRecorderSignal.emit()
                 elif k in {Qt.Key.Key_Return,Qt.Key.Key_Enter}: # k in {16777220, 16777221}: #ENTER (turns ON/OFF keyboard moves; COMMAND+ENTER starts record, SHIFT+ENTER turns Artisan OFF)
-                    if self.quickEventShortCut and len(self.quickEventShortCut[1])>0:
+                    if self.quickEventShortCut and len(self.quickEventShortCut[1])>0 and no_modifier:
                         # event entry active
                         eventNr = self.quickEventShortCut[0]
                         eventValueStr = self.quickEventShortCut[1]
@@ -12259,7 +12450,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                             self.moveslider(eventNr,value)
                             self.recordsliderevent(eventNr)
                             focus_widget = QApplication.focusWidget()
-                            if focus_widget is not None and isinstance(focus_widget, QSlider): # pyrefly: ignore[invalid-argument]
+                            if focus_widget is not None and isinstance(focus_widget, QSlider):
                                 try:
                                     n:int = [self.slider1,self.slider2,self.slider3,self.slider4].index(focus_widget)
                                     self.quickEventShortCut = (n,'') # restart with the focused slider event type
@@ -12272,7 +12463,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     else:
                         self.releaseminieditor()
                         self.moveKbutton('enter')
-                elif k == Qt.Key.Key_Backspace: # 16777219:              #BACKSPACE (deletes last picked event)
+                elif k == Qt.Key.Key_Backspace and no_modifier: # 16777219:          #BACKSPACE (deletes last picked event)
                     if self.quickEventShortCut and len(self.quickEventShortCut[1])>0:
                         eventNr = self.quickEventShortCut[0]
                         self.quickEventShortCut = (eventNr, self.quickEventShortCut[1][:-1])
@@ -12282,7 +12473,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         self.qmc.clear_last_picked_event_selection()
                         self.qmc.fileDirtySignal.emit()
                         self.qmc.redraw_keep_view(recomputeAllDeltas=False)
-                elif k == Qt.Key.Key_Escape: # 16777216:                 #ESCAPE (exists full screen mode / clears message line / resets event short cut / exits designer/wheel graph / releases minieditor)
+                elif k == Qt.Key.Key_Escape and no_modifier: # 16777216:             #ESCAPE (exists full screen mode / clears message line / resets event short cut / exits designer/wheel graph / releases minieditor)
                     if self.quickEventShortCut is not None:
                         eventNr = self.quickEventShortCut[0]
                         # if corresponding slider has focus we reset LCD color and value
@@ -12324,7 +12515,12 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                             self.graphwheel()
                             self.wheeleditorAction.setChecked(self.qmc.wheelflag)
                         self.releaseminieditor()
-                elif k == Qt.Key.Key_Left: # 16777234:            #LEFT (moves background left / moves button selection left)
+
+                    if self.qmc.foreground_event_last_picked_ind is not None or self.qmc.foreground_event_last_picked_pos is not None:
+                        self.qmc.clear_last_picked_event_selection()
+                        self.qmc.redraw_keep_view(recomputeAllDeltas=False)
+
+                elif k == Qt.Key.Key_Left and (no_modifier or keypad_modifier): # 16777234:    #LEFT (moves background left / moves button selection left)
                     if self.qmc.foreground_event_last_picked_ind is not None and self.qmc.foreground_event_last_picked_pos is not None:
                         # a foreground event is selected; move it up
                         self.qmc.move_custom_event(True, self.qmc.foreground_event_last_picked_ind, self.qmc.foreground_event_last_picked_pos, xstep=-1)
@@ -12335,7 +12531,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         self.moveKbutton('left')
                     elif self.qmc.background and self.qmc.backgroundKeyboardControlFlag:
                         self.qmc.moveBackgroundSignal.emit('left',self.qmc.backgroundmovespeed)
-                elif k == Qt.Key.Key_Right: # 16777236:            #RIGHT (moves background right / moves button selection right)
+                elif k == Qt.Key.Key_Right and (no_modifier or keypad_modifier): # 16777236:    #RIGHT (moves background right / moves button selection right)
                     if self.qmc.foreground_event_last_picked_ind is not None and self.qmc.foreground_event_last_picked_pos is not None:
                         # a foreground event is selected; move it up
                         self.qmc.move_custom_event(True, self.qmc.foreground_event_last_picked_ind, self.qmc.foreground_event_last_picked_pos, xstep=1)
@@ -12346,7 +12542,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         self.moveKbutton('right')
                     elif self.qmc.background and self.qmc.backgroundKeyboardControlFlag:
                         self.qmc.moveBackgroundSignal.emit('right',self.qmc.backgroundmovespeed)
-                elif k == Qt.Key.Key_Up: # 16777235:               #UP (moves background up)
+                elif k == Qt.Key.Key_Up and (no_modifier or keypad_modifier): # 16777235:       #UP (moves background up)
                     if self.qmc.foreground_event_last_picked_ind is not None and self.qmc.foreground_event_last_picked_pos is not None:
                         # a foreground event is selected; move it up
                         self.qmc.move_custom_event(True, self.qmc.foreground_event_last_picked_ind, self.qmc.foreground_event_last_picked_pos, ystep=1)
@@ -12355,7 +12551,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         self.qmc.move_custom_event(False, self.qmc.background_event_last_picked_ind, self.qmc.background_event_last_picked_pos, ystep=1)
                     elif self.qmc.background and self.qmc.backgroundKeyboardControlFlag:
                         self.qmc.moveBackgroundSignal.emit('up',self.qmc.backgroundmovespeed)
-                elif k == Qt.Key.Key_Down: # 16777237:             #DOWN (moves background down)
+                elif k == Qt.Key.Key_Down and (no_modifier or keypad_modifier): # 16777237:     #DOWN (moves background down)
                     if self.qmc.foreground_event_last_picked_ind is not None and self.qmc.foreground_event_last_picked_pos is not None:
                         # a foreground event is selected; move it up
                         self.qmc.move_custom_event(True, self.qmc.foreground_event_last_picked_ind, self.qmc.foreground_event_last_picked_pos, ystep=-1)
@@ -12364,10 +12560,10 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         self.qmc.move_custom_event(False, self.qmc.background_event_last_picked_ind, self.qmc.background_event_last_picked_pos, ystep=-1)
                     elif self.qmc.background and self.qmc.backgroundKeyboardControlFlag:
                         self.qmc.moveBackgroundSignal.emit('down',self.qmc.backgroundmovespeed)
-                elif k == Qt.Key.Key_A: # 65:                       #A (automatic save)
+                elif k == Qt.Key.Key_A and no_modifier: # 65:               #A (automatic save)
                     if not self.app.artisanviewerMode and self.qmc.flagon and not self.qmc.designerflag and self.comparator is None:
                         self.automaticsave()
-                elif k == Qt.Key.Key_D: # 68:                       #D (toggle xy coordinates between temp and RoR scale)
+                elif k == Qt.Key.Key_D and no_modifier: # 68:               #D (toggle xy coordinates between temp and RoR scale)
                     if not self.qmc.wheelflag:
                         if not self.qmc.fmt_data_ON:
                             self.qmc.fmt_data_ON = True
@@ -12389,10 +12585,10 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                                 self.ntb.mouse_move(mplLocationevent.lastevent) # type:ignore[attr-defined] # lastevent removed from MPL 3.10
                             except Exception: # pylint: disable=broad-except
                                 pass
-                elif k == Qt.Key.Key_Z: # 90:                       #Z (toggle xy coordinates between 0: cursor, 1: BT, 2: ET, 3: BTB, 4: ETB)
+                elif k == Qt.Key.Key_Z and no_modifier: # 90:   #Z (toggle xy coordinates between 0: cursor, 1: BT, 2: ET, 3: BTB, 4: ETB)
                     if not self.qmc.designerflag and not self.qmc.wheelflag and self.comparator is None:
                         self.qmc.nextFmtDataCurve()
-                elif k == Qt.Key.Key_U: # 85:                       #U (toggle running LCDs on/off)
+                elif k == Qt.Key.Key_U and no_modifier: # 85:    #U (toggle running LCDs on/off)
                     if not self.qmc.flagon:
                         if self.qmc.running_LCDs == 0 and self.curFile:
                             self.qmc.running_LCDs = 1
@@ -12415,52 +12611,52 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                                 idx=None) # show default OFF placeholders in LCDs
                         else:
                             self.ntb.update_message()
-                elif k == Qt.Key.Key_C: # 67:                          #C (toggle controls)
+                elif k == Qt.Key.Key_C and no_modifier: # 67:          #C (toggle controls)
                     if not self.qmc.wheelflag:
                         self.toggleControls()
-                elif k == Qt.Key.Key_X: # 88:                          #X (toggle readings)
+                elif k == Qt.Key.Key_X and no_modifier: # 88:          #X (toggle readings)
                     if not self.app.artisanviewerMode and not self.qmc.designerflag and not self.qmc.wheelflag:
                         self.toggleReadings()
-                elif k == Qt.Key.Key_Y: # 89:                          #Y (toggle minieditor)
+                elif k == Qt.Key.Key_Y and no_modifier: # 89:          #Y (toggle minieditor)
                     if not self.qmc.designerflag and not self.qmc.wheelflag:
                         self.toggle_minieventline()
-                elif k == Qt.Key.Key_S: # 83:                          #S (toggle sliders)
+                elif k == Qt.Key.Key_S and no_modifier: # 83:          #S (toggle sliders)
                     if not self.app.artisanviewerMode and not self.qmc.designerflag and not self.qmc.wheelflag:
                         self.toggleSliders()
-                elif k == Qt.Key.Key_T: # 84 and not self.qmc.flagon:  #T (toggle mouse cross)
-                    self.qmc.togglecrosslines()
-                elif k == Qt.Key.Key_Q: # 81:                          #Q (quick entry of custom event 1)
+                elif k == Qt.Key.Key_T and (no_modifier or control_shift_modifier):
+                    self.qmc.togglecrosslines()                        #T (toggle mouse cross)
+                elif k == Qt.Key.Key_Q and no_modifier: # 81:          #Q (quick entry of custom event 1)
                     if not self.qmc.designerflag and self.comparator is None:
                         self.quickEventShortCut = (0,'')
                         self.sendmessage(self.qmc.etypes[0], append=False)
-                elif k == Qt.Key.Key_W: # 87:                          #W (quick entry of custom event 2)
+                elif k == Qt.Key.Key_W and no_modifier: # 87:          #W (quick entry of custom event 2)
                     if not self.qmc.designerflag and self.comparator is None:
                         self.quickEventShortCut = (1,'')
                         self.sendmessage(self.qmc.etypes[1], append=False)
-                elif k == Qt.Key.Key_E: # 69:                          #E (quick entry of custom event 3)
+                elif k == Qt.Key.Key_E and no_modifier: # 69:          #E (quick entry of custom event 3)
                     if not self.qmc.designerflag and self.comparator is None:
                         self.quickEventShortCut = (2,'')
                         self.sendmessage(self.qmc.etypes[2], append=False)
-                elif k == Qt.Key.Key_R: # 82:                          #R (quick entry of custom event 4)
+                elif k == Qt.Key.Key_R and no_modifier: # 82:          #R (quick entry of custom event 4)
                     if not self.qmc.designerflag and self.comparator is None:
                         self.quickEventShortCut = (3,'')
                         self.sendmessage(self.qmc.etypes[3], append=False)
-                elif k == Qt.Key.Key_V: # 86:                          #V (set SV)
+                elif k == Qt.Key.Key_V and no_modifier: # 86:          #V (set SV)
                     if not self.qmc.designerflag and self.comparator is None:
                         self.quickEventShortCut = (4,'')
                         self.sendmessage('SV', append=False)
-                elif k == Qt.Key.Key_B: # 66:                          #B (hides/shows extra rows of event buttons / actives custom event button <nr> with ALT/CTRL+SHIFT modifier)
-                    if (alt_modifier and platform.system() != 'Windows') or (control_shift_modifier and platform.system() == 'Windows'):
+                elif k == Qt.Key.Key_B: # 66:          #B (hides/shows extra rows of event buttons / actives custom event button <nr> with ALT/CTRL+SHIFT modifier)
+                    if alt_modifier or control_shift_modifier:
                         # activate custom event button
                         self.quickEventShortCut = (-1,'')
                         self.sendmessage(f"{QApplication.translate('Label','Event button')}", append=False)
-                    elif not self.app.artisanviewerMode and not self.qmc.designerflag and not self.qmc.wheelflag:
+                    elif no_modifier and not self.app.artisanviewerMode and not self.qmc.designerflag and not self.qmc.wheelflag:
                         self.toggleextraeventrows()
-                elif k == Qt.Key.Key_M: # 77:                          #M (hides/shows standard buttons row)
+                elif k == Qt.Key.Key_M and no_modifier: # 77:                          #M (hides/shows standard buttons row)
                     if self.qmc.flagstart:
                         self.standardButtonsVisibility()
                 #Extra event buttons palette. Numerical keys [0,1,2,3,4,5,6,7,8,9]
-                elif k in numberkeys: # 47 < k < 58:
+                elif k in numberkeys and no_modifier: # 47 < k < 58:
                     if not self.app.artisanviewerMode:
                         button = [48,49,50,51,52,53,54,55,56,57]
                         if self.quickEventShortCut:
@@ -12476,9 +12672,9 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                             self.quickEventShortCut = (eventNr,eventValueStr)
                             self.outputQuickEventShortCutState()
                 # note Qt/PyQt maps the ';' and ',' keys reversed from the ASCII mapping
-                elif k_txt == ';' and not self.qmc.flagon: #k == Qt.Key.Key_Semicolon: k == 58    # ";" (application screenshots only if not sampling)
+                elif k_txt == ';' and no_modifier and not self.qmc.flagon and self.ui_mode is not UI_MODE.PRODUCTION: #k == Qt.Key.Key_Semicolon : k == 58    # ";" (application screenshots only if not sampling)
                     self.applicationscreenshot()
-                elif k_txt == ':' and not self.qmc.flagon:  #k == Qt.Key.Key_Colon:    k == 59    # ":" (desktop screenshots only if not sampling)
+                elif k_txt == ':' and no_modifier and not self.qmc.flagon and self.ui_mode is not UI_MODE.PRODUCTION:  #k == Qt.Key.Key_Colon:    k == 59    # ":" (desktop screenshots only if not sampling)
                     self.desktopscreenshot()
                 else:
                     QWidget.keyPressEvent(self, a0)
@@ -12920,8 +13116,14 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
     #automatation of filename when saving a file through keyboard shortcut. Speeds things up for batch roasting.
     # returns filename on success, None otherwise
     def automaticsave(self, interactive:bool = True) -> str|None:
+        filename:str|None = None
         try:
-            if self.qmc.autosavepath and self.qmc.autosaveflag:
+            if self.qmc.autosaveflag:
+                if self.qmc.autosavepath == '':
+                    # if autosave is ON and autosavepath is empty, we clean the file without saving anything if autosave has not been triggered manually
+                    if not interactive:
+                        self.qmc.fileCleanSignal.emit()
+                    return None
                 prefix = ''
                 if self.qmc.autosaveprefix != '':
                     prefix = self.qmc.autosaveprefix
@@ -12947,35 +13149,31 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     self.sendmessage(QApplication.translate('Message','Profile {0} saved in: {1}').format(filename,self.qmc.autosavepath))
                     self.setCurrentFile(filename_path,self.qmc.autosaveaddtorecentfilesflag)
                     self.qmc.fileCleanSignal.emit()
-
-                    if self.qmc.autosaveimage and not self.qmc.flagon:
-                        if self.qmc.autosavealsopath != '':
-                            other_filename_path = os.path.join(self.qmc.autosavealsopath,filename)
-                        else:
-                            other_filename_path = os.path.join(self.qmc.autosavepath,filename)
-                        if other_filename_path.endswith('.alog'):
-                            other_filename_path = other_filename_path[0:-5]
-                        self.autosave(other_filename_path)
-                    #restore dirs
-                    QDir.setCurrent(oldDir)
-                    # file might be autosaved but not uploaded to plus yet (no DROP registered). This needs to be indicated by a red plus icon
-                    try:
-                        self.updatePlusStatus()
-                    except Exception as e: # pylint: disable=broad-except
-                        _log.exception(e)
-
-                    return filename
-                self.sendmessage(QApplication.translate('Message','Autosave path does not exist. Autosave failed.'))
-                return None
-            if interactive:
-                self.sendmessage(QApplication.translate('Message','Empty path or box unchecked in Autosave'))
-                self.autosaveconf()
-                return None
+                else:
+                    self.sendmessage(QApplication.translate('Message','Autosave path does not exist. Autosave failed.'))
+                #restore dirs
+                QDir.setCurrent(oldDir)
+                # file might be autosaved but not uploaded to plus yet (no DROP registered). This needs to be indicated by a red plus icon
+                try:
+                    self.updatePlusStatus()
+                except Exception as e: # pylint: disable=broad-except
+                    _log.exception(e)
+                # autosave "other" (eg. PDF) even if autosavepath is empty
+                if self.qmc.autosaveimage and not self.qmc.flagon:
+                    if self.qmc.autosavealsopath != '':
+                        other_filename_path = os.path.join(self.qmc.autosavealsopath,filename)
+                    elif self.qmc.autosavepath != '':
+                        other_filename_path = os.path.join(self.qmc.autosavepath,filename)
+                    else:
+                        return None # no path set
+                    if other_filename_path.endswith('.alog'):
+                        other_filename_path = other_filename_path[0:-5]
+                    self.autosave(other_filename_path)
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
             _, _, exc_tb = sys.exc_info()
             self.qmc.adderror((QApplication.translate('Error Message', 'Error:') + ' automaticsave() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
-        return None
+        return filename
 
     @pyqtSlot()
     @pyqtSlot(bool)
@@ -13268,10 +13466,6 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         #       START
         #########################################
 
-        # turn keepOn temporary off
-        tmpKeepON = self.qmc.flagKeepON
-        self.qmc.flagKeepON = False
-
         if self.qmc.flagstart:
             if self.qmc.timeindex[0] == -1:
                 self.sendmessage(QApplication.translate('Message','NEW ROAST canceled: incomplete profile lacking CHARGE and DROP found'))
@@ -13282,18 +13476,20 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                 self.sendmessage(QApplication.translate('Message','NEW ROAST canceled: incomplete profile lacking DROP found'))
                 return False
             #invoke "OFF"
-            self.qmc.OffMonitor()
-
-            filename = self.automaticsave(interactive=False)
-            if self.qmc.reset():
-                #start new roast
-                self.qmc.ToggleRecorder()
-                if filename is not None:
-                    self.sendmessage(QApplication.translate('Message','{0} has been saved. New roast has started').format(filename))
+            self.qmc.monitorClosedDown.connect(self.startNewRoast)
+            self.qmc.OffMonitor(respectAlwaysON=False)
         elif len(self.qmc.timex) > 1 or self.qmc.reset():
             self.qmc.ToggleRecorder()
-        self.qmc.flagKeepON = tmpKeepON
         return True
+
+    @pyqtSlot()
+    def startNewRoast(self) -> None:
+        self.qmc.monitorClosedDown.disconnect(self.startNewRoast)
+        libtime.sleep(.3) # sleep a moment to ensure all serial devices have been disconnected
+        if self.qmc.reset():
+            #start new roast
+            self.qmc.ToggleRecorder()
+            self.sendmessage(QApplication.translate('Message','New roast has started'))
 
     @pyqtSlot()
     @pyqtSlot(bool)
@@ -13438,6 +13634,8 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
 
                 #check colors
                 self.checkColors(self.getcolorPairsToCheck())
+                #update menus
+                self.set_ui_mode(self.ui_mode)
 
         except OSError as ex:
             _, _, exc_tb = sys.exc_info()
@@ -14019,15 +14217,15 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
 
 # on request we load alarms from backgrounds, but keep in mind as this would overload the one of the foreground profile that automatically loads this background
                 if self.qmc.loadalarmsfrombackground:
-                    self.loadAlarmsFromProfile(filename, self.qmc.backgroundprofile) # pyrefly: ignore[bad-argument-type]
+                    self.loadAlarmsFromProfile(filename, self.qmc.backgroundprofile)
 
                 # Ramp/Soak Profiles
                 if self.pidcontrol.loadRampSoakFromBackground:
-                    self.loadRampSoakFromProfile(filename,self.qmc.backgroundprofile) # pyrefly: ignore[bad-argument-type]
+                    self.loadRampSoakFromProfile(filename,self.qmc.backgroundprofile)
 
                 # PID settings
                 if self.pidcontrol.loadpidfrombackground:
-                    self.loadPIDFromProfile(self.qmc.backgroundprofile) # pyrefly: ignore[bad-argument-type]
+                    self.loadPIDFromProfile(self.qmc.backgroundprofile)
 
 
                 #if old format < 0.5.0 version  (identified by numbers less than 1.). convert
@@ -14037,7 +14235,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         self.qmc.backgroundFlavors[i] *= 10.
                     self.qmc.backgroundFlavors = self.qmc.backgroundFlavors[:(l-1)]
                 if 'etypes' in profile:
-                    self.qmc.Betypes = self.get_profile_etypes(self.qmc.backgroundprofile) # pyrefly: ignore[bad-argument-type]
+                    self.qmc.Betypes = self.get_profile_etypes(self.qmc.backgroundprofile)
                 if 'timeindex' in profile:
                     self.qmc.timeindexB = [max(0,min(v,data_len-1)) if i>0 else max(-1,min(v,data_len-1)) for i,v in enumerate(profile['timeindex'])]          #if new profile found with variable timeindex
                     if self.qmc.phasesfromBackgroundflag:
@@ -14871,7 +15069,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                 from openpyxl.cell import MergedCell
 
                 wb = Workbook()
-                ws:Worksheet|None = wb.active # type: ignore[assignment,unused-ignore] # Incompatible types in assignment (expression has type "_WorkbookChild|None", variable has type "Worksheet|None")
+                ws:Worksheet|None = wb.active # type: ignore[assignment,unused-ignore] # ty:ignore[ignore] # Incompatible types in assignment (expression has type "_WorkbookChild|None", variable has type "Worksheet|None")
                 if ws is not None:
                     ws.title = QApplication.translate('HTML Report Template', 'Profile')
 
@@ -14896,12 +15094,12 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         row1_cell = ws.cell(row=1,column=f+1)
                         if not isinstance(row1_cell, MergedCell):
                             row1_cell.value = fe[0]
-                        ws.cell(row=1,column=f+1).font = bf
+                        ws.cell(row=1,column=f+1).font = bf # pyrefly:ignore[bad-assignment]
                         row2_cell = ws.cell(row=2,column=f+1)
                         if not isinstance(row2_cell, MergedCell):
                             row2_cell.value = fe[1]
-                        ws.cell(row=1,column=f+1).alignment = Alignment(horizontal='center')
-                        ws.cell(row=2,column=f+1).alignment = Alignment(horizontal='center')
+                        ws.cell(row=1,column=f+1).alignment = Alignment(horizontal='center')  # pyrefly:ignore[bad-assignment]
+                        ws.cell(row=2,column=f+1).alignment = Alignment(horizontal='center')  # pyrefly:ignore[bad-assignment]
 
                     #profile data
                     fieldlist = [
@@ -14912,7 +15110,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         [deltaLabelUTF8 + 'BT','self.qmc.delta2[i]'],
                         ['Event',  'event'             ],
                         ]
-                    extraslist = list(zip(self.qmc.extraname1[0:len(self.qmc.extradevices)], self.qmc.extraname2[0:len(self.qmc.extradevices)], strict=True)) # ty:ignore
+                    extraslist = list(zip(self.qmc.extraname1[0:len(self.qmc.extradevices)], self.qmc.extraname2[0:len(self.qmc.extradevices)], strict=True))
 
                     r = 4  #starting row number
                     c = 0  #starting col number
@@ -14934,8 +15132,8 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                             pass
 
                     for i in range(ws.max_column):
-                        ws.cell(row=r,column=i+1).font = bf
-                        ws.cell(row=r,column=i+1).alignment = Alignment(horizontal='center')
+                        ws.cell(row=r,column=i+1).font = bf  # pyrefly:ignore[bad-assignment]
+                        ws.cell(row=r,column=i+1).alignment = Alignment(horizontal='center')  # pyrefly:ignore[bad-assignment]
                     r += 1
 
                     last_time:str|None = None
@@ -14947,8 +15145,8 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                             time2 = '' #@UnusedVariable #@UnusedVariable # pylint: disable=unused-variable # noqa: F841
                         event:str = ''     #@UnusedVariable #@UnusedVariable # pylint: disable=unused-variable # noqa: F841
                         for ev in events:
-                            if not ev[2] and int(round(tx)) == int(round(ev[0])): # type: ignore[arg-type]
-                                event = ev[1] # type: ignore[assignment] # #@UnusedVariable #@UnusedVariable # pylint: disable=unused-variable # noqa: F841
+                            if not ev[2] and int(round(tx)) == int(round(ev[0])): # type: ignore[arg-type] # ty:ignore[ignore]
+                                event = ev[1] # type: ignore[assignment] # ty:ignore[ignore] # #@UnusedVariable #@UnusedVariable # pylint: disable=unused-variable # noqa: F841
                                 ev[2] = True
                                 break
                         if i in self.qmc.specialevents:
@@ -16913,7 +17111,10 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             if not filename:
                 path = QDir()
                 path.setPath(self.getDefaultPath())
-                if self.qmc.batchcounter > -1 and self.qmc.roastbatchnr > 0 and self.qmc.autosaveprefix == '':
+                if self.qmc.roastbatchnr > 0 and self.qmc.roastbatchprefix != '' and self.qmc.autosaveprefix == '':
+                    # we are saving a file which already has batch prefix and counter assigned, we keep that as default prefix
+                    prefix = self.qmc.roastbatchprefix + str(self.qmc.roastbatchnr)
+                elif self.qmc.batchcounter > -1 and self.qmc.roastbatchnr > 0 and self.qmc.autosaveprefix == '':
                     prefix = self.qmc.batchprefix + str(self.qmc.roastbatchnr)
                 elif self.qmc.roastbatchprefix != '' and self.qmc.autosaveprefix == '':
                     prefix = self.qmc.roastbatchprefix
@@ -17039,6 +17240,12 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
     def convertFromIKAWA(self, _:bool = False) -> None:
         from artisanlib.ikawa import extractProfileIkawaCSV
         self.fileConvertFrom('*.csv', extractProfileIkawaCSV)
+
+    @pyqtSlot()
+    @pyqtSlot(bool)
+    def convertFromKaleido(self, _:bool = False) -> None:
+        from artisanlib.kaleido import extractProfileKaleidoCSV
+        self.fileConvertFrom('*.csv', extractProfileKaleidoCSV)
 
     @pyqtSlot()
     @pyqtSlot(bool)
@@ -17633,9 +17840,12 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                 self.qmc.autosaveaddtorecentfilesflag = False
                 self.qmc.batchcounter = -1
                 self.qmc.batchprefix = ''
+                # similarly we default to UI_MODE.EXPERT for existing users while for new users the default is UI_MODE.DEFAULT
+                self.ui_mode = UI_MODE.EXPERT
 
             if self.resetqsettings or (filename is None and QApplication.queryKeyboardModifiers() == (Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.ShiftModifier)):
                 self.resetqsettings = 0
+#                settings.clear() # this allows to get rid of old Artisan settings via "Save Settings >> Factory Reset >> Load Settings"
                 if 'canvas' in self.qmc.palette:
                     self.updateCanvasColors(checkColors=False)
                 # remove window geometry and splitter settings
@@ -17956,6 +18166,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             self.qmc.AUCLCDmode = toInt(settings.value('AUCLCDmode',self.qmc.AUCLCDmode))
             self.qmc.AUCshowFlag = toBool(settings.value('AUCshowFlag',self.qmc.AUCshowFlag))
             self.keyboardmoveflag = toInt(settings.value('keyboardmoveflag',int(self.keyboardmoveflag)))
+            self.ui_mode = UI_MODE(toInt(settings.value('UI_mode',int(self.ui_mode))))
             self.qmc.ambientTempSource = toInt(settings.value('AmbientTempSource',int(self.qmc.ambientTempSource)))
             self.qmc.ambientHumiditySource = toInt(settings.value('AmbientHumiditySource',int(self.qmc.ambientHumiditySource)))
             self.qmc.ambientPressureSource = toInt(settings.value('AmbientPressureSource',int(self.qmc.ambientPressureSource)))
@@ -18615,7 +18826,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                 plus_custom_blend_ratios = [toFloat(x) for x in toList(settings.value('plus_custom_blend_ratios', []))]
                 if plus_custom_blend_name != '' and len(plus_custom_blend_coffees)>1 and len(plus_custom_blend_ratios) == len(plus_custom_blend_coffees):
                     try:
-                        plus_custom_blend_components = [plus.blend.Component(c,r) for (c,r) in zip(plus_custom_blend_coffees, plus_custom_blend_ratios, strict=True)] # ty:ignore
+                        plus_custom_blend_components = [plus.blend.Component(c,r) for (c,r) in zip(plus_custom_blend_coffees, plus_custom_blend_ratios, strict=True)]
                         self.qmc.plus_custom_blend = plus.blend.CustomBlend(
                             plus_custom_blend_name,
                             plus_custom_blend_components)
@@ -18817,12 +19028,9 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             eventsliderunits = list(map(str,list(toStringList(settings.value('eventsliderunits',self.eventsliderunits)))))
             if len(eventsliderunits) == self.eventsliders:
                 self.eventsliderunits = eventsliderunits
-            self.qmc.mode_tempsliders = ('F' if str(settings.value('ModeTempSliders',self.qmc.mode_tempsliders)) == 'F' else 'C') # pyrefly: ignore[bad-assignment]
+            self.qmc.mode_tempsliders = ('F' if str(settings.value('ModeTempSliders',self.qmc.mode_tempsliders)) == 'F' else 'C')
             settings.endGroup()
             self.qmc.adjustTempSliders() # adjust min/max slider limits of temperature sliders to correspond to the current temp mode
-            self.slidersAction.setEnabled(any(self.eventslidervisibilities) or self.pidcontrol.svSlider)
-            if self.app.artisanviewerMode:
-                self.slidersAction.setEnabled(False)
 #--- END GROUP Sliders
 
 #--- BEGIN GROUP Quantifiers
@@ -19669,7 +19877,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
 #        def get_macOS_arch():
 #            # platform.machine() returns x86_64 on M1 macs running Artisan under Rossetta2
 #            try:
-#                import cpuinfo # type: ignore
+#                import cpuinfo # type: ignore # ty:ignore[ignore]
 #                manufacturer = cpuinfo.get_cpu_info().get('brand_raw')
 #                return 'm1' if 'm1' in manufacturer.lower() else 'x86_64'
 #            except Exception as e: # pylint: disable=broad-except
@@ -19681,8 +19889,8 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             if platform.system().startswith('Windows'):
                 return 'Windows', platform.release(), platform.machine()
             # we assume Linux
-            if os.uname()[4][:3] == 'arm': # type:ignore[unused-ignore,attr-defined] # pylint: disable=no-member # not available on Windows
-                return 'RPi',platform.release(),os.uname()[4] # type:ignore[unused-ignore,attr-defined] # pylint: disable=no-member # not available on Windows
+            if os.uname()[4][:3] == 'arm': # type:ignore[unused-ignore,attr-defined] # ty:ignore[ignore] # pylint: disable=no-member # not available on Windows
+                return 'RPi',platform.release(),os.uname()[4] # type:ignore[unused-ignore,attr-defined] # ty:ignore[ignore] # pylint: disable=no-member # not available on Windows
             try:
                 lib,version = platform.libc_ver()
                 return 'Linux',f'{lib} {version}', platform.machine()
@@ -19727,6 +19935,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             return self.saveAllSettings(QSettings(filename, QSettings.Format.IniFormat), None, filename)
         # we hand over the defaultSettings to have only those settings saved that are different from their defaults
         return self.saveAllSettings(QSettings(), self.defaultSettings)
+
 
     # if settings are None, the default_settings dict is filled with current values (the default values if called directly after start)
     # if settings are given all values are filled if default_settings are not given or different to the corresponding value in default_settings
@@ -19971,6 +20180,9 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             settings.endGroup()
 #--- END GROUP events
 
+            #save UI Mode
+            if not read_defaults:
+                settings.setValue('UI_mode',int(self.ui_mode)) # 'UI_mode' is always stored to ease the transition (old settings default to Expert, new to Default)
             #save ambient temperature source
             self.settingsSetValue(settings, default_settings, 'AmbientTempSource',self.qmc.ambientTempSource, read_defaults)
             self.settingsSetValue(settings, default_settings, 'AmbientHumiditySource',self.qmc.ambientHumiditySource, read_defaults)
@@ -21052,7 +21264,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
 #            image_rect.setHeight(int(round(image_rect.height()/self.devicePixelRatio())))
 #            image_rect.setWidth(int(round(image_rect.width()/self.devicePixelRatio())))
             painter.setWindow(image_rect) # pyright:ignore[reportUnknownArgumentType] #scale to fit page # sets logical coordinate system
-            if isinstance(image, QPixmap): # pyrefly: ignore[invalid-argument]
+            if isinstance(image, QPixmap):
                 painter.drawPixmap(0, 0, image)
             else:
                 painter.drawImage(0, 0, image) # pyright:ignore[reportUnknownArgumentType]
@@ -21074,7 +21286,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         #            image_rect.setHeight(int(round(image_rect.height()/self.devicePixelRatio())))
         #            image_rect.setWidth(int(round(image_rect.width()/self.devicePixelRatio())))
                     painter.setWindow(image_rect) #scale to fit page # sets logical coordinate system  # pyright:ignore[reportUnknownArgumentType]
-                    if isinstance(phases_image, QPixmap): # pyrefly: ignore[invalid-argument]
+                    if isinstance(phases_image, QPixmap):
                         painter.drawPixmap(0, 0, phases_image)
                     else:
                         painter.drawImage(0, offset, phases_image) # pyright:ignore[reportUnknownArgumentType]
@@ -21601,7 +21813,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     from openpyxl.utils.cell import get_column_letter  # @UnusedImport # pylint: disable=unused-import # noqa: F401
                     from openpyxl.styles import Font, Fill  # @UnusedImport # pylint: disable=unused-import # noqa: F401
                     wb = Workbook()
-                    ws:Worksheet|None = wb.active # type: ignore[assignment,unused-ignore] # Incompatible types in assignment (expression has type "_WorkbookChild|None", variable has type "Worksheet|None")
+                    ws:Worksheet|None = wb.active # type: ignore[assignment,unused-ignore] # ty:ignore[ignore] # Incompatible types in assignment (expression has type "_WorkbookChild|None", variable has type "Worksheet|None")
 
                     if ws is not None:
                         ws.title = QApplication.translate('HTML Report Template', 'Production Report')
@@ -21614,13 +21826,13 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         ws['A1'].font = bf
                         ws['B1'] = QApplication.translate('HTML Report Template', 'Time')
                         ws['B1'].font = bf
-                        ws.column_dimensions['B'].width = 18 # pyrefly: ignore[bad-assignment]
+                        ws.column_dimensions['B'].width = 18  # pyrefly:ignore[bad-assignment]
                         ws['C1'] = QApplication.translate('HTML Report Template', 'Profile')
                         ws['C1'].font = bf
-                        ws.column_dimensions['C'].width = 25 # pyrefly: ignore[bad-assignment]
+                        ws.column_dimensions['C'].width = 25  # pyrefly:ignore[bad-assignment]
                         ws['D1'] = QApplication.translate('HTML Report Template', 'Beans')
                         ws['D1'].font = bf
-                        ws.column_dimensions['D'].width = 25 # pyrefly: ignore[bad-assignment]
+                        ws.column_dimensions['D'].width = 25  # pyrefly:ignore[bad-assignment]
                         ws['E1'] = QApplication.translate('HTML Report Template', 'In') + ' (' + str(unit.lower()) + ')'
                         ws['E1'].font = bf
                         ws['F1'] = QApplication.translate('HTML Report Template', 'Out') + ' (' + str(unit.lower()) + ')'
@@ -21651,7 +21863,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                                 c += 1
                                 d = self.productionData2string(raw_data,units=False)
                                 ws[f'A{c}'] = d['id']
-                                ws[f'B{c}'] = QDateTime(d['datetime']).toPyDateTime() # type: ignore[assignment, unused-ignore] # Incompatible types in assignment (expression has type "datetime", target has type "str")
+                                ws[f'B{c}'] = QDateTime(d['datetime']).toPyDateTime() # type: ignore[assignment, unused-ignore] # ty:ignore[ignore] # Incompatible types in assignment (expression has type "datetime", target has type "str")
                                 ws[f'B{c}'].number_format = 'YYYY-MM-DD HH:MM'
                                 ws[f'C{c}'] = d['title']
                                 ws[f'D{c}'] = d['beans']
@@ -21659,15 +21871,15 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                                 weight = raw_data.get('weight', (0, 0, weight_units[1]))
                                 w_in = (convertWeight(weight[0],weight_units.index(weight[2]),weight_units.index(unit)) if weight is not None else 0)
                                 w_out = (convertWeight(weight[1],weight_units.index(weight[2]),weight_units.index(unit)) if weight is not None else 0)
-                                ws[f'E{c}'] = w_in # type: ignore[assignment, unused-ignore] # Incompatible types in assignment (expression has type "float", target has type "str")
+                                ws[f'E{c}'] = w_in # type: ignore[assignment, unused-ignore]# ty:ignore[ignore]  # Incompatible types in assignment (expression has type "float", target has type "str")
                                 ws[f'E{c}'].number_format = num_format
-                                ws[f'F{c}'] = w_out # type: ignore[assignment, unused-ignore] # Incompatible types in assignment (expression has type "float", target has type "str")
+                                ws[f'F{c}'] = w_out # type: ignore[assignment, unused-ignore] # ty:ignore[ignore] # Incompatible types in assignment (expression has type "float", target has type "str")
                                 ws[f'F{c}'].number_format = num_format
                                 ws[f'G{c}'] = avgFormat(c,'E','F')
                                 ws[f'G{c}'].number_format = ('0.00%' if self.percent_decimals == 2 else '0.0%')
 
                                 w_def = (convertWeight(raw_data.get('defects_weight',0),weight_units.index(weight[2]),weight_units.index(unit)) if weight is not None else 0)
-                                ws[f'H{c}'] = w_def # type: ignore[assignment, unused-ignore] # Incompatible types in assignment (expression has type "float", target has type "str")
+                                ws[f'H{c}'] = w_def # type: ignore[assignment, unused-ignore] # ty:ignore[ignore] # Incompatible types in assignment (expression has type "float", target has type "str")
                                 ws[f'H{c}'].number_format = num_format
                                 ws[f'I{c}'] = f'=IF(F{c}=0,0,(H{c}) / F{c})'
                                 ws[f'I{c}'].number_format = ('0.00%' if self.percent_decimals == 2 else '0.0%')
@@ -22847,11 +23059,10 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             from openpyxl.utils.cell import get_column_letter,column_index_from_string  # @UnusedImport # pylint: disable=unused-import # noqa: F401
             from openpyxl.styles import Font, Fill, Alignment # @UnusedImport # pylint: disable=unused-import # noqa: F401
             wb = Workbook()
-            ws:Worksheet|None = wb.active # type: ignore[assignment,unused-ignore] # Incompatible types in assignment (expression has type "_WorkbookChild|None", variable has type "Worksheet|None")
+            ws:Worksheet|None = wb.active # type: ignore[assignment,unused-ignore] # ty:ignore[ignore] # Incompatible types in assignment (expression has type "_WorkbookChild|None", variable has type "Worksheet|None")
             if ws is not None:
                 ws.title = QApplication.translate('HTML Report Template', 'Ranking Report')
                 bf = Font(name='Calibri',size='11',bold=True)
-#                        ws.font = Font(name='Calibri',size='11') # type: ignore # has no attribute .font
 
                 #get the field definitions
                 ranking_data_fields, field_index = self.rankingdataDef()
@@ -22878,12 +23089,12 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     else:
                         suffix = ''
                     cell = ws.cell(column=i+1, row=1, value=f'{name}{suffix}')
-                    cell.font = bf
-                    cell.alignment = Alignment(horizontal='center')
+                    cell.font = bf   # pyrefly:ignore[bad-assignment]
+                    cell.alignment = Alignment(horizontal='center')   # pyrefly:ignore[bad-assignment]
                     width = len(name + suffix) + 2.
                     if width > widths[i]:
                         widths[i] = width
-                        ws.column_dimensions[get_column_letter(i+1)].width = width # pyrefly: ignore[bad-assignment]
+                        ws.column_dimensions[get_column_letter(i+1)].width = width   # pyrefly:ignore[bad-assignment]
 
                 # write data
                 c = 1
@@ -22938,50 +23149,50 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                                     conv_fld = res_fld
 
                                 if typ == 'text':
-                                    ws[cr] = conv_fld # type: ignore[assignment, unused-ignore]
+                                    ws[cr] = conv_fld # type: ignore[assignment, unused-ignore] # ty:ignore[ignore]
                                     width = len(str(conv_fld)) + 2. # pyright:ignore[reportUnknownArgumentType]
                                     if re.match(r'[0-9]+',units) and width > float(units):
                                         width = float(units)
                                     if width > widths[i]:
                                         widths[i] = width
-                                        ws.column_dimensions[get_column_letter(cnum)].width = width # pyrefly: ignore[bad-assignment]
+                                        ws.column_dimensions[get_column_letter(cnum)].width = width   # pyrefly:ignore[bad-assignment]
                                     ws[cr].alignment = Alignment(wrap_text=True)
                                 elif typ == 'int':
-                                    ws[cr] = conv_fld  # type: ignore[assignment, unused-ignore]
+                                    ws[cr] = conv_fld  # type: ignore[assignment, unused-ignore] # ty:ignore[ignore]
                                 elif typ == 'float1':
-                                    ws[cr] = conv_fld  # type: ignore[assignment, unused-ignore]
+                                    ws[cr] = conv_fld  # type: ignore[assignment, unused-ignore] # ty:ignore[ignore]
                                     ws[cr].number_format = '0.0'
                                 elif typ == 'float2':
-                                    ws[cr] = conv_fld  # type: ignore[assignment, unused-ignore]
+                                    ws[cr] = conv_fld  # type: ignore[assignment, unused-ignore] # ty:ignore[ignore]
                                     ws[cr].number_format = '0.00'
                                 elif typ == 'float4':
-                                    ws[cr] = conv_fld  # type: ignore[assignment, unused-ignore]
+                                    ws[cr] = conv_fld  # type: ignore[assignment, unused-ignore] # ty:ignore[ignore]
                                     ws[cr].number_format = '0.0000'
                                 elif typ == 'text2float1':
-                                    ws[cr] = float2float(toFloat(conv_fld)) # type: ignore[assignment, unused-ignore] #  Incompatible types in assignment (expression has type "float", target has type "str")
+                                    ws[cr] = float2float(toFloat(conv_fld)) # type: ignore[assignment, unused-ignore] # ty:ignore[ignore] #  Incompatible types in assignment (expression has type "float", target has type "str")
                                     ws[cr].number_format = '0.0'
                                 elif typ == 'text2float2':
-                                    ws[cr] = float2float(toFloat(conv_fld)) # type: ignore[assignment, unused-ignore] # Incompatible types in assignment (expression has type "float", target has type "str")
+                                    ws[cr] = float2float(toFloat(conv_fld)) # type: ignore[assignment, unused-ignore] # ty:ignore[ignore] # Incompatible types in assignment (expression has type "float", target has type "str")
                                     ws[cr].number_format = '0.00'
                                 elif typ == 'text2int':
-                                    ws[cr] = toInt(conv_fld) # type: ignore[assignment, unused-ignore]
+                                    ws[cr] = toInt(conv_fld) # type: ignore[assignment, unused-ignore] # ty:ignore[ignore]
                                     ws[cr].number_format = '0'
                                 elif typ == 'percent':
-                                    ws[cr] = conv_fld/100. # type: ignore[assignment, unused-ignore]
+                                    ws[cr] = conv_fld/100. # type: ignore[assignment, unused-ignore] # ty:ignore[ignore]
                                     ws[cr].number_format = ('0.00%' if self.percent_decimals == 2 else '0.0%')
                                 elif typ == 'time':
                                     h,m = divmod(conv_fld, 60.0) # pyright:ignore[reportUnknownArgumentType]
                                     dt = datetime.time(int(h),int(m),0) # note that rounding h and m might lead to failure of .time() as round(59.99) = 60 which is >59 thus not accepted by .time()
-                                    ws[cr] = dt # type: ignore[assignment, unused-ignore] # Incompatible types in assignment (expression has type "time", target has type "str")
+                                    ws[cr] = dt # type: ignore[assignment, unused-ignore] # ty:ignore[ignore] # Incompatible types in assignment (expression has type "time", target has type "str")
                                     ws[cr].number_format = 'H:MM'
                                 elif typ == 'date':
-                                    ws[cr] = QDateTime(conv_fld).toPyDateTime() # type: ignore[call-overload] # Incompatible types in assignment (expression has type "datetime", target has type "str")
+                                    ws[cr] = QDateTime(conv_fld).toPyDateTime() # type: ignore[call-overload] # ty:ignore[ignore] # Incompatible types in assignment (expression has type "datetime", target has type "str")
                                     fmt = 'YYYY-MM-DD HH:MM'
                                     ws[cr].number_format = fmt
                                     width = len(fmt) + 2.
                                     if width > widths[i]:
                                         widths[i] = width
-                                        ws.column_dimensions[get_column_letter(cnum)].width = width # pyrefly: ignore[bad-assignment]
+                                        ws.column_dimensions[get_column_letter(cnum)].width = width   # pyrefly:ignore[bad-assignment]
                                 elif typ == 'bool':
                                     ws[cr] = str(conv_fld) # pyright:ignore[reportUnknownArgumentType]
 
@@ -23602,7 +23813,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             else:
                 start = 0
             # sort events by time/index
-            sevents = sorted(zip(self.qmc.specialevents, range(len(self.qmc.specialevents)), strict=True)) # ty:ignore
+            sevents = sorted(zip(self.qmc.specialevents, range(len(self.qmc.specialevents)), strict=True))
             seventsString:list[str] = []
             seventsType:list[int] = []
             seventsValue:list[float] = []
@@ -24051,18 +24262,18 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         name:str = (application_viewer_name if self.app.artisanviewerMode else application_name)
         otherlibs:str = ''
         try:
-            from Phidget22.Phidget import Phidget as PhidgetDriver # type: ignore[import-untyped]
+            from Phidget22.Phidget import Phidget as PhidgetDriver # type: ignore[import-untyped] # ty:ignore[ignore]
             phidgetlibversion = PhidgetDriver.getLibraryVersion()
             otherlibs += ', ' + phidgetlibversion
         except Exception as e: # pylint: disable=broad-except
             _log.debug(e)
         try:
-            from Phidget22 import __version__ as phidget_lib_version # type: ignore[import-untyped] # @UnresolvedImport
+            from Phidget22 import __version__ as phidget_lib_version # type: ignore[import-untyped] # ty:ignore[ignore # @UnresolvedImport
             otherlibs += f' ({phidget_lib_version})'
         except Exception: # pylint: disable=broad-except
             pass
         try:
-            yocto_version = YAPI.GetAPIVersion() # type:ignore[reportPossibleUnboundVariable,unused-ignore]
+            yocto_version = YAPI.GetAPIVersion() # type:ignore[reportPossibleUnboundVariable,unused-ignore] # ty:ignore[ignore]
             otherlibs += ', Yoctopuce ' + yocto_version
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
@@ -24441,7 +24652,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         #FUJI/DELTA pid
         if self.qmc.device in {0, 26}:
             modifiers = QApplication.keyboardModifiers()
-            if modifiers == Qt.KeyboardModifier.ControlModifier and self.qmc.device == 0:
+            if (self.ui_mode is UI_MODE.PRODUCTION or modifiers == Qt.KeyboardModifier.ControlModifier) and self.qmc.device == 0:
                 # a right-click on the Control button will toggle PID Standby on and off
                 standby = self.fujipid.getONOFFstandby()
                 if standby == 0:
@@ -24479,7 +24690,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         # all other devices
         else:
             modifiers = QApplication.keyboardModifiers()
-            if modifiers == Qt.KeyboardModifier.ControlModifier:
+            if self.ui_mode is UI_MODE.PRODUCTION or modifiers == Qt.KeyboardModifier.ControlModifier:
                 self.pidcontrol.togglePID()
             else:
                 dialog = PID_DlgControl(self,self,self.PID_DlgControl_activeTab)
@@ -25092,9 +25303,12 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
     @pyqtSlot()
     @pyqtSlot(bool)
     def editgraph(self, _:bool = False) -> None:
+        self.open_roast_properties_dialog()
+
+    def open_roast_properties_dialog(self, start_recording_on_exit:bool=False) -> None:
         if self.editgraphdialog is not False and self.editgraphdialog is None: # Roast Properties dialog is not blocked!
             from artisanlib.roast_properties import editGraphDlg
-            self.editgraphdialog = editGraphDlg(self,self,self.editGraphDlg_activeTab)
+            self.editgraphdialog = editGraphDlg(self,self,self.editGraphDlg_activeTab,start_recording_on_exit)
             self.editgraphdialog.show()
 
     @pyqtSlot()
@@ -25727,6 +25941,12 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
 
     @pyqtSlot()
     @pyqtSlot(bool)
+    def importKaleido(self, _:bool = False) -> None:
+        from artisanlib.kaleido import extractProfileKaleidoCSV
+        self.importExternal(extractProfileKaleidoCSV,QApplication.translate('Message','Import Kaleido CSV'),'*.csv')
+
+    @pyqtSlot()
+    @pyqtSlot(bool)
     def importLoring(self, _:bool = False) -> None:
         from artisanlib.loring import extractProfileLoringCSV
         self.importExternal(extractProfileLoringCSV,QApplication.translate('Message','Import Loring CSV'),'*.csv')
@@ -25772,7 +25992,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                     unit:str|None = None
                     #read data
                     for row in data:
-                        items:list[tuple[str,str]] = list(zip(fields, row, strict=True)) # ty:ignore
+                        items:list[tuple[str,str]] = list(zip(fields, row, strict=True))
                         item:dict[str,str] = {}
                         for (name, value) in items:
                             item[name] = value.strip()
@@ -26110,11 +26330,16 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
         tempvalueF = (value if self.qmc.mode == 'F' else int(round(fromFtoCstrict(value))))
         tempvalueC = (value if self.qmc.mode == 'C' else int(round(fromCtoFstrict(value))))
         sign = ''
-        if 4 < et < 9 and value > 0:
+        percent = ''
+        if et != 9 and 4 < et < 14 and value > 0:
             sign = '+'
+        if 9 < et < 14:
+            percent = '%'
+        if et > 8:
+            et = et - 10
         if et > 4:
             et = et - 5
-        if et < 4:
+        if et < 4 and eventtype != 9:
             res = res.replace('\\t',self.qmc.etypes[et])
         state:int = 0
         if len(self.buttonStates) > buttonNr > -1:
@@ -26149,7 +26374,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                 ('\\s', QApplication.translate('Label','START')),
                 ('\\S', (QApplication.translate('Label','STOP') if state else QApplication.translate('Label','START'))),
                 ('\\T', f'{tempvalueC}{self.qmc.mode}'),
-                ('\\V', f'{sign}{value}'),
+                ('\\V', f'{sign}{value}{percent}'),
                 ('\\w', self.qmc.etypes[1])
                 ]:
             res = res.replace(var,subst)
@@ -26351,9 +26576,13 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
             self.e10buttonbarLayout.insertStretch(0)
             self.e10buttonbarLayout.insertStretch(self.e10buttonbarLayout.count())
         self.settooltip()
-        self.buttonsAction.setEnabled(bool(len(self.extraeventslabels) > 0))
         if self.app.artisanviewerMode:
             self.buttonsAction.setEnabled(False)
+        else:
+            self.buttonsAction.setEnabled(bool(len(self.extraeventslabels) > 0))
+        if not self.buttonsAction.isEnabled():
+            # hide buttons widget and reset the flag
+            self.hideExtraButtons()
         self.update_extraeventbuttons_visibility()
 
     #assigns tooltips to extra event buttons
@@ -27157,7 +27386,7 @@ class ApplicationWindow(QMainWindow): # pyrefly:ignore[invalid-inheritance] # py
                         else:
                             toff = 0
                     else:
-                        x_range = list(range(int(self.qmc.startofx),int(self.qmc.endofx))) # ty:ignore[invalid-assignment] # Object of type `list[int]` is not assignable to `list[int | float]`
+                        x_range = list(range(int(self.qmc.startofx),int(self.qmc.endofx))) # Object of type `list[int]` is not assignable to `list[int | float]`
                         toff = 0
                     #create y range
                     y_range:list[float] = []
@@ -27407,7 +27636,7 @@ sys.excepthook = excepthook
 # "The Artisan Profile type doesn't map to any NSDocumentClass." on startup (since pyobjc-core 3.1.1)
 if sys.platform.startswith('darwin'):
     from Cocoa import NSDocument # type: ignore[import-untyped] # @UnresolvedImport # pylint: disable=import-error,no-name-in-module
-    class Document(NSDocument): # type: ignore[misc,no-any-unimported] # pylint: disable= too-few-public-methods
+    class Document(NSDocument): # type: ignore[misc,no-any-unimported] # ty:ignore[ignore] # pylint: disable= too-few-public-methods
 #        def windowNibName(self):
 #            return None #"Document"
         def makeWindowControllers(self) -> None:
@@ -27575,7 +27804,7 @@ def main() -> None:
 
     # only here deactivating the app napping seems to have an effect
     if sys.platform.startswith('darwin'):
-        import appnope # pyright: ignore # @UnresolvedImport # type: ignore # pylint: disable=import-error,redefined-outer-name
+        import appnope # pyright: ignore # @UnresolvedImport # type: ignore # ty:ignore[ignore] # pylint: disable=import-error,redefined-outer-name
         appnope.nope()
 
     if locale_str in {'ar', 'he', 'fa'}:
@@ -27598,6 +27827,8 @@ def main() -> None:
     appWindow.restoreExtraDeviceSettingsBackup() # load settings backup if it exists (like on RESET)
     _log.info('loaded %s settings in %.2fs', len(QSettings().allKeys()), libtime.process_time() - start_time)
 #    _log.debug("PRINT mpl.get_cachedir(): %s",mpl.get_cachedir())
+
+    appWindow.set_ui_mode(appWindow.ui_mode)
 
     # inform the user the debug logging is on
     if debugLogLevelActive():

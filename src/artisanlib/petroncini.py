@@ -83,7 +83,7 @@ def extractProfilePetronciniCSV(file:str,
             if row == []:
                 continue
             i = i + 1
-            items:list[tuple[str,str]] = list(zip(header, row, strict=True)) # ty:ignore
+            items:list[tuple[str,str]] = list(zip(header, row, strict=True))
             item:dict[str,str] = {}
             for (name, value) in items:
                 item[name] = value.strip()
@@ -187,6 +187,6 @@ def extractProfilePetronciniCSV(file:str,
         res['specialeventsStrings'] = specialeventsStrings
         if power_event:
             # first set etypes to defaults
-            res['etypes'] = etypesdefault
+            res['etypes'] = [encodeLocalStrict(etype) for etype in etypesdefault]
     res['title'] = encodeLocalStrict(Path(file).stem)
     return res

@@ -18,7 +18,7 @@ from PyQt6.QtCore import QDateTime, Qt, QMutex, QWaitCondition, QUrl
 from artisanlib.util import encodeLocal, encodeLocalStrict
 from artisanlib.atypes import ProfileData
 from artisanlib.ble_port import ClientBLE
-from proto import IkawaCmd_pb2 # type:ignore[unused-ignore]
+from proto import IkawaCmd_pb2 # type:ignore[unused-ignore] # ty:ignore[ignore]
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
@@ -32,8 +32,8 @@ def url_to_profile(url:str) -> IkawaCmd_pb2.RoastProfile: # pylint: disable=no-m
     return IkawaCmd_pb2.RoastProfile().FromString(message_bytes) # pylint: disable=no-member
 
 def extractProfileIkawaURL(url:QUrl,
-        etypesdefault:list[str],
-        _alt_etypesdefault:list[str],
+        _etypesdefault:list[str],
+        alt_etypesdefault:list[str],
         _artisanflavordefaultlabels:list[str],
         eventsExternal2InternalValue:Callable[[int],float]) -> ProfileData:
     ikawa_profile = url_to_profile(url.query())
@@ -143,14 +143,14 @@ def extractProfileIkawaURL(url:QUrl,
         res['specialeventsvalue'] = specialeventsvalue
         res['specialeventsStrings'] = specialeventsStrings
 
-    res['etypes'] = etypesdefault
+    res['etypes'] = [encodeLocalStrict(etype) for etype in alt_etypesdefault]
     return res
 
 
 # returns a dict containing all profile information contained in the given IKAWA CSV file
 def extractProfileIkawaCSV(file:str,
-        etypesdefault:list[str],
-        _alt_etypesdefault:list[str],
+        _etypesdefault:list[str],
+        alt_etypesdefault:list[str],
         _artisanflavordefaultlabels:list[str],
         eventsExternal2InternalValue:Callable[[int],float]) -> ProfileData:
     res:ProfileData = ProfileData() # the interpreted data set
@@ -206,7 +206,7 @@ def extractProfileIkawaCSV(file:str,
         last_item:dict[str,str]|None = None
         for row in data:
             i = i + 1
-            items = list(zip(header, row, strict=False)) # ty:ignore
+            items = list(zip(header, row, strict=False))
             item:dict[str,str] = {}
             for (name, value) in items:
                 item[name] = value.strip()
@@ -348,7 +348,7 @@ def extractProfileIkawaCSV(file:str,
         res['specialeventsvalue'] = specialeventsvalue
         res['specialeventsStrings'] = specialeventsStrings
 
-    res['etypes'] = etypesdefault
+    res['etypes'] = [encodeLocalStrict(etype) for etype in alt_etypesdefault]
     res['title'] = encodeLocalStrict(Path(file).stem)
     return res
 

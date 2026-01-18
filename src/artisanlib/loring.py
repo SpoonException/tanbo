@@ -58,7 +58,7 @@ def extractProfileLoringCSV(file:str,
 
         i = 0
         for row in data:
-            items = list(zip(header, row, strict=True)) # ty:ignore
+            items = list(zip(header, row, strict=True))
             item:dict[str,str] = {}
             for (name, value) in items:
                 item[name] = value.strip()
@@ -258,7 +258,7 @@ def extractProfileLoringCSV(file:str,
         res['specialeventsStrings'] = specialeventsStrings
         if power_event:
             # first set etypes to defaults
-            res['etypes'] = etypesdefault
+            res['etypes'] = [encodeLocalStrict(etype) for etype in etypesdefault]
 
     res['title'] = encodeLocalStrict(Path(file).stem)
     return res

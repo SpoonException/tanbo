@@ -49,14 +49,14 @@ if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
     from plus.stock import Blend # pylint: disable=unused-import
     from plus.blend import CustomBlend # pylint: disable=unused-import
-    from matplotlib.collections import PolyCollection # pylint: disable=unused-import
-    from matplotlib.axes import Axes # pylint: disable=unused-import
-    from matplotlib.axes._base import _AxesBase # pyright:ignore[reportPrivateImportUsage] # pylint: disable=unused-import
-    from matplotlib.image import AxesImage # pylint: disable=unused-import
-    from matplotlib.legend import Legend # pylint: disable=unused-import
-    from matplotlib.backend_bases import Event # pylint: disable=unused-import
-    from matplotlib.font_manager import FontProperties # pylint: disable=unused-import
-    from matplotlib.ticker import Locator # pylint: disable=unused-import
+    from matplotlib.collections import PolyCollection # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore] # pylint: disable=unused-import
+    from matplotlib.axes import Axes # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore] # pylint: disable=unused-import
+    from matplotlib.axes._base import _AxesBase # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore] # pyright:ignore[reportPrivateImportUsage] # pylint: disable=unused-import
+    from matplotlib.image import AxesImage # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore] # pylint: disable=unused-import
+    from matplotlib.legend import Legend # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore] # pylint: disable=unused-import
+    from matplotlib.backend_bases import Event # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore] # pylint: disable=unused-import
+    from matplotlib.font_manager import FontProperties # type:ignore[untyped-import,unused-ignore]# ty:ignore[ignore] # pylint: disable=unused-import
+    from matplotlib.ticker import Locator # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore] # pylint: disable=unused-import
     import numpy.typing as npt # pylint: disable=unused-import
     from PyQt6.QtGui import QResizeEvent # pylint: disable=unused-import
 
@@ -89,25 +89,25 @@ from PyQt6.QtCore import (QLocale, pyqtSignal, pyqtSlot,
 from PyQt6 import sip
 
 
-from matplotlib.figure import Figure
-from matplotlib import rcParams, patches, transforms, ticker
-import matplotlib.patheffects as PathEffects
-from matplotlib.patches import Polygon, Rectangle
-from matplotlib.transforms import Bbox, Transform
-from matplotlib.backend_bases import PickEvent, MouseEvent
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.projections.polar import PolarAxes
-from matplotlib.text import Annotation, Text
-from matplotlib.lines import Line2D
-from matplotlib.offsetbox import DraggableAnnotation
-from matplotlib.colors import to_hex, to_rgba
+from matplotlib.figure import Figure # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
+from matplotlib import rcParams, patches, transforms, ticker # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
+import matplotlib.patheffects as PathEffects # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
+from matplotlib.patches import Polygon, Rectangle # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
+from matplotlib.transforms import Bbox, Transform # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
+from matplotlib.backend_bases import PickEvent, MouseEvent # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
+from matplotlib.projections.polar import PolarAxes # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
+from matplotlib.text import Annotation, Text # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
+from matplotlib.lines import Line2D # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
+from matplotlib.offsetbox import DraggableAnnotation # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
+from matplotlib.colors import to_hex, to_rgba # type:ignore[untyped-import,unused-ignore] # ty:ignore[ignore]
 
 from artisanlib.phidgets import PhidgetManager
-from Phidget22.VoltageRange import VoltageRange # type: ignore[import-untyped]
+from Phidget22.VoltageRange import VoltageRange # type: ignore[import-untyped] # ty:ignore[ignore]
 
 try:
     # spanning a second multiprocessing instance on macOS falils to import the YAPI interface
-    from yoctopuce.yocto_api import YAPI # type: ignore[import-untyped]
+    from yoctopuce.yocto_api import YAPI # type: ignore[import-untyped] # ty:ignore[ignore]
 except Exception: # pylint: disable=broad-except
     pass
 
@@ -148,7 +148,7 @@ type Interp1dKind = Literal['linear', 'nearest', 'nearest-up', 'zero', 'slinear'
 #################### Ambient Data Collection  #########################################
 #######################################################################################
 
-class AmbientWorker(QObject): # pyrefly:ignore[invalid-inheritance] # pylint: disable=too-few-public-methods # pyright: ignore [reportGeneralTypeIssues] # Argument to class must be a base class
+class AmbientWorker(QObject):
     finished = pyqtSignal()
 
     def __init__(self, aw:'ApplicationWindow') -> None:
@@ -172,7 +172,7 @@ class MplCanvas(FigureCanvas):
 
         self.fig:Figure = Figure(tight_layout=tight_layout_params, frameon=True, dpi=dpi)
         # with tight_layout=True, the matplotlib canvas expands to the maximum using figure.autolayout
-        super().__init__(self.fig) # type: ignore[no-untyped-call]
+        super().__init__(self.fig) # type: ignore[no-untyped-call] # ty:ignore[ignore]
         self.setParent(parent)
 
         self.lazyredraw_on_resize_timer:QTimer =  QTimer()
@@ -181,20 +181,19 @@ class MplCanvas(FigureCanvas):
 
     @pyqtSlot()
     def lazyredraw_on_resize(self) -> None:
-        self.lazyredraw(recomputeAllDeltas=False)
+        try:
+            # self.aw.qmc might not be established yet
+            self.aw.qmc.lazyredraw(recomputeAllDeltas=False)
+        except Exception: # pylint: disable=broad-except
+            pass
 
     @override
-    def resizeEvent(self, event:'QResizeEvent') -> None: # pyrefly:ignore[bad-override]
-        super().resizeEvent(event) # type:ignore[no-untyped-call]
+    def resizeEvent(self, event:'QResizeEvent') -> None:
+        super().resizeEvent(event) # type:ignore[no-untyped-call] # ty:ignore[ignore]
         # we only trigger a redraw on resize if a watermark is displayed to fix its aspect ratio
         if self.aw.redrawOnResize and self.aw.logofilename != '':
             dw = event.size().width() - event.oldSize().width()   # width change
             dh = event.size().height() - event.oldSize().height() # height change
-#            t = libtime.time()
-#            # ensure that we redraw during resize only once per second
-#            if self.resizeredrawing + 0.5 < t and ((dw != 0) or (dh != 0)):
-#                self.resizeredrawing = t
-#                QTimer.singleShot(1, lazyredraw_on_resize)
             if ((dw != 0) or (dh != 0)):
                 self.lazyredraw_on_resize_timer.start(10)
 
@@ -235,6 +234,7 @@ class tgraphcanvas(QObject):
     showBackgroundEventsSignal = pyqtSignal(bool)
     redrawSignal = pyqtSignal(bool,bool,bool,bool,bool)
     redrawKeepViewSignal = pyqtSignal(bool,bool,bool,bool,bool)
+    monitorClosedDown = pyqtSignal()
 
     umlaute_dict : Final[dict[str, str]] = {
        uchr(228): 'ae',  # U+00E4   \xc3\xa4
@@ -377,7 +377,8 @@ class tgraphcanvas(QObject):
         'foreground_event_pos', 'plus_lockSchedule_sent_account', 'plus_lockSchedule_sent_date', 'specialeventplaybackramp', 'ramp_lookahead',
         'CO2kg_per_BTU_default', 'CO2kg_per_BTU', 'Biogas_CO2_Reduction', 'Biogas_CO2_Reduction_default',
         'meterunitnames', 'meterreads_default', 'meterreads', 'meterlabels_setup', 'meterlabels', 'meterunits_setup', 'meterunits',
-        'meterfuels_setup', 'meterfuels', 'metersources_setup', 'metersources', 'playbackdrop_min_roasttime', 'TP_max_roasttime'
+        'meterfuels_setup', 'meterfuels', 'metersources_setup', 'metersources', 'playbackdrop_min_roasttime', 'TP_max_roasttime',
+        'single_click_mpl_upperleft_corner_timer', 'single_click_mpl_upperleft_corner_TIMEOUT'
         ]
 
 
@@ -393,7 +394,7 @@ class tgraphcanvas(QObject):
 
         #default palette of colors
         self.locale_str:str = locale
-        self.alpha:dict[str,float] = {'analysismask':0.4,'statsanalysisbkgnd':1.0,'legendbg':0.4}
+        self.alpha:dict[str,float] = {'analysismask':0.4,'statsanalysisbkgnd':1.0,'legendbg':0.8}
         self.palette:dict[str,str] = {'background':'#ffffff','grid':'#e5e5e5','ylabel':'#808080','xlabel':'#808080','title':'#0c6aa6',
                         'title_focus':'#cc0f50', 'title_hidden':'#808080',
                         'rect1':'#e5e5e5','rect2':'#b2b2b2','rect3':'#e5e5e5','rect4':'#bde0ee','rect5':'#d3d3d3',
@@ -1238,10 +1239,10 @@ class tgraphcanvas(QObject):
         self.ax:Axes|None
         self.ax = self.fig.add_subplot(111,facecolor=self.palette['background'])
         self.delta_ax:_AxesBase|None = None
-        self.delta_ax = self.ax.twinx()  # ty:ignore[possibly-missing-attribute]
+        self.delta_ax = self.ax.twinx()
 
         #legend location
-        self.legendloc:int = 7
+        self.legendloc:int = 4
         self.legendloc_pos:tuple[float,float]|None = None # holds the custom position of the legend set on profile load and reset after first redraw
 
         self.fig.subplots_adjust(
@@ -1251,10 +1252,10 @@ class tgraphcanvas(QObject):
             left=0.067, # the left side of the subplots of the figure (default: 0.125)
             right=.925) # the right side of the subplots of the figure (default: 0.9)
 
-        #self.fig.canvas.set_cursor = lambda _: None # type: ignore[assignment, method-assign] # deactivate the busy cursor on slow full redraws
+        #self.fig.canvas.set_cursor = lambda _: None # type: ignore[assignment, method-assign] # ty:ignore[ignore] # deactivate the busy cursor on slow full redraws
 
         # important to make the Qt canvas transparent (note that this changes stylesheets of children like popups too!):
-        if isinstance(self.fig.canvas, QWidget): # pyrefly: ignore[invalid-argument]
+        if isinstance(self.fig.canvas, QWidget):
             cast(QWidget, self.fig.canvas).setStyleSheet('background-color:transparent;') # default is white
 
         self.onclick_cid:int = self.fig.canvas.mpl_connect('button_press_event', self.onclick)
@@ -1974,8 +1975,8 @@ class tgraphcanvas(QObject):
         # RoR display limits
         # user configurable RoR limits (only applied if flag is True; applied before TP during recording as well as full redraw)
         self.RoRlimitFlag:bool = True
-        self.RoRlimit:int = 95
-        self.RoRlimitm:int = -95
+        self.RoRlimit:int = 113 # 113F/min = 45C/min # was 95F/min
+        self.RoRlimitm:int = 14 # 14F/min = -10C/min # was: -95F/min
         # system fixed RoR limits (only applied if flag is True; usually higher than the user configurable once and always applied)
         self.maxRoRlimit: Final[int] = 170
         # axis limits
@@ -2020,15 +2021,15 @@ class tgraphcanvas(QObject):
         self.ystep_down:int = 0
         self.ystep_up:int = 0
 
-        self.ax.set_xlim(self.startofx, self.endofx)  # ty:ignore[possibly-missing-attribute]
-        self.ax.set_ylim(self.ylimit_min,self.ylimit) # ty:ignore[possibly-missing-attribute]
+        self.ax.set_xlim(self.startofx, self.endofx)
+        self.ax.set_ylim(self.ylimit_min,self.ylimit)
 
-        self.delta_ax.set_xlim(self.startofx, self.endofx)  # ty:ignore[possibly-missing-attribute]
-        self.delta_ax.set_ylim(self.zlimit_min,self.zlimit) # ty:ignore[possibly-missing-attribute]
-        self.delta_ax.set_autoscale_on(False)  # ty:ignore[possibly-missing-attribute]
+        self.delta_ax.set_xlim(self.startofx, self.endofx)
+        self.delta_ax.set_ylim(self.zlimit_min,self.zlimit)
+        self.delta_ax.set_autoscale_on(False)
 
         # disable figure autoscale
-        self.ax.set_autoscale_on(False)  # ty:ignore[possibly-missing-attribute]
+        self.ax.set_autoscale_on(False)
 
         #set grid + axis labels + title
         grid_axis:str|None = None
@@ -2039,8 +2040,8 @@ class tgraphcanvas(QObject):
         elif self.time_grid:
             grid_axis = 'x'
         if grid_axis is not None:
-            self.ax.grid(True, # ty:ignore[possibly-missing-attribute]
-                axis=grid_axis, # type: ignore[arg-type] # "grid" of "_AxesBase" has incompatible type "str"; expected "Literal['both', 'x', 'y']
+            self.ax.grid(True,
+                axis=grid_axis, # type: ignore[arg-type] # ty:ignore[ignore] # "grid" of "_AxesBase" has incompatible type "str"; expected "Literal['both', 'x', 'y']
                 color=self.palette['grid'],
                 linestyle = self.gridstyles[self.gridlinestyle],
                 linewidth = self.gridthickness,
@@ -2400,10 +2401,10 @@ class tgraphcanvas(QObject):
         self.CO2kg_per_BTU:list[float] = self.CO2kg_per_BTU_default.copy()
         self.Biogas_CO2_Reduction:float = self.Biogas_CO2_Reduction_default
 
-        self.energyunits: Final[list[str]] = ['BTU', 'kJ', 'kCal', 'kWh', 'hph']
-        self.powerunits: Final[list[str]] = ['BTU/h', 'kJ/h', 'kCal/h', 'kW', 'hp']
+        self.energyunits: Final[list[str]] = ['BTU', 'kJ', 'kCal', 'kWh', 'hph','Wh']
+        self.powerunits: Final[list[str]] = ['BTU/h', 'kJ/h', 'kCal/h', 'kW', 'hp','W']
         self.sourcenames: Final[list[str]] = ['LPG', 'NG', QApplication.translate('ComboBox','Elec')]
-        self.meterunitnames: Final[list[str]] = ['BTU', 'kJ', 'kCal', 'kWh', 'thm']
+        self.meterunitnames: Final[list[str]] = ['BTU', 'kJ', 'kCal', 'kWh', 'thm', 'Wh']
         self.meterreads_default: list[list[float]] = [[0.]*9,[0.]*9] # scaled to btu, [0]:ON to OFF, [1:8] ON to extratemp[timeindex[0:7]]
         self.meterreads = self.meterreads_default.copy()
         ## setup defaults (stored in app):
@@ -2412,14 +2413,14 @@ class tgraphcanvas(QObject):
         self.loadratings_setup:list[float] = [0.0]*4               # in ratingunits
         self.ratingunits_setup:list[int] = [0]*4                   # index in list self.powerunits
         self.sourcetypes_setup:list[int] = [0]*4                   # index in list self.sourcenames
-        self.load_etypes_setup:list[int] = [0]*4                   # index of the etype that is the gas/burner setting
+        self.load_etypes_setup:list[int] = [0]*4                   # index of the etype that is the gas/burner setting (if idx > 4, the PID Duty extra dev is selected as source)
         self.presssure_percents_setup:list[bool] = [False]*4       # event value in pressure percent
         self.loadevent_zeropcts_setup:list[int] = [0]*4            # event value corresponding to 0 percent
         self.loadevent_hundpcts_setup:list[int] = [100]*4          # event value corresponding to 100 percent
         # Meters
         self.meterlabels_setup:list[str] = ['']*2                  # meter labels
-        self.meterunits_setup:list[int] = [3]*2                    # index in list meterunitnames, default to Elec
-        self.meterfuels_setup:list[int] = [2]*2                    # index in list sourcetypes, default to kWh
+        self.meterunits_setup:list[int] = [3]*2                    # index in list sourcetypes, default to kWh
+        self.meterfuels_setup:list[int] = [2]*2                    # index in list meterunitnames, default to Elec
         self.metersources_setup:list[int] = [0]*2                  # index in locally generated list curvenames
         # Protocol
         self.preheatDuration_setup:int = 0                         # length of preheat in seconds
@@ -2434,15 +2435,34 @@ class tgraphcanvas(QObject):
 
         # Others
         self.energyresultunit_setup:int = 0                        # index in list self.powerunits
-        self.kind_list: Final[list[str]] = [QApplication.translate('Label','Preheat Measured'),
-                          QApplication.translate('Label','Preheat %'),
-                          QApplication.translate('Label','BBP Measured'),
-                          QApplication.translate('Label','BBP %'),
-                          QApplication.translate('Label','Cooling Measured'),
-                          QApplication.translate('Label','Cooling %'),
-                          QApplication.translate('Label','Continuous'),
-                          QApplication.translate('Label','Roast Event'),
-                          QApplication.translate('Label','Meter')]
+        self.kind_list: Final[list[str]] = [                       # label displayed in Kind column of the Energy Details table
+                        QApplication.translate('Label','Preheat Measured'),      # 0
+                        QApplication.translate('Label','Preheat %'),             # 1
+                        QApplication.translate('Label','BBP Measured'),          # 2
+                        QApplication.translate('Label','BBP %'),                 # 3
+                        QApplication.translate('Label','Cooling Measured'),      # 4
+                        QApplication.translate('Label','Cooling %'),             # 5
+                        QApplication.translate('Label','Continuous Roast'),      # 6
+                        QApplication.translate('Label','Roast Event'),           # 7
+                        QApplication.translate('Label','Meter Batch'),           # 8
+                        QApplication.translate('Label','PID Duty %'),            # 9
+                        QApplication.translate('Label','Meter Preheat'),         #10
+                        QApplication.translate('Label','Meter BBP'),             #11
+                        QApplication.translate('Label','Meter Roast'),           #12
+                        QApplication.translate('Label','Meter Cooling'),         #13
+                        QApplication.translate('Label','PID Duty % BBP'),        #14
+                        QApplication.translate('Label','PID Duty % Roast'),      #15
+                        QApplication.translate('Label','PID Duty % Cooling'),    #16
+                        QApplication.translate('Label','Preheat Event'),         #17
+                        QApplication.translate('Label','BBP Event'),             #18
+                        QApplication.translate('Label','Cooling Event'),         #19
+                        QApplication.translate('Label','PID Duty % Preheat'),    #20
+                        QApplication.translate('Label','Continuous Batch'),      #21
+                        QApplication.translate('Label','Continuous Preheat'),    #22
+                        QApplication.translate('Label','Continuous BBP'),        #23
+                        QApplication.translate('Label','Continuous Cooling'),    #24
+                        QApplication.translate('Label','Event Batch'),           #25
+                        ]
         self.perKgRoastMode:bool = False # if true only the amount during the roast and not the full batch (incl. preheat and BBP) are displayed), toggled by click on the result widget
 
         ## working variables (stored in .alog profiles):
@@ -2451,7 +2471,7 @@ class tgraphcanvas(QObject):
         self.loadratings = self.loadratings_setup[:]             # in ratingunits
         self.ratingunits = self.ratingunits_setup[:]             # index in list self.heatunits
         self.sourcetypes = self.sourcetypes_setup[:]             # index in list self.sourcetypes
-        self.load_etypes = self.load_etypes_setup[:]             # index of the etype that is the gas/burner setting
+        self.load_etypes = self.load_etypes_setup[:]             # index of the etype that is the gas/burner setting (if idx > 4, the PID Duty extra dev is selected as source)
         self.presssure_percents = self.presssure_percents_setup[:]  # event value in pressure percent
         self.loadevent_zeropcts = self.loadevent_zeropcts_setup[:]  # event value corresponding to 0 percent
         self.loadevent_hundpcts = self.loadevent_hundpcts_setup[:]  # event value corresponding to 100 percent
@@ -2490,6 +2510,12 @@ class tgraphcanvas(QObject):
         self.eventmessage = ''
         self.backgroundeventmessage = ''
         self.eventmessagetimer:QTimer|None = None
+
+        # used to differentiate between a double click that opens the roastUUID on plus and a single click which opens the Roast Properties dialog
+        self.single_click_mpl_upperleft_corner_timer = QTimer()
+        self.single_click_mpl_upperleft_corner_timer.setSingleShot(True)
+        self.single_click_mpl_upperleft_corner_timer.timeout.connect(self.aw.open_roast_properties_dialog)
+        self.single_click_mpl_upperleft_corner_TIMEOUT:Final[int] = 200 # time in milliseconds before disconnect state is terminated by a 'reset'
 
         self.resizeredrawing = 0 # holds timestamp of last resize triggered redraw
 
@@ -2654,7 +2680,7 @@ class tgraphcanvas(QObject):
     def ax_lines_clear(self) -> None:
         if self.ax is not None:
             while len(self.ax.lines) > 0:
-                self.ax.lines[0].remove() # pyrefly: ignore[index-error]
+                self.ax.lines[0].remove()
 
     def ax_combo_text_annotations_clear(self) -> None:
         if self.ax is not None:
@@ -2878,7 +2904,7 @@ class tgraphcanvas(QObject):
             elif self.ambientTemp == 0.0 and self.device in {34, 58}: # Phidget 1048 or TMP1101 channel 4 (use internal temp)
                 try:
                     if self.aw.ser.PhidgetTemperatureSensor is not None and self.aw.ser.PhidgetTemperatureSensor[0].getAttached():
-                        from Phidget22.Devices.TemperatureSensor import TemperatureSensor as PhidgetTemperatureSensor # type: ignore[import-untyped]
+                        from Phidget22.Devices.TemperatureSensor import TemperatureSensor as PhidgetTemperatureSensor # type: ignore[import-untyped] # ty:ignore[ignore]
                         ambient = PhidgetTemperatureSensor()
                         ambient.setDeviceSerialNumber(self.aw.ser.PhidgetTemperatureSensor[0].getDeviceSerialNumber())
                         if self.device == 58:
@@ -4049,17 +4075,22 @@ class tgraphcanvas(QObject):
                     self.fig.canvas.draw_idle()
                     return
 
-    #PLUS
-                if not self.designerflag and not self.wheelflag and event.inaxes is None and not self.flagstart and not self.flagon and event.button == 1 and event.dblclick and \
-                        event.x < event.y and self.roastUUID is not None:
-                    QDesktopServices.openUrl(QUrl(roastLink(self.roastUUID), QUrl.ParsingMode.TolerantMode))
+                if not self.designerflag and not self.wheelflag and event.inaxes is None and not self.flagstart and not self.flagon and event.button == 1 and \
+                        event.x < event.y:
+                    if event.dblclick and self.roastUUID is not None:
+                        self.single_click_mpl_upperleft_corner_timer.stop()
+                        QDesktopServices.openUrl(QUrl(roastLink(self.roastUUID), QUrl.ParsingMode.TolerantMode))
+                        return
+                    # title not set => open Roast Properties dialog
+                    self.single_click_mpl_upperleft_corner_timer.start(self.single_click_mpl_upperleft_corner_TIMEOUT)
                     return
 
                 if event.dblclick and event.button == 1 and not self.designerflag and not self.wheelflag and event.inaxes:
-                    if self.ax.get_autoscaley_on():
+                    if self.ax.get_autoscaley_on(): # pyrefly:ignore[not-callable]
                         self.ax.autoscale(enable=False, axis='y', tight=False)
                         self.redraw(recomputeAllDeltas=False)
                     else:
+                        self.ax.yaxis.set_major_locator(ticker.AutoLocator())
                         self.ax.autoscale(enable=True, axis='y', tight=False)
                         self.fig.canvas.draw_idle()
 
@@ -4533,7 +4564,7 @@ class tgraphcanvas(QObject):
         # take trail of length l and remove items where temp[i]=None to fulfil precond. of numpy.interp
         tx_org:list[float] = []
         temp_trail:list[float] = []
-        for x, tp in zip(tx_in[-l:], temp_in[-l:], strict=True): # we only iterate over l-elements # ty:ignore
+        for x, tp in zip(tx_in[-l:], temp_in[-l:], strict=True): # we only iterate over l-elements
             if tp is not None and tp != -1:
                 tx_org.append(x)
                 temp_trail.append(tp)
@@ -4547,10 +4578,10 @@ class tgraphcanvas(QObject):
         tx_lin = numpy.flip(numpy.arange(tx_org[-1],tx_org[-1]-l*d,-d), axis=0) # by construction, len(tx_lin)=len(tx_org)=l
         temp_trail_re = numpy.interp(tx_lin, tx_org, temp_trail) # resample data into that linear spaced time
         try:
-            return float(numpy.average(temp_trail_re[-len(decay_weights):],axis=0,weights=decay_weights[-l:])) # pyrefly: ignore[bad-index] # ty: ignore[non-subscriptable] # len(decay_weights)>len(temp_trail_re)=l is possible
+            return float(numpy.average(temp_trail_re[-len(decay_weights):],axis=0,weights=decay_weights[-l:]))
         except Exception: # pylint: disable=broad-except
             # in case something goes very wrong we at least return the standard average over temp, this should always work as len(tx)=len(temp)
-            return float(numpy.average(tx_org, numpy.array(temp_trail)))
+            return float(numpy.average(numpy.array(temp_trail)))
 
     # returns true after BT passed the TP
     def checkTPalarmtime(self) -> bool:
@@ -6001,7 +6032,7 @@ class tgraphcanvas(QObject):
     @staticmethod
     def lists2AlarmSet(l:list[Any]) -> 'AlarmSet':
         if len(l) == tgraphcanvas.ALARMSET_ITEMS:
-            return tgraphcanvas.makeAlarmSet(*l) # ty:ignore[missing-argument]
+            return tgraphcanvas.makeAlarmSet(*l)
         return tgraphcanvas.emptyAlarmSet()
 
     @staticmethod
@@ -6561,27 +6592,27 @@ class tgraphcanvas(QObject):
                 if self.projectionmode == 0 or (self.projectionmode == 1 and (self.timex[-1]-charge)<=60*5): # linear temperature projection mode based on current RoR
                     #calculate the temperature endpoint at endofx according to the latest rate of change
                     if self.l_BTprojection is not None:
-                        if self.BTcurve and len(self.unfiltereddelta2_pure) > 0 and len(self.ctemp2) > 0 and self.ctemp2[-1] is not None and self.ctemp2[-1] != -1 and not math.isnan(self.ctemp2[-1]): # ty:ignore[invalid-argument-type]
+                        if self.BTcurve and len(self.unfiltereddelta2_pure) > 0 and len(self.ctemp2) > 0 and self.ctemp2[-1] is not None and self.ctemp2[-1] != -1 and not math.isnan(self.ctemp2[-1]):
                             # projection extended to the plots current endofx
                             left = now
                             right = max(left, xlim_right + charge) # never have the right point be left of left;)
-                            BTprojection = self.ctemp2[-1] + self.unfiltereddelta2_pure[-1]*(right - left)/60. # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
+                            BTprojection = self.ctemp2[-1] + self.unfiltereddelta2_pure[-1]*(right - left)/60. # pyrefly: ignore[unsupported-operation]
                             #plot projection
                             self.BTprojection_tx = [left,right]
-                            self.BTprojection_temp = [self.ctemp2[-1], BTprojection] # ty:ignore[invalid-assignment] # pyrefly: ignore[bad-assignment]
+                            self.BTprojection_temp = [self.ctemp2[-1], BTprojection] # pyrefly: ignore[bad-assignment]
                         else:
                             self.BTprojection_tx = []
                             self.BTprojection_temp = []
                         self.l_BTprojection.set_data(self.BTprojection_tx, self.BTprojection_temp)
                     if self.l_ETprojection is not None:
-                        if self.ETcurve and len(self.unfiltereddelta1_pure) > 0 and len(self.ctemp1) > 0 and self.ctemp1[-1] is not None and self.ctemp1[-1] != -1 and not math.isnan(self.ctemp1[-1]): # ty:ignore[invalid-argument-type]
+                        if self.ETcurve and len(self.unfiltereddelta1_pure) > 0 and len(self.ctemp1) > 0 and self.ctemp1[-1] is not None and self.ctemp1[-1] != -1 and not math.isnan(self.ctemp1[-1]):
                             # projection extended to the plots current endofx
                             left = now
                             right = max(left,xlim_right + charge) # never have the right point be left of left;)
-                            ETprojection = self.ctemp1[-1] + self.unfiltereddelta1_pure[-1]*(right - left)/60. # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
+                            ETprojection = self.ctemp1[-1] + self.unfiltereddelta1_pure[-1]*(right - left)/60. # pyrefly: ignore[unsupported-operation]
                             #plot projection
                             self.ETprojection_tx = [left,right]
-                            self.ETprojection_temp = [self.ctemp1[-1], ETprojection] # ty:ignore[invalid-assignment] # pyrefly: ignore[bad-assignment]
+                            self.ETprojection_temp = [self.ctemp1[-1], ETprojection] # pyrefly: ignore[bad-assignment]
                         else:
                             self.ETprojection_tx = []
                             self.ETprojection_temp = []
@@ -6597,7 +6628,7 @@ class tgraphcanvas(QObject):
 
                     # NOTE: we use the unfiltered deltas here to make this work also with a delta symbolic formula like x/2 to render RoR in C/30sec
                     if self.l_BTprojection is not None:
-                        if (len(self.ctemp2) > 0 and self.ctemp2[-1] is not None and self.ctemp2[-1] != -1 and not math.isnan(self.ctemp2[-1]) and # ty:ignore[invalid-argument-type]
+                        if (len(self.ctemp2) > 0 and self.ctemp2[-1] is not None and self.ctemp2[-1] != -1 and not math.isnan(self.ctemp2[-1]) and
                                 len(self.unfiltereddelta2_pure)>delta_interval_BT and
                                 self.unfiltereddelta2_pure[-1] and
                                 self.unfiltereddelta2_pure[-1]>0 and
@@ -6616,14 +6647,14 @@ class tgraphcanvas(QObject):
                                 delta_sec = delta_sec + deltadelta_secsec*delay
                             #plot BT curve
                             self.BTprojection_tx = xpoints.tolist()
-                            self.BTprojection_temp = ypoints # ty:ignore[invalid-assignment] # pyrefly: ignore[bad-assignment]
+                            self.BTprojection_temp = ypoints # pyrefly: ignore[bad-assignment]
                         else:
                             self.BTprojection_tx = []
                             self.BTprojection_temp = []
                         self.l_BTprojection.set_data(self.BTprojection_tx, self.BTprojection_temp)
 
                     if self.l_ETprojection is not None:
-                        if (len(self.ctemp1) > 0 and self.ctemp1[-1] is not None and self.ctemp1[-1] != -1 and not math.isnan(self.ctemp1[-1]) and # ty:ignore[invalid-argument-type]
+                        if (len(self.ctemp1) > 0 and self.ctemp1[-1] is not None and self.ctemp1[-1] != -1 and not math.isnan(self.ctemp1[-1]) and
                                 len(self.unfiltereddelta1_pure)>delta_interval_BT and
                                 self.unfiltereddelta1_pure[-1] and
                                 self.unfiltereddelta1_pure[-1]>0 and
@@ -6642,7 +6673,7 @@ class tgraphcanvas(QObject):
                                 delta_sec = delta_sec + deltadelta_secsec*delay
                             #plot ET curve
                             self.ETprojection_tx = xpoints.tolist()
-                            self.ETprojection_temp = ypoints # ty:ignore[invalid-assignment] # pyrefly: ignore[bad-assignment]
+                            self.ETprojection_temp = ypoints # pyrefly: ignore[bad-assignment]
                         else:
                             self.ETprojection_tx = []
                             self.ETprojection_temp = []
@@ -6919,7 +6950,7 @@ class tgraphcanvas(QObject):
                     if idx > -1: # we passed the AUCbegin event
                         mathdictionary['AUCbase'] = sample_temp2[idx]
                     else:
-                        mathdictionary['AUCbase'] = None # Event not set yet, no AUCbase # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
+                        mathdictionary['AUCbase'] = None # Event not set yet, no AUCbase
                 else:
                     mathdictionary['AUCbase'] = self.AUCbase
                 if self.AUCtargetFlag and self.backgroundprofile is not None and self.AUCbackground > 0:
@@ -7115,16 +7146,19 @@ class tgraphcanvas(QObject):
                                         try:
                                             absolute_index = eval(body,{'__builtins__':None},mathdictionary)  # pylint: disable=eval-used
                                             if absolute_index > -1:
+                                                valn:float|None = -1
                                                 if nint == 1: #DeltaET
                                                     if k == 0:
-                                                        val = sample_delta1[absolute_index] # pyrefly: ignore[bad-assignment]
+                                                        valn = sample_delta1[absolute_index]
                                                     else:
-                                                        val = self.delta1B[absolute_index] # pyrefly: ignore[bad-assignment]
+                                                        valn = self.delta1B[absolute_index]
                                                 # nint == 2: #DeltaBT
                                                 elif k == 0:
-                                                    val = sample_delta2[absolute_index] # pyrefly: ignore[bad-assignment]
+                                                    valn = sample_delta2[absolute_index]
                                                 else:
-                                                    val = self.delta2B[absolute_index] # pyrefly: ignore[bad-assignment]
+                                                    valn = self.delta2B[absolute_index]
+                                                if valn is not None:
+                                                    val = valn
                                         except Exception: # pylint: disable=broad-except
                                             pass
                                         #add expression and values found
@@ -7139,7 +7173,7 @@ class tgraphcanvas(QObject):
                                     #no shift
                                     elif mathexpression[i+k+1] == '1':
                                         if k == 0:
-                                            mathdictionary['R1'] = sample_delta1[index] # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
+                                            mathdictionary['R1'] = sample_delta1[index]
                                         else:
                                             #if sampling
                                             if RTsname is not None and RTsname != '':
@@ -7148,7 +7182,7 @@ class tgraphcanvas(QObject):
                                                 idx = index
                                             # the index is resolved relative to the time of the foreground profile if available
                                             if not sample_timex:
-                                                mathdictionary['RB1'] = self.delta1B[idx] # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
+                                                mathdictionary['RB1'] = self.delta1B[idx]
                                             else:
                                                 if RTsname is not None and RTsname != '':
                                                     if len(sample_timex)>2:
@@ -7163,10 +7197,10 @@ class tgraphcanvas(QObject):
                                                     res = self.delta1B[idx]
                                                 else:
                                                     res = -1
-                                                mathdictionary['RB1'] = res # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
+                                                mathdictionary['RB1'] = res
                                     elif mathexpression[i+k+1] == '2':
                                         if k == 0:
-                                            mathdictionary['R2'] = sample_delta2[index] # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
+                                            mathdictionary['R2'] = sample_delta2[index]
                                         else:
                                             if RTsname is not None and RTsname != '':
                                                 idx = index + 1
@@ -7174,7 +7208,7 @@ class tgraphcanvas(QObject):
                                                 idx = index
                                             # the index is resolved relative to the time of the foreground profile if available
                                             if not sample_timex:
-                                                mathdictionary['RB2'] = self.delta2B[idx] # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
+                                                mathdictionary['RB2'] = self.delta2B[idx]
                                             else:
                                                 if RTsname is not None and RTsname != '':
                                                     if len(sample_timex)>2:
@@ -7189,7 +7223,7 @@ class tgraphcanvas(QObject):
                                                     res = self.delta2B[idx]
                                                 else:
                                                     res = -1
-                                                mathdictionary['RB2'] = res # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
+                                                mathdictionary['RB2'] = res
                         except Exception: # pylint: disable=broad-except
                             # if deltas of backgrounds are not visible the data is not calculated and thus this fails with an exception
                             pass
@@ -7584,7 +7618,7 @@ class tgraphcanvas(QObject):
                 self.ax.xaxis.set_major_formatter(formatter)
 
                 #adjust the length of the major ticks
-                for i in self.ax.get_xticklines() + self.ax.get_yticklines():
+                for i in self.ax.get_xticklines() + self.ax.get_yticklines(): # pyrefly:ignore[not-callable]
                     i.set_markersize(6)
                     #i.set_markeredgewidth(2)   #adjust the width
 
@@ -8157,6 +8191,8 @@ class tgraphcanvas(QObject):
 
         self.aw.updatePlusStatus()
 
+        self.aw.set_ui_mode(self.aw.ui_mode)
+
         ### REDRAW  ##
         if redraw:
             self.aw.autoAdjustAxis(background=not keepProperties) # if reset() triggered by ON, we ignore background on adjusting the axis and adjust according to RESET min/max
@@ -8198,7 +8234,7 @@ class tgraphcanvas(QObject):
             y[:j,i] = x[0]
             y[:-j,-(i+1)] = x[j:]
             y[-j:,-(i+1)] = x[-1]
-        return cast('npt.NDArray[numpy.double]', numpy.median(y, axis=1))
+        return numpy.median(y, axis=1)
 #        return numpy.nanmedian(y, axis=1) # produces artefacts
 
     # smoothes a list (or numpy.array) of values 'y' at taken at times indicated by the numbers in list 'x'
@@ -8292,14 +8328,14 @@ class tgraphcanvas(QObject):
                 else:
                     result:list[float] = []
                     # ignore -1 readings in averaging and ensure a good ramp
-                    for i, v in enumerate(b): # ty: ignore[invalid-argument-type] # pyrefly: ignore [bad-argument-type]
-                        seq = b[max(0,i-window_len + 1):i+1] # ty: ignore[non-subscriptable] # pyrefly: ignore[bad-index]
+                    for i, v in enumerate(b):
+                        seq = b[max(0,i-window_len + 1):i+1]
                         w = decay_weights_internal[max(0,window_len-len(seq)):]  # preCond: len(decay_weights_internal)=window_len and len(seq) <= window_len; postCond: len(w)=len(seq)
                         if len(w) == 0:
                             # we don't average if there is are no weights (e.g. if the original seq did only contain -1 values and got empty)
                             result.append(v)
                         else:
-                            result.append(numpy.average(seq,axis=0,weights=w)) # works only if len(seq) = len(w)
+                            result.append(float(numpy.average(seq,axis=0,weights=w))) # works only if len(seq) = len(w)
                     res = numpy.array(result)
                     # postCond: len(res) = len(b)
             else:
@@ -8312,7 +8348,7 @@ class tgraphcanvas(QObject):
         # 4. sample back
         if re_sample and back_sample:
             res = numpy.interp(a, a_mod, res) # pyright:ignore[reportUnknownArgumentType] # re-sampled back to original timestamps
-        return numpy.array(res)
+        return numpy.array(res).astype(numpy.double)
 
     # takes lists a (time array) and b (temperature array) containing invalid segments of -1/None values and returns a list with all segments of valid values smoothed
     # a: list of timestamps
@@ -8323,7 +8359,7 @@ class tgraphcanvas(QObject):
     # delta: True if b is a RoR signal
     # NOTE: result can contain NaN items on places where the input array contains the error element -1
     # result is a numpy array or the b as numpy array with drop out readings -1 replaced by NaN
-    def smooth_list(self, aa:'npt.NDArray[numpy.double]|Sequence[float]', b:'npt.NDArray[numpy.double]|Sequence[float]', window_len:int = 7, window:str = 'hanning',
+    def smooth_list(self, aa:'npt.NDArray[numpy.double]|npt.NDArray[numpy.floating]|Sequence[float]', b:'npt.NDArray[numpy.double]|npt.NDArray[numpy.floating]|Sequence[float]', window_len:int = 7, window:str = 'hanning',
             decay_weights:list[int]|None = None, decay_smoothing:bool = False, fromIndex:int = -1, toIndex:int = 0,
             re_sample:bool = True, back_sample:bool = True, a_lin:'npt.NDArray[numpy.double]|None' = None, delta:bool=False) -> 'npt.NDArray[numpy.double]':
         if len(aa) > 1 and len(aa) == len(b) and (self.filterDropOuts or window_len>2):
@@ -8337,10 +8373,10 @@ class tgraphcanvas(QObject):
                 toIndex = len(aa)
             a = numpy.array(aa[fromIndex:toIndex], dtype=numpy.double)
             # we mask the error value -1 and Numpy  in the temperature array
-            mb:numpy.ndarray[tuple[Literal[1]],numpy.dtype[numpy.float64]] = cast(numpy.ndarray[tuple[Literal[1]],numpy.dtype[numpy.float64]], numpy.ma.masked_equal(numpy.ma.masked_equal(b[fromIndex:toIndex], -1), None)) # type:ignore[no-untyped-call]
+            mb:numpy.ndarray[tuple[Literal[1]],numpy.dtype[numpy.float64]] = cast(numpy.ndarray[tuple[Literal[1]],numpy.dtype[numpy.float64]], numpy.ma.masked_equal(b[fromIndex:toIndex], -1))
             # split in masked and
-            unmasked_slices = [(x,False) for x in numpy.ma.clump_unmasked(mb)] # type:ignore[no-untyped-call] # the valid readings
-            masked_slices = [(x,True) for x in numpy.ma.clump_masked(mb)]  # type:ignore[no-untyped-call] # the dropped values
+            unmasked_slices = [(x,False) for x in numpy.ma.clump_unmasked(mb)] # type:ignore[no-untyped-call] # ty:ignore[ignore] # the valid readings
+            masked_slices = [(x,True) for x in numpy.ma.clump_masked(mb)]  # type:ignore[no-untyped-call] # ty:ignore[ignore] # the dropped values
             sorted_slices = sorted(unmasked_slices + masked_slices, key=lambda tup: tup[0].start) # pyright:ignore[reportUnknownArgumentType] # pyright: ignore[reportGeneralTypeIssues]
             b_smoothed:list[npt.NDArray[numpy.double]] = [] # pyright:ignore[reportUnknownArgumentType] # b_smoothed collects the smoothed segments in order
             b_smoothed.append(numpy.full(fromIndex, numpy.nan, dtype=numpy.double)) # pyright:ignore[reportUnknownArgumentType] # append initial segment to the list of resulting segments
@@ -8735,12 +8771,12 @@ class tgraphcanvas(QObject):
 
     @staticmethod
     # with window size wsize=1 the RoR is computed over succeeding readings; tx and temp assumed to be of type numpy.array
-    def arrayRoR(tx:'npt.NDArray[numpy.double]', temp:'npt.NDArray[numpy.double]', wsize:int) -> 'npt.NDArray[numpy.double]': # with wsize >=1
+    def arrayRoR(tx:'npt.NDArray[numpy.double]', temp:'npt.NDArray[numpy.double]', wsize:int) -> 'npt.NDArray[numpy.floating]': # with wsize >=1
         # length compensation done downstream, not necessary here!
         with warnings.catch_warnings():
             # suppress warning if time difference is 0 which leads to a div by zero resulting in a warning and an inf value
             warnings.simplefilter('ignore')
-            return cast('npt.NDArray[numpy.double]', (temp[wsize:] - temp[:-wsize]) / ((tx[wsize:] - tx[:-wsize])/60.))
+            return (temp[wsize:] - temp[:-wsize]) / ((tx[wsize:] - tx[:-wsize])/60.)
 
 
     # returns deltas and linearized timex;  both results can be None
@@ -8934,7 +8970,7 @@ class tgraphcanvas(QObject):
             if len(ix)>1:
                 a = ix[0]
                 b = ix[-1]
-                verts = [ xy for xy in [(a, rtbt)] + list(zip(ix, iy, strict=True)) + [(b, rtbt)] if xy[1] > 0 ] # ty:ignore
+                verts = [ xy for xy in [(a, rtbt)] + list(zip(ix, iy, strict=True)) + [(b, rtbt)] if xy[1] > 0 ]
                 if verts:
                     poly = Polygon(numpy.array(verts), facecolor=self.palette['aucarea'], edgecolor='0.5', alpha=0.3)
                     self.ax.add_patch(poly)
@@ -9074,7 +9110,7 @@ class tgraphcanvas(QObject):
             except Exception: # pylint: disable=broad-except
                 pass
             # don't draw -1:
-            temp = numpy.ma.masked_where(temp == -1, temp) # type:ignore[no-untyped-call]
+            temp = numpy.ma.masked_where(temp == -1, temp)
             self.l_temp1, = self.ax.plot(
                 self.timex,
                 temp, # pyright:ignore[reportUnknownArgumentType]
@@ -9096,7 +9132,7 @@ class tgraphcanvas(QObject):
             except Exception: # pylint: disable=broad-except
                 pass
             # don't draw -1:
-            temp = numpy.ma.masked_where(temp == -1, temp) # type:ignore[no-untyped-call]
+            temp = numpy.ma.masked_where(temp == -1, temp)
             self.l_temp2, = self.ax.plot(
                 self.timex,
                 temp, # pyright:ignore[reportUnknownArgumentType]
@@ -9178,6 +9214,7 @@ class tgraphcanvas(QObject):
         else:
             _log.info('lazyredraw(): failed to get profileDataSemaphore lock')
 
+    # if smooth is set or stemp1/stemp2 are empty, data is re-smoothed (and drops potentially interpolated) and assigned to stemp1/stemp2, otherwise the existing stemp1/stemp2
     def smoothETBT(self, smooth:bool, recomputeAllDeltas:bool, decay_smoothing_p:bool) -> None:
         try:
             # we resample the temperatures to regular interval timestamps
@@ -9414,7 +9451,7 @@ class tgraphcanvas(QObject):
                         grid_axis = 'x'
                     if grid_axis is not None:
                         self.ax.grid(True,
-                            axis=grid_axis, # type: ignore[arg-type] # "grid" of "_AxesBase" has incompatible type "str"; expected "Literal['both', 'x', 'y']
+                            axis=grid_axis, # type: ignore[arg-type] # ty:ignore[ignore] # "grid" of "_AxesBase" has incompatible type "str"; expected "Literal['both', 'x', 'y']
                             color=self.palette['grid'],
                             linestyle=self.gridstyles[self.gridlinestyle],
                             linewidth=self.gridthickness,
@@ -9475,8 +9512,8 @@ class tgraphcanvas(QObject):
                         labelbottom=True)   # labels along the bottom edge are on
 
                     # format temperature as int, not float in the cursor position coordinate indicator
-                    self.ax.fmt_ydata = self.fmt_data
-                    self.ax.fmt_xdata = self.fmt_timedata
+                    self.ax.fmt_ydata = self.fmt_data # pyrefly:ignore[bad-assignment] # not assignable to attribute `fmt_ydata` with type `Formatter | None`
+                    self.ax.fmt_xdata = self.fmt_timedata  # pyrefly:ignore[bad-assignment] # not assignable to attribute `fmt_ydata` with type `Formatter | None`
 
                     if self.delta_ax is not None:
                         self.ax.set_zorder(self.delta_ax.get_zorder()+1) # put ax in front of delta_ax (which remains empty!)
@@ -9555,12 +9592,12 @@ class tgraphcanvas(QObject):
                                 self.ax.yaxis.set_minor_locator(ticker.NullLocator())
                             for m in self.ax.yaxis.get_minorticklines():
                                 m.set_markersize(5)
-                        for j in self.ax.get_yticklines():
+                        for j in self.ax.get_yticklines(): # pyrefly:ignore[not-callable]
                             j.set_markersize(10)
-                        for label in self.ax.get_yticklabels():
+                        for label in self.ax.get_yticklabels(): # pyrefly:ignore[not-callable]
                             label.set_fontsize('small')
                     else:
-                        self.ax.set_yticks([])
+                        self.ax.set_yticks([]) # pyrefly:ignore[not-callable]
 
                     for ldots in [self.l_eventtype1dots,self.l_eventtype2dots,self.l_eventtype3dots,self.l_eventtype4dots,
                             self.l_backgroundeventtype1dots,self.l_backgroundeventtype2dots,self.l_backgroundeventtype3dots,self.l_backgroundeventtype4dots]:
@@ -9606,7 +9643,7 @@ class tgraphcanvas(QObject):
                     self.xaxistosm(redraw=False)
 
                     if self.xgrid:
-                        for label in self.ax.get_xticklabels():
+                        for label in self.ax.get_xticklabels(): # pyrefly:ignore[not-callable]
                             label.set_fontsize('small')
 
                     rcParams['path.sketch'] = (0,0,0)
@@ -9773,7 +9810,7 @@ class tgraphcanvas(QObject):
                                 except Exception: # pylint: disable=broad-except
                                     pass
                                 # don't draw -1:
-                                stemp3B = numpy.ma.masked_where(stemp3B == -1, stemp3B) # type:ignore[no-untyped-call]
+                                stemp3B = numpy.ma.masked_where(stemp3B == -1, stemp3B)
                                 self.l_back3, = self.ax.plot(self.extratimexB[n3], stemp3B, markersize=self.XTbackmarkersize,marker=self.XTbackmarker,
                                                             sketch_params=None,path_effects=[],transform=trans,
                                                             linewidth=self.XTbacklinewidth,linestyle=self.XTbacklinestyle,drawstyle=self.XTbackdrawstyle,color=self.backgroundxtcolor,
@@ -9830,7 +9867,7 @@ class tgraphcanvas(QObject):
                                 except Exception: # pylint: disable=broad-except
                                     pass
                                 # don't draw -1:
-                                stemp4B = numpy.ma.masked_where(stemp4B == -1, stemp4B) # type:ignore[no-untyped-call]
+                                stemp4B = numpy.ma.masked_where(stemp4B == -1, stemp4B)
                                 self.l_back4, = self.ax.plot(self.extratimexB[n4], stemp4B, markersize=self.YTbackmarkersize,marker=self.YTbackmarker,
                                                             sketch_params=None,path_effects=[],transform=trans,
                                                             linewidth=self.YTbacklinewidth,linestyle=self.YTbacklinestyle,drawstyle=self.YTbackdrawstyle,color=self.backgroundytcolor,
@@ -9864,7 +9901,7 @@ class tgraphcanvas(QObject):
                         except Exception: # pylint: disable=broad-except
                             pass
                         # don't draw -1:
-                        temp_etb = numpy.ma.masked_where(temp_etb == -1, temp_etb) # type:ignore[no-untyped-call]
+                        temp_etb = numpy.ma.masked_where(temp_etb == -1, temp_etb)
                         self.l_back1, = self.ax.plot(self.timeB,temp_etb,markersize=self.ETbackmarkersize,marker=self.ETbackmarker,
                                                     sketch_params=None,path_effects=[],
                                                     linewidth=self.ETbacklinewidth,linestyle=self.ETbacklinestyle,drawstyle=self.ETbackdrawstyle,color=self.backgroundmetcolor,
@@ -9895,7 +9932,7 @@ class tgraphcanvas(QObject):
                         except Exception: # pylint: disable=broad-except
                             pass
                         # don't draw -1:
-                        temp_btb = numpy.ma.masked_where(temp_btb == -1, temp_btb) # type:ignore[no-untyped-call]
+                        temp_btb = numpy.ma.masked_where(temp_btb == -1, temp_btb)
                         self.l_back2, = self.ax.plot(self.timeB, temp_btb,markersize=self.BTbackmarkersize,marker=self.BTbackmarker,
                                                     linewidth=self.BTbacklinewidth,linestyle=self.BTbacklinestyle,drawstyle=self.BTbackdrawstyle,color=self.backgroundbtcolor,
                                                     sketch_params=None,path_effects=[],
@@ -10979,7 +11016,7 @@ class tgraphcanvas(QObject):
                             self.drawDeltaBT(trans,0,0)
 
                     if self.delta_ax is not None:
-                        self.delta_ax.set_yticks([])
+                        self.delta_ax.set_yticks([]) # pyrefly:ignore[not-callable]
                         if two_ax_mode:
                             self.aw.autoAdjustAxis(timex=False)
                             self.delta_ax.set_ylim(self.zlimit_min,self.zlimit)
@@ -10990,10 +11027,10 @@ class tgraphcanvas(QObject):
                                     min_grid = (self.aw.qmc.zlimit - self.aw.qmc.zlimit_min) / 50
                                     # set grid to closest of min_grid from regular grids [1, 2, 5, 10, 20, 50, 100]
                                     major_locator.set_params(min([1, 2, 5, 10, 20, 50, 100], key=lambda x:abs(x-min_grid)))
-                                delta_major_tick_lines:list[Line2D] = self.delta_ax.get_yticklines()
+                                delta_major_tick_lines:list[Line2D] = self.delta_ax.get_yticklines() # pyrefly:ignore[not-callable]
                                 for ytl in delta_major_tick_lines:
                                     ytl.set_markersize(10)
-                                for label in self.delta_ax.get_yticklabels() :
+                                for label in self.delta_ax.get_yticklabels(): # pyrefly:ignore[not-callable]
                                     label.set_fontsize('small')
                                 if not self.LCDdecimalplaces:
                                     self.delta_ax.minorticks_off()
@@ -11041,10 +11078,13 @@ class tgraphcanvas(QObject):
                                         decay_smoothing=decay_smoothing_p,
                                         a_lin=timexi_lin,
                                         delta=False).tolist()
-                                elif self.interpolateDropsflag: # we don't smooth, but remove the dropouts
-                                    self.extrastemp1[i] = fill_gaps(self.extratemp1[i])
-                                else:
-                                    self.extrastemp1[i] = self.extratemp1[i]
+                                elif len(self.extrastemp1[i]) != len(self.extratimex[i]):
+                                    # extratemp1 does not exist and we are not re-smoothing, we take the raw data (potentially with dropouts interpolated)
+                                    if self.interpolateDropsflag: # we don't smooth, but remove the dropouts
+                                        self.extrastemp1[i] = fill_gaps(self.extratemp1[i])
+                                    else:
+                                        self.extrastemp1[i] = self.extratemp1[i]
+
                                 if self.aw.extraDelta1[i] and self.delta_ax is not None:
                                     trans = self.delta_ax.transData
                                 else:
@@ -11089,10 +11129,13 @@ class tgraphcanvas(QObject):
                                         decay_smoothing=decay_smoothing_p,
                                         a_lin=timexi_lin,
                                         delta=False).tolist()
-                                elif self.interpolateDropsflag:
-                                    self.extrastemp2[i] = fill_gaps(self.extratemp2[i])
-                                else:
-                                    self.extrastemp2[i] = self.extratemp2[i]
+                                elif len(self.extrastemp2[i]) != len(self.extratimex[i]):
+                                    # extratemp2 does not exist and we are not re-smoothing, we take the raw data (potentially with dropouts interpolated)
+                                    if self.interpolateDropsflag:
+                                        self.extrastemp2[i] = fill_gaps(self.extratemp2[i])
+                                    else:
+                                        self.extrastemp2[i] = self.extratemp2[i]
+
                                 if self.aw.extraDelta2[i] and self.delta_ax is not None:
                                     trans = self.delta_ax.transData
                                 else:
@@ -11300,7 +11343,7 @@ class tgraphcanvas(QObject):
                             frame.set_alpha(self.alpha['legendbg'])
                             frame.set_edgecolor(self.palette['legendborder'])
                             frame.set_linewidth(0.5)
-                            for line,text in zip(leg.get_lines(), leg.get_texts(), strict=True): # ty:ignore
+                            for line,text in zip(leg.get_lines(), leg.get_texts(), strict=True):
                                 text.set_color(line.get_color())
                         except Exception as e: # pylint: disable=broad-except
                             _log.error(e)
@@ -11645,7 +11688,7 @@ class tgraphcanvas(QObject):
             #     ['', '20', 'Fresh Cut Grass', '|', '50', 'Hay', '|', '80', 'Baking Bread', '|', '100', 'A Point', '']
 #            pattern = re.compile(r'.*{ndo}(?P<nominalstr>[^{ndc}]+){ndc}'.format(ndo=nominalDelimopen,ndc=nominalDelimclose),_ignorecase)
             pattern = re.compile(fr'.*{nominalDelimopen}(?P<nominalstr>[^{nominalDelimclose}]+){nominalDelimclose}',_ignorecase)
-            matched = pattern.match(eventanno) # pyrefly: ignore[no-matching-overload]
+            matched = pattern.match(eventanno)
             if matched is not None:
                 pattern = re.compile(r'([0-9]+)([A-Za-z]+[A-Za-z 0-9]+)',_ignorecase)
                 matches = pattern.split(matched.group('nominalstr'))
@@ -11659,7 +11702,7 @@ class tgraphcanvas(QObject):
                     j += 3
 #                pattern = re.compile(r'({ndo}[^{ndc}]+{ndc})'.format(ndo=nominalDelimopen,ndc=nominalDelimclose))
                 pattern = re.compile(fr'({nominalDelimopen}[^{nominalDelimclose}]+{nominalDelimclose})')
-                eventanno = pattern.sub(replacestring,eventanno) # pyrefly: ignore
+                eventanno = pattern.sub(replacestring,eventanno)
 
             # make all the remaining substitutions
             for field in fields:
@@ -12367,7 +12410,7 @@ class tgraphcanvas(QObject):
                 self.aw.pidcontrol.conv2celsius()
             else:
                 self.aw.pidcontrol.conv2fahrenheit()
-            self.mode_tempsliders = self.mode # pyrefly: ignore[bad-assignment]
+            self.mode_tempsliders = self.mode
 
     #sets the graph display in Fahrenheit mode
     def fahrenheitMode(self, setdefaultaxes:bool = True) -> None:
@@ -12741,7 +12784,7 @@ class tgraphcanvas(QObject):
             self.updateFlavorChartData()
             if self.flavorchart_angles is not None:
                 try:
-                    ticks_loc = [float(tick) for tick in self.ax1.get_yticks()]
+                    ticks_loc = [float(tick) for tick in self.ax1.get_yticks()] # pyrefly:ignore[not-callable]
                     self.ax1.yaxis.set_major_locator(ticker.FixedLocator(ticks_loc))
                 except Exception: # pylint: disable=broad-except
                     pass
@@ -12784,26 +12827,26 @@ class tgraphcanvas(QObject):
                 fontprop_small.set_size('x-small')
 
                 #rename yaxis
-                locs = self.ax1.get_yticks()
+                locs = self.ax1.get_yticks()  # pyrefly:ignore[not-callable]
                 labels:list[str] = []
                 for loc in locs:
                     stringlabel = str(int(round(loc*10)))
                     labels.append(stringlabel)
-                self.ax1.set_yticklabels(labels, color=self.palette['xlabel'],fontproperties=fontprop_small)
+                self.ax1.set_yticklabels(labels, color=self.palette['xlabel'],fontproperties=fontprop_small)  # pyrefly:ignore[not-callable]
 
                 #annotate labels
                 self.flavorchart_labels = []
                 for i in range(len(self.flavorlabels)):
-                    if self.flavorchart_angles[i] > 2.*pi or self.flavorchart_angles[i] < 0.: # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
-                        _,self.flavorchart_angles[i] = divmod(self.flavorchart_angles[i],(2.*pi)) # pyrefly: ignore[unsupported-operation]
-                    if self.flavorchart_angles[i] <= (pi/2.) or self.flavorchart_angles[i] >= (1.5*pi): #if < 90 or smaller than 270 degrees # pyrefly: ignore[unsupported-operation]
+                    if self.flavorchart_angles[i] > 2.*pi or self.flavorchart_angles[i] < 0.:
+                        _,self.flavorchart_angles[i] = divmod(self.flavorchart_angles[i],(2.*pi))
+                    if self.flavorchart_angles[i] <= (pi/2.) or self.flavorchart_angles[i] >= (1.5*pi): #if < 90 or smaller than 270 degrees
                         ha = 'left'
                     else:
                         ha = 'right'
-                    anno = self.ax1.annotate(self.flavorChartLabelText(i),xy =(self.flavorchart_angles[i],.9),  # pyrefly: ignore[unsupported-operation]
+                    anno = self.ax1.annotate(self.flavorChartLabelText(i),xy =(self.flavorchart_angles[i],.9),
                                         fontproperties=fontprop_small,
                                         color=self.palette['ylabel'],
-                                        xytext=(self.flavorchart_angles[i],1.1),horizontalalignment=ha,verticalalignment='center')  # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
+                                        xytext=(self.flavorchart_angles[i],1.1),horizontalalignment=ha,verticalalignment='center')
                     anno.set_in_layout(False)  # remove text annotations from tight_layout calculation
                     self.flavorchart_labels.append(anno)
 
@@ -12860,7 +12903,7 @@ class tgraphcanvas(QObject):
         self.flavorchart_plotf.append(self.flavors[0])
         #normalize flavor values to 0-1 range
         for i,_ in enumerate(self.flavorchart_plotf):
-            self.flavorchart_plotf[i] /= 10. # ty:ignore[unsupported-operator] # pyrefly: ignore[unsupported-operation]
+            self.flavorchart_plotf[i] /= 10.
 
     @staticmethod
     def calcFlavorChartScoreFromFlavors(flavors:list[float], flavors_total_correction:float) -> float:
@@ -13032,11 +13075,11 @@ class tgraphcanvas(QObject):
 
     def addPhidgetServer(self) -> None:
         if not self.phidgetServerAdded:
-            from Phidget22.Net import Net as PhidgetNetwork # type: ignore[import-untyped]
+            from Phidget22.Net import Net as PhidgetNetwork # type: ignore[import-untyped] # ty:ignore[ignore]
             if self.phidgetServerID == '' and not self.phidgetServiceDiscoveryStarted:
                 try:
                     # we enable the automatic service discovery if no server host is given
-                    from Phidget22.PhidgetServerType import PhidgetServerType # type: ignore[import-untyped]
+                    from Phidget22.PhidgetServerType import PhidgetServerType # type: ignore[import-untyped] # ty:ignore[ignore]
                     PhidgetNetwork.enableServerDiscovery(PhidgetServerType.PHIDGETSERVER_DEVICEREMOTE)
                     self.phidgetServiceDiscoveryStarted = True
                     self.aw.sendmessage(QApplication.translate('Message','Phidget service discovery started...'))
@@ -13064,8 +13107,8 @@ class tgraphcanvas(QObject):
 
     @staticmethod
     def deviceLogDEBUG() -> None:
-        from Phidget22.Devices.Log import Log as PhidgetLog # type: ignore[import-untyped]
-        from Phidget22.LogLevel import LogLevel as PhidgetLogLevel # type: ignore[import-untyped]
+        from Phidget22.Devices.Log import Log as PhidgetLog # type: ignore[import-untyped] # ty:ignore[ignore]
+        from Phidget22.LogLevel import LogLevel as PhidgetLogLevel # type: ignore[import-untyped] # ty:ignore[ignore]
         PhidgetLog.setLevel(PhidgetLogLevel.PHIDGET_LOG_VERBOSE)
 
     @staticmethod
@@ -13289,7 +13332,7 @@ class tgraphcanvas(QObject):
                         disconnected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} disconnected').format('Kaleido'),True,None))
                 elif self.device == 142:
                     try:
-                        from artisanlib.ikawa import IKAWA_BLE # ty: ignore[possibly-missing-import]
+                        from artisanlib.ikawa import IKAWA_BLE
                         self.aw.ikawa = IKAWA_BLE(
                             connected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} connected').format('IKAWA'),True,None),
                             disconnected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} disconnected').format('IKAWA'),True,None))
@@ -13384,11 +13427,19 @@ class tgraphcanvas(QObject):
 
     # OffMonitorCloseDown is called after the sampling loop stopped
     @pyqtSlot()
-    def OffMonitorCloseDown(self) -> None:
+    def OffMonitorCloseDownIgnoreAlwaysON(self) -> None:
+        self.OffMonitorCloseDown(False)
+    def OffMonitorCloseDownRespectAlwaysON(self) -> None:
+        self.OffMonitorCloseDown(True)
+
+    def OffMonitorCloseDown(self, respectAlwaysON:bool) -> None:
         _log.debug('MODE: OffMonitorCloseDown')
         try:
 
-            self.threadserver.terminatingSignal.disconnect(self.OffMonitorCloseDown)
+            if respectAlwaysON:
+                self.threadserver.terminatingSignal.disconnect(self.OffMonitorCloseDownRespectAlwaysON)
+            else:
+                self.threadserver.terminatingSignal.disconnect(self.OffMonitorCloseDownIgnoreAlwaysON)
 
             # reset WebLCDs
             resLCD = '-.-' if self.LCDdecimalplaces else '--'
@@ -13513,9 +13564,9 @@ class tgraphcanvas(QObject):
 #            QApplication.processEvents()  # solves the issue (but is more general as the MPL flush_events (takes ~1sec)
 
             # we autosave after full redraw after OFF to have the optional generated PDF containing all information
-            if len(self.timex) > 2 and self.autosaveflag != 0 and self.autosavepath:
+            if len(self.timex) > 2 and self.autosaveflag != 0:
                 try:
-                    self.aw.automaticsave()
+                    self.aw.automaticsave(False)
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
 
@@ -13543,17 +13594,19 @@ class tgraphcanvas(QObject):
             self.aw.buttonCONTROL.setEnabled(True)
             self.aw.buttonCONTROL.setGraphicsEffect(self.aw.makeShadow())
 
-            if self.flagKeepON and len(self.timex) > 10:
+            if respectAlwaysON and self.flagKeepON and len(self.timex) > 10:
                 QTimer.singleShot(300, self.onMonitorSignal.emit)
 
             self.aw.updatePlusStatusSignal.emit() # update plus icon (roast might not have been uploaded yet)
+            self.monitorClosedDown.emit()
 
         except Exception as ex: # pylint: disable=broad-except
             _log.exception(ex)
             _, _, exc_tb = sys.exc_info()
             self.adderror((QApplication.translate('Error Message', 'Exception:') + ' OffMonitorCloseDown() {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
+        _log.debug('MODE: OffMonitorCloseDown DONE')
 
-    def OffMonitor(self) -> None:
+    def OffMonitor(self, respectAlwaysON:bool = True) -> None:
         _log.info('MODE: OFF MONITOR')
         if self.flagon:
             try:
@@ -13567,7 +13620,6 @@ class tgraphcanvas(QObject):
                 ge = self.aw.buttonSTARTSTOP.graphicsEffect()
                 if ge is not None:
                     ge.setEnabled(False)
-                self.aw.buttonSTARTSTOP.setEnabled(False)
 
                 self.aw.buttonCONTROL.setEnabled(False)
                 ge = self.aw.buttonCONTROL.graphicsEffect()
@@ -13585,8 +13637,10 @@ class tgraphcanvas(QObject):
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
 
-
-                self.threadserver.terminatingSignal.connect(self.OffMonitorCloseDown)
+                if respectAlwaysON:
+                    self.threadserver.terminatingSignal.connect(self.OffMonitorCloseDownRespectAlwaysON)
+                else:
+                    self.threadserver.terminatingSignal.connect(self.OffMonitorCloseDownIgnoreAlwaysON)
                 self.flagon = False
 
                 self.getMeterReads()
@@ -13595,6 +13649,7 @@ class tgraphcanvas(QObject):
                 _log.exception(ex)
                 _, _, exc_tb = sys.exc_info()
                 self.adderror((QApplication.translate('Error Message', 'Exception:') + ' OffMonitor() {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
+        _log.info('MODE: OFF MONITOR DONE')
 
     # input: extratemp, outputs: modified extratemp, rollover_index, error_flag
     def conditionMeterData(self,extratemp:list[float]) -> tuple[list[float], int, bool]:
@@ -13706,7 +13761,6 @@ class tgraphcanvas(QObject):
                         # if no timeindex then leave at initialized -1 value
                         if self.timeindex[event] > 0:
                             event_meterread[event] = self.timeindex[event]
-
                     self.meterreads[i] = [
                         float2float(
                             self.convertHeat(
@@ -13720,7 +13774,7 @@ class tgraphcanvas(QObject):
                         float2float(
                             self.convertHeat(
                                 self.calc_meter_read(meterarray, self.timeindex[j], rolloveridx),
-                                self.powerunits[self.meterunits[i]],
+                                self.meterunitnames[self.meterunits[i]],
                                 'BTU'
                             ),
                             5
@@ -13929,7 +13983,7 @@ class tgraphcanvas(QObject):
                         ser.YOCTOthread = None
                     ser.YOCTOvalues = [[],[]]
                     ser.YOCTOlastvalues = [-1.0]*2
-                    YAPI.FreeAPI() # type:ignore[reportUnboundVariable,unused-ignore]
+                    YAPI.FreeAPI() # type:ignore[reportUnboundVariable,unused-ignore] # ty:ignore[ignore]
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
         finally:
@@ -13938,6 +13992,7 @@ class tgraphcanvas(QObject):
 
     # close Phidget and and Yocto outputs
     def closePhidgetOUTPUTs(self) -> None:
+        _log.debug('closePhidgetOUTPUTs')
         # close Phidget Digital Outputs
         self.aw.ser.phidgetOUTclose()
         # close Phidget Digital Outputs on Hub
@@ -13964,6 +14019,7 @@ class tgraphcanvas(QObject):
         self.aw.ser.yoctoPWMclose()
 
     def closePhidgetAMBIENTs(self) -> None:
+        _log.debug('closePhidgetAMBIENTs')
         # note that we do not unregister this detach in the self.phidgetManager as we only support one of those devices
         try:
             if self.aw.ser.TMP1000temp is not None and self.aw.ser.TMP1000temp.getAttached():
@@ -14106,7 +14162,6 @@ class tgraphcanvas(QObject):
             ge:QGraphicsEffect|None = self.aw.buttonSTARTSTOP.graphicsEffect()
             if ge is not None:
                 ge.setEnabled(False)
-#            self.aw.buttonSTARTSTOP.setGraphicsEffect(None) # not type correct as setGraphicsEffect expects a QGraphicsEffect
             self.aw.buttonONOFF.setText(QApplication.translate('Button', 'OFF')) # text means click to turn OFF (it is ON)
             self.aw.buttonONOFF.setToolTip(QApplication.translate('Tooltip', 'Stop recording'))
             self.aw.buttonONOFF.setEnabled(True) # ensure that the OFF button is enabled
@@ -14199,9 +14254,9 @@ class tgraphcanvas(QObject):
                     self.aw.clusterEvents()
             except Exception as e: # pylint: disable=broad-except
                 _log.exception(e)
-            if autosave and self.autosaveflag != 0 and self.autosavepath and self.timeindex[0] != -1 and self.timeindex[6] != 0: # only autosave if CHARGE and DROP are set
+            if autosave and self.autosaveflag != 0 and self.timeindex[0] != -1 and self.timeindex[6] != 0: # only autosave if CHARGE and DROP are set
                 try:
-                    self.aw.automaticsave()
+                    self.aw.automaticsave(False)
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
             self.aw.sendmessage(QApplication.translate('Message','Scope recording stopped'))
@@ -14236,6 +14291,17 @@ class tgraphcanvas(QObject):
         if not self.flagstart:
             if not self.checkSaved():
                 return
+
+            # ensure that beans are specified if plus is connected
+            if (self.aw.plus_account is not None and              # plus connected
+                    not self.roastpropertiesAutoOpenFlag and      # no "Open on CHARGE"
+                    not self.roastpropertiesAutoOpenDropFlag and  # no "Open on DROP"
+                    (self.plus_coffee is None and self.plus_blend_spec is None and self.beans == '') and # beans are not set
+                    (self.aw.schedule_window is None or self.aw.schedule_window.selected_remaining_item is None) # scheduler is off or no schedule item selected
+                    ):
+                self.aw.open_roast_properties_dialog(start_recording_on_exit=True)
+                return
+
             self.aw.soundpopSignal.emit()
             if self.flagon and len(self.timex) == 1:
                 # we are already in monitoring mode, we just clear this first measurement and go
@@ -14486,9 +14552,8 @@ class tgraphcanvas(QObject):
                         self.autoDRYenabled = False
                         self.timeindex[1] = 0
                         removed = True
-                        st = stringfromseconds(self.timex[self.timeindex[1]]-start,False)
-                        DE_str = self.aw.arabicReshape(QApplication.translate('Scope Annotation','DE {0}').format(st))
-                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text() == DE_str:
+                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','DE {0}').format(0)).rstrip('0')
+                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text().startswith(st1):
                             self.ystep_down, self.ystep_up = 0, 0
                             try:
                                 self.l_annotations[-1].remove()
@@ -14602,8 +14667,8 @@ class tgraphcanvas(QObject):
                         self.autoFCsenabled = False
                         self.timeindex[2] = 0
                         removed = True
-                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','FCs {0}').format(stringfromseconds(self.timex[self.timeindex[2]]-start,False)))
-                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text() == st1:
+                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','FCs {0}').format(0)).rstrip('0')
+                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text().startswith(st1):
                             self.ystep_down, self.ystep_up = 0, 0
                             try:
                                 self.l_annotations[-1].remove()
@@ -14713,8 +14778,8 @@ class tgraphcanvas(QObject):
                         # undo wrongly set FCe
                         self.timeindex[3] = 0
                         removed = True
-                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','FCe {0}').format(stringfromseconds(self.timex[self.timeindex[3]]-start,False)))
-                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text() == st1:
+                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','FCe {0}').format(0)).rstrip('0')
+                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text().startswith(st1):
                             self.ystep_down, self.ystep_up = 0, 0
                             try:
                                 self.l_annotations[-1].remove()
@@ -14821,11 +14886,11 @@ class tgraphcanvas(QObject):
                     else:
                         start = 0
                     if self.aw.buttonSCs.isFlat() and self.timeindex[4] > 0:
-                        # undo wrongly set FCs
-                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','SCs {0}').format(stringfromseconds(self.timex[self.timeindex[4]]-start,False)))
+                        # undo wrongly set SCs
                         self.timeindex[4] = 0
                         removed = True
-                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text() == st1:
+                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','SCs {0}').format(0)).rstrip('0')
+                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text().startswith(st1):
                             self.ystep_down, self.ystep_up = 0, 0
                             try:
                                 self.l_annotations[-1].remove()
@@ -14937,11 +15002,11 @@ class tgraphcanvas(QObject):
                     else:
                         start = 0
                     if self.aw.buttonSCe.isFlat() and self.timeindex[5] > 0:
-                        # undo wrongly set FCs
+                        # undo wrongly set SCe
                         self.timeindex[5] = 0
                         removed = True
-                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','SCe {0}').format(stringfromseconds(self.timex[self.timeindex[5]]-start,False)))
-                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text() == st1:
+                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','SCe {0}').format(0)).rstrip('0')
+                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text().startswith(st1):
                             self.ystep_down, self.ystep_up = 0, 0
                             try:
                                 self.l_annotations[-1].remove()
@@ -15060,8 +15125,8 @@ class tgraphcanvas(QObject):
                         #decrease BatchCounter again
                         self.decBatchCounter()
                         removed = True
-                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','DROP {0}').format(stringfromseconds(self.timex[self.timeindex[6]]-start,False)))
-                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text() == st1:
+                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','DROP {0}').format(0)).rstrip('0')
+                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text().startswith(st1):
                             self.ystep_down, self.ystep_up = 0, 0
                             try:
                                 self.l_annotations[-1].remove()
@@ -15252,10 +15317,8 @@ class tgraphcanvas(QObject):
                         # undo wrongly set COOL
                         self.timeindex[7] = 0
                         removed = True
-
-                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','CE {0}').format(stringfromseconds(self.timex[self.timeindex[7]] - start)))
-
-                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text() == st1:
+                        st1 = self.aw.arabicReshape(QApplication.translate('Scope Annotation','CE {0}').format(0)).rstrip('0')
+                        if len(self.l_annotations) > 1 and self.l_annotations[-1].get_text().startswith(st1):
                             self.ystep_down, self.ystep_up = 0, 0
                             try:
                                 self.l_annotations[-1].remove()
@@ -15472,10 +15535,12 @@ class tgraphcanvas(QObject):
                         eventdescription=self.aw.extraeventsdescriptions[extraevent],takeLock=takeLock,
                         doupdategraphics=doupdategraphics,doupdatebackground=doupdatebackground)
                 else: # on "relative" event values, we take the last value set per event via the recordextraevent call before
-                    last_value:int|None = self.aw.extraeventsactionslastvalue[self.aw.extraeventstypes[extraevent]-5]
+                    offset = (10 if self.aw.extraeventstypes[extraevent] > 9 else 5)
+                    event_type_idx = self.aw.extraeventstypes[extraevent]-offset
+                    last_value:int|None = self.aw.extraeventsactionslastvalue[event_type_idx]
                     self.EventRecordAction(
                         extraevent=extraevent,
-                        eventtype=self.aw.extraeventstypes[extraevent]-5,
+                        eventtype=event_type_idx, # either regular relative or percent relative type
                         eventvalue=((self.eventsExternal2InternalValue(last_value) if last_value else None) if value is None else self.eventsExternal2InternalValue(value)),
                         eventdescription=self.aw.extraeventsdescriptions[extraevent],takeLock=takeLock,
                         doupdategraphics=doupdategraphics,doupdatebackground=doupdatebackground)
@@ -16402,14 +16467,21 @@ class tgraphcanvas(QObject):
     def convertHeat(value:float, fromUnit:str, toUnit:str='BTU') -> float:
         if value in [-1,None]:
             return value
-        conversion = { #        BTU                kJ                kCal                kWh                hph               thm
-                       'bt': {'bt':1.,          'kj':1.0551E+00,  'kc':2.5200E-01,  'kw':2.9307E-04,  'hp':3.9301E-04, 'th':1.0000E-05 }, # = 1 btu
-                       'kj': {'bt':9.4782E-01,  'kj':1.,          'kc':2.3885E-01,  'kw':2.7778E-04,  'hp':3.7251E-04, 'th':9.4782E-06 }, # = 1 kj
-                       'kc': {'bt':3.9683E+00,  'kj':4.1868E+00,  'kc':1.,          'kw':1.1630E-03,  'hp':1.5596E-03, 'th':3.9683E-05 }, # = 1 kcal
-                       'kw': {'bt':3.4121E+03,  'kj':3.6000E+03,  'kc':8.5985E+02,  'kw':1.,          'hp':1.3410E+00, 'th':3.4121E-02 }, # = 1 kwh
-                       'hp': {'bt':2.5444E+03,  'kj':2.6845E+03,  'kc':6.4119E+02,  'kw':7.4570E-01,  'hp':1.        , 'th':2.5444E-02 }, # = 1 hph
-                       'th': {'bt':1.0000E+05,  'kj':1.0551E+05,  'kc':2.5200E+04,  'kw':2.9307E+01,  'hp':3.9301E+01, 'th':1.         }} # = 1 thm
-
+        # all units are truncated to the first two characters, this doesn't work for W (wattts) so add an 'h' to fudge it
+        if fromUnit in {'w','W'}:
+            fromUnit = 'wh'
+        if toUnit in {'w','W'}:
+            toUnit = 'wh'
+        conversion = {
+            #          BTU               kJ                kCal              kWh               hph              thm             Wh
+            'bt': {'bt':1.,          'kj':1.0551E+00,  'kc':2.5200E-01,  'kw':2.9307E-04,  'hp':3.9301E-04, 'th':1.0000E-05, 'wh':2.9307E-01}, # = 1 btu
+            'kj': {'bt':9.4782E-01,  'kj':1.,          'kc':2.3885E-01,  'kw':2.7778E-04,  'hp':3.7251E-04, 'th':9.4782E-06, 'wh':2.7778E-01}, # = 1 kj
+            'kc': {'bt':3.9683E+00,  'kj':4.1868E+00,  'kc':1.,          'kw':1.1630E-03,  'hp':1.5596E-03, 'th':3.9683E-05, 'wh':1.1630E-00}, # = 1 kcal
+            'kw': {'bt':3.4121E+03,  'kj':3.6000E+03,  'kc':8.5985E+02,  'kw':1.,          'hp':1.3410E+00, 'th':3.4121E-02, 'wh':1.0000E+03}, # = 1 kwh
+            'hp': {'bt':2.5444E+03,  'kj':2.6845E+03,  'kc':6.4119E+02,  'kw':7.4570E-01,  'hp':1.        , 'th':2.5444E-02, 'wh':7.4570E+02}, # = 1 hph
+            'th': {'bt':1.0000E+05,  'kj':1.0551E+05,  'kc':2.5200E+04,  'kw':2.9307E+01,  'hp':3.9301E+01, 'th':1.        , 'wh':2.9307E+04}, # = 1 thm
+            'wh': {'bt':3.4121E+00,  'kj':3.6000E+00,  'kc':8.5985E-01,  'kw':1.0000E-03,  'hp':1.3410E-03, 'th':3.4121E-05, 'wh':1.        }, # = 1 Wh
+        }
         try:
             return value * conversion[fromUnit.lower()[0:2]][toUnit.lower()[0:2]]
         except Exception as ex: # pylint: disable=broad-except
@@ -16426,19 +16498,106 @@ class tgraphcanvas(QObject):
         return co2g
 
     # Sum up the energy use from a variety of inputs
+    #   If there is no CHARGE or DROP all Loads and meters will feed into PreHeating.  Protocols are unchanged.
+    #   Protocols Pre-Heating and Cooling protocols apply only to the first batch
     def calcEnergyuse(self, beanweightstr:str = '') -> tuple['EnergyMetrics', list['BTU']]:
         energymetrics = EnergyMetrics()
         btu_list:list[BTU] = []
         try:
+            # return immediately if there is no time to the profile
             if len(self.timex) == 0:
                 #self.aw.sendmessage(QApplication.translate("Message","No profile data"),append=False)
                 return energymetrics, btu_list
 
-            # helping function
+            # Local function, generate alphabetic label (A,B,C D) if loadlabel is empty, otherwise return the loadlabel as is
             def formatLoadLabel(i:int) -> str:
                 if len(self.loadlabels[i]) > 0:
                     return  self.loadlabels[i]
                 return chr(ord('A')+i)
+
+            # Local function to record energies of events
+            def record_event_energies(_kind: int, _duration: float) -> None:
+                # scale the burner setting for 0-100%
+                val = (self.specialeventsvalue[j] - 1) * 10
+                emin = toInt(self.loadevent_zeropcts[i])
+                emax = toInt(self.loadevent_hundpcts[i])
+                scaled = (val - emin) / (emax - emin)  #emax > emin enforced by energy.py
+                load_pct = min(1.0, max(0.0, scaled)) * 100
+                if self.presssure_percents[i] and self.sourcetypes[i] in {0, 1}:   # gas loads only
+                    # convert pressure to heat
+                    factor = math.sqrt(load_pct / 100)
+                else:
+                    factor = load_pct / 100
+                BTUs = self.loadratings[i] * factor * (duration / 3600) * self.convertHeat(1,self.powerunits[self.ratingunits[i]],'BTU')
+                if BTUs > 0:
+                    loadlabel = f'{formatLoadLabel(i)}-{eTypes[self.load_etypes[i]]}'
+                    sortorder = (2000 * (i + 1)) + j
+                    CO2g = self.calcCO2g(BTUs, self.sourcetypes[i])
+                    btu_list.append({
+                        'load_pct':load_pct,
+                        'duration':_duration,
+                        'BTUs':BTUs,
+                        'CO2g':CO2g,
+                        'LoadLabel':loadlabel,
+                        'Kind':_kind,
+                        'SourceType':self.sourcetypes[i],
+                        'SortOrder':sortorder
+                    })
+
+            # Local function to record energies of continuous loads
+            def record_continuous_energies(_i: int, _kind: int, _duration: float) -> None:
+                load_pct = self.loadevent_hundpcts[_i]  #needed only for the btu_list and outmsg
+                if self.presssure_percents[_i] and self.sourcetypes[_i] in {0, 1}:   # gas loads only
+                    # convert pressure to heat
+                    factor = math.sqrt(load_pct / 100)
+                else:
+                    factor = load_pct / 100
+
+                BTUs = self.loadratings[_i] * factor * (duration / 3600) * self.convertHeat(1,self.powerunits[self.ratingunits[_i]],'BTU')
+                if BTUs > 0:
+                    loadlabel = formatLoadLabel(_i)
+                    kind = _kind
+                    sortorder = 2000 - _i
+                    CO2g = self.calcCO2g(BTUs, self.sourcetypes[_i])
+                    btu_list.append({
+                        'load_pct':load_pct,
+                        'duration':duration,
+                        'BTUs':BTUs,
+                        'CO2g':CO2g,
+                        'LoadLabel':loadlabel,
+                        'Kind':kind,
+                        'SourceType':self.sourcetypes[_i],
+                        'SortOrder':sortorder
+                    })
+
+
+            # Local function to accumulate and return the DUTY % BTUs
+            def accumulate_DUTY(_i:int, extra_timex_idx_start: int, extra_timex_idx_end: int, _pid_duty_extradevice_index: int) -> tuple[float, float]:
+                accumulated_btus: float = 0
+                accumulated_factors: float = 0
+                # loop over the values from CHARGE to DROP and accumulate energy
+                for j in range(extra_timex_idx_start, extra_timex_idx_end):
+                    duration = self.extratimex[_pid_duty_extradevice_index][j+1] - self.extratimex[_pid_duty_extradevice_index][j]
+
+                    # get the PID DUTY % value
+                    load_pct = self.extratemp2[_pid_duty_extradevice_index][j]
+
+                    # scale when Pressure % is ticked
+                    if self.presssure_percents[_i] and self.sourcetypes[_i] in {0, 1}:   # gas loads only
+                        # convert pressure to heat
+                        factor = math.sqrt(load_pct / 100)
+                    else:
+                        factor = load_pct / 100
+
+                    # don't accumulate the value when the PID is OFF, i.e. when extratemp2 == -1 and reject values not in 0-100
+                    if not 0 <= self.extratemp2[_pid_duty_extradevice_index][j] <= 100:
+                        factor = 0
+
+                    # accumulate
+                    accumulated_btus += self.loadratings[_i] * factor * (duration / 3600) * self.convertHeat(1,self.powerunits[self.ratingunits[_i]],'BTU')
+                    accumulated_factors += factor
+
+                return accumulated_btus, accumulated_factors
 
             # get the valid green weight
             if beanweightstr != '':
@@ -16447,77 +16606,223 @@ class tgraphcanvas(QObject):
                 w = self.weight[0]
             bean_weight = convertWeight(w, weight_units.index(self.weight[2]),1) # to kg
 
-            eTypes = [''] + self.etypes[:][:4]
+            eTypes = [''] + self.etypes[:4]
 
-            # init the prev_loadtime to drop if it exists or to the end of profile time
-            if self.timeindex[6] > 0:
-                prev_loadtime = [self.timex[self.timeindex[6]]]*4
-            else:
-                prev_loadtime = [self.timex[-1]]*4
-                #self.aw.sendmessage(QApplication.translate("Message","Profile has no DROP event"),append=False)
+            # init the prev_loadtime to the end of profile time
+            prev_loadtime = [self.timex[-1]]*4
 
+            # init for PID DUTY % calculations
+            PID_DUTY_DEVICE_INDEX = 22  # '+PID SV/DUTY %' hardcoded value
+            pid_duty_extradevice_index = -1
+            pid_duty_label = ''
+            if PID_DUTY_DEVICE_INDEX in self.extradevices:
+                pid_duty_extradevice_index = self.extradevices.index(PID_DUTY_DEVICE_INDEX)
+                pid_duty_label = self.extraname2[pid_duty_extradevice_index]
+
+
+            # loop through each load and calculate the energy from each contributor
             for i in range(4):
-                # iterate specialevents in reverse from DROP to the first event
+                # calculate specialevents, iterate in reverse from DROP to the first event
                 for j in range(len(self.specialevents) - 1, -1, -1):
-                    if self.load_etypes[i] != 0 and self.specialeventstype[j] == self.load_etypes[i]-1:
+                    if self.load_etypes[i] in {1,2,3,4} and self.specialeventstype[j] == self.load_etypes[i]-1:
                         # skip if loadrating is zero
                         if self.loadratings[i] == 0:
-                            break
+                            break #j loop
                         loadtime = self.timex[self.specialevents[j]]
-                        # exclude heat before charge event
-                        if self.timeindex[0] > -1 and loadtime <= self.timex[self.timeindex[0]]:
-                            if prev_loadtime[i] <= self.timex[self.timeindex[0]]:
-                                break
-                            loadtime = self.timex[self.timeindex[0]]
-                        duration = prev_loadtime[i] - loadtime
 
-                        # exclude heat after drop event
-                        if duration < 0:
-                            continue
-                        prev_loadtime[i] = loadtime
-                        # scale the burner setting for 0-100%
-                        val = (self.specialeventsvalue[j] - 1) * 10
-                        emin = toInt(self.loadevent_zeropcts[i])
-                        emax = toInt(self.loadevent_hundpcts[i])
-                        scaled = (val - emin) / (emax - emin)  #emax > emin enforced by energy.py
-                        load_pct = min(1.0, max(0.0, scaled)) * 100
-                        if self.presssure_percents[i] and self.sourcetypes[i] in {0, 1}:   # gas loads only
-                            # convert pressure to heat
-                            factor = math.sqrt(load_pct / 100)
-                        else:
-                            factor = load_pct / 100
+                        # there is no CHARGE or no DROP, events accumulate to Preheat
+                        if self.timeindex[0] == -1 or self.timeindex[6] == 0:
+                            kind = 17 # Event PreheatS
+                            duration = prev_loadtime[i] - loadtime
+                            record_event_energies(kind, duration)
+                            prev_loadtime[i] = loadtime
+                            continue  #j loop
 
-                        BTUs = self.loadratings[i] * factor * (duration / 3600) * self.convertHeat(1,self.powerunits[self.ratingunits[i]],'BTU')
-                        if BTUs > 0:
-                            loadlabel = f'{formatLoadLabel(i)}-{eTypes[self.load_etypes[i]]}'
-                            kind = 7  #Roast Event
-                            sortorder = (2000 * (i + 1)) + j
-                            CO2g = self.calcCO2g(BTUs, self.sourcetypes[i])
-                            btu_list.append({'load_pct':load_pct,'duration':duration,'BTUs':BTUs,'CO2g':CO2g,'LoadLabel':loadlabel,'Kind':kind,'SourceType':self.sourcetypes[i],'SortOrder':sortorder})
-                ### end of loop: for j in range(len(self.specialevents) - 1, -1, -1)
+                        # from here on we know there is a CHARGE and a DROP event
 
-                # calculate Continuous event type
+                        # calculate the portion after DROP
+                        # Event begins and terminates after DROP
+                        if loadtime > self.timex[self.timeindex[6]]:
+                            kind = 19  #Event Cooling
+                            duration = prev_loadtime[i] - loadtime
+                            record_event_energies(kind, duration)
+                            prev_loadtime[i] = loadtime
+                            continue  #j loop
+
+                        # Event begins before DROP, terminates after DROP
+                        if loadtime <= self.timex[self.timeindex[6]] and prev_loadtime[i] > self.timex[self.timeindex[6]]:
+                            # Event begins after CHARGE
+                            if loadtime >= self.timex[self.timeindex[0]]:
+                                # Two portions to register
+                                # Before DROP
+                                kind = 7  #Event Roast
+                                duration = self.timex[self.timeindex[6]] - loadtime
+                                record_event_energies(kind, duration)
+                                # After DROP
+                                kind = 19  #Event Cooling
+                                duration = prev_loadtime[i] - self.timex[self.timeindex[6]]
+                                record_event_energies(kind, duration)
+                                prev_loadtime[i] = loadtime
+                                continue  #j loop
+                            # Event begins before CHARGE
+                            if loadtime < self.timex[self.timeindex[0]]:
+                                # Three portions to register
+                                # Before CHARGE
+                                kind = 18  #Event BBP
+                                duration = self.timex[self.timeindex[0]] - loadtime
+                                record_event_energies(kind, duration)
+                                # After CHARGE and Before DROP
+                                kind = 7  #Event Roast
+                                duration = self.timex[self.timeindex[6]] - self.timex[self.timeindex[0]]
+                                record_event_energies(kind, duration)
+                                # After DROP
+                                kind = 19  #Event Cooling
+                                duration = prev_loadtime[i] - self.timex[self.timeindex[6]]
+                                record_event_energies(kind, duration)
+                                prev_loadtime[i] = loadtime
+                                continue  #j loop
+
+                        # Event begins and terminates after CHARGE and before DROP
+                        if (self.timex[self.timeindex[0]] <= loadtime < self.timex[self.timeindex[6]] and
+                            self.timex[self.timeindex[0]] <= prev_loadtime[i] < self.timex[self.timeindex[6]]):
+                            kind = 7  #Event Roast
+                            duration = prev_loadtime[i] - loadtime
+                            record_event_energies(kind, duration)
+                            prev_loadtime[i] = loadtime
+                            continue  #j loop
+
+                        # Event begins before CHARGE and terminates after CHARGE and before DROP
+                        if (loadtime < self.timex[self.timeindex[0]] and
+                            self.timex[self.timeindex[0]] <= prev_loadtime[i] < self.timex[self.timeindex[6]]):
+                            # Two portions to register
+                            # Before CHARGE
+                            kind = 18  #Event BBP
+                            duration = self.timex[self.timeindex[0]] - loadtime
+                            record_event_energies(kind, duration)
+                            # Between CHARGE and DROP
+                            # After CHARGE and Before DROP
+                            kind = 7  #Event Roast
+                            duration = prev_loadtime[i] - self.timex[self.timeindex[0]]
+                            record_event_energies(kind, duration)
+                            prev_loadtime[i] = loadtime
+                            continue  #j loop
+
+                        # Event begins and terminates before CHARGE
+                        if (loadtime < self.timex[self.timeindex[0]] and
+                            prev_loadtime[i] < self.timex[self.timeindex[0]]):
+                            kind = 18  #Event BBP
+                            duration = prev_loadtime[i] - loadtime
+                            record_event_energies(kind, duration)
+                            prev_loadtime[i] = loadtime
+                            continue  #j loop
+
+                # calculate PID DUTY % energy when there is a 'PID DUTY %' extradevice, Load Rating
+                if self.load_etypes[i] == 6 and pid_duty_extradevice_index > -1 and self.loadratings[i] > 0:
+                    # no CHARGE or DROP, accumulate PID DUTY % to Preheat
+                    if self.timeindex[0] == -1 or self.timeindex[6] == 0:
+                        accumulated_btus, accumulated_factors = accumulate_DUTY(i, 0, len(self.extratimex[pid_duty_extradevice_index]) -1, pid_duty_extradevice_index)
+                        if accumulated_btus > 0:
+                            loadlabel = f'{formatLoadLabel(i)}-{pid_duty_label}'
+                            kind = 20  #PID Duty % Preheat
+                            sortorder = 200 + i
+                            CO2g = self.calcCO2g(accumulated_btus, self.sourcetypes[i])
+                            roast_time = self.extratimex[pid_duty_extradevice_index][-1] - self.extratimex[pid_duty_extradevice_index][0]
+                            avg_power_pct = accumulated_factors * 100 / (self.timeindex[0]) if (self.timeindex[0]) > 0 else 0
+                            btu_list.append({
+                                'load_pct':avg_power_pct,
+                                'duration':roast_time,
+                                'BTUs':accumulated_btus,
+                                'CO2g':CO2g,
+                                'LoadLabel':loadlabel,
+                                'Kind':kind,
+                                'SourceType':self.sourcetypes[i],
+                                'SortOrder':sortorder
+                            })
+
+                    # there is both a CHARGE and DROP
+                    else:
+                        # PID DUTY % BBP (includes Preheat)
+                        accumulated_btus, accumulated_factors = accumulate_DUTY(i, 0, self.timeindex[0], pid_duty_extradevice_index)
+                        if accumulated_btus > 0:
+                            loadlabel = f'{formatLoadLabel(i)}-{pid_duty_label}'
+                            kind = 14  #PID DUTY % BBP
+                            sortorder = 200 + i
+                            CO2g = self.calcCO2g(accumulated_btus, self.sourcetypes[i])
+                            roast_time = self.extratimex[pid_duty_extradevice_index][self.timeindex[0]] - self.extratimex[pid_duty_extradevice_index][0]
+                            avg_power_pct = accumulated_factors * 100 / (self.timeindex[0]) if (self.timeindex[0]) > 0 else 0
+                            btu_list.append({
+                                'load_pct':avg_power_pct,
+                                'duration':roast_time,
+                                'BTUs':accumulated_btus,
+                                'CO2g':CO2g,
+                                'LoadLabel':loadlabel,
+                                'Kind':kind,
+                                'SourceType':self.sourcetypes[i],
+                                'SortOrder':sortorder
+                            })
+
+                        # PID DUTY % Roast
+                        accumulated_btus, accumulated_factors = accumulate_DUTY(i, self.timeindex[0],self.timeindex[6], pid_duty_extradevice_index)
+
+                        if accumulated_btus > 0:
+                            loadlabel = f'{formatLoadLabel(i)}-{pid_duty_label}'
+                            kind = 15  #PID DUTY % Roast
+                            sortorder = 200 + i
+                            CO2g = self.calcCO2g(accumulated_btus, self.sourcetypes[i])
+                            roast_time = self.extratimex[pid_duty_extradevice_index][self.timeindex[6]] - self.extratimex[pid_duty_extradevice_index][self.timeindex[0]]
+                            avg_power_pct = accumulated_factors * 100 / (self.timeindex[6] - self.timeindex[0]) if (self.timeindex[6] - self.timeindex[0]) > 0 else 0
+                            btu_list.append({
+                                'load_pct':avg_power_pct,
+                                'duration':roast_time,
+                                'BTUs':accumulated_btus,
+                                'CO2g':CO2g,
+                                'LoadLabel':loadlabel,
+                                'Kind':kind,
+                                'SourceType':self.sourcetypes[i],
+                                'SortOrder':sortorder
+                            })
+
+                        # PID DUTY % Cooling
+                        accumulated_btus, accumulated_factors = accumulate_DUTY(i, self.timeindex[6], len(self.extratimex[pid_duty_extradevice_index]) -1, pid_duty_extradevice_index)
+                        if accumulated_btus > 0:
+                            loadlabel = f'{formatLoadLabel(i)}-{pid_duty_label}'
+                            kind = 16  #PID DUTY % Cooling (Includes DROP to OFF)
+                            sortorder = 200 + i
+                            CO2g = self.calcCO2g(accumulated_btus, self.sourcetypes[i])
+                            roast_time = self.extratimex[pid_duty_extradevice_index][-1] - self.extratimex[pid_duty_extradevice_index][self.timeindex[6]]
+                            avg_power_pct = accumulated_factors * 100 / (len(self.extratimex[i]) - self.timeindex[6]) if (len(self.extratimex[i]) - self.timeindex[6]) > 0 else 0
+                            btu_list.append({
+                                'load_pct':avg_power_pct,
+                                'duration':roast_time,
+                                'BTUs':accumulated_btus,
+                                'CO2g':CO2g,
+                                'LoadLabel':loadlabel,
+                                'Kind':kind,
+                                'SourceType':self.sourcetypes[i],
+                                'SortOrder':sortorder
+                            })
+
+                # calculate Continuous loads
                 if self.load_etypes[i] == 0:
-                    if self.timeindex[0] > -1 and self.timeindex[6] > 0:
+                    # no CHARGE or DROP accumulate Continuous to Preheat
+                    if self.timeindex[0] == -1 or self.timeindex[6] == 0:
+                        duration = self.timex[-1] - self.timex[0]
+                        kind = 22  # Continuous Preheat
+                        record_continuous_energies(i, kind, duration)
+                    # there is both a CHARGE and DROP
+                    else:
+                        # BBP portion
+                        duration = self.timex[self.timeindex[0]] - self.timex[0]
+                        kind = 23  # Continuous BBP
+                        record_continuous_energies(i, kind, duration)
+                        # Roast portion
                         duration = self.timex[self.timeindex[6]] - self.timex[self.timeindex[0]]
-                    else:
-                        duration = 0
-                        #self.aw.sendmessage(QApplication.translate("Message","Missing CHARGE or DROP event"),append=False)
-                    load_pct = toInt(self.loadevent_hundpcts[i])  #needed only for the btu_list and outmsg
-                    if self.presssure_percents[i] and self.sourcetypes[i] in {0, 1}:   # gas loads only
-                        # convert pressure to heat
-                        factor = math.sqrt(load_pct / 100)
-                    else:
-                        factor = load_pct / 100
-
-                    loadlabel = formatLoadLabel(i)
-                    kind = 6  #Roast Continuous
-                    fueltype = self.sourcetypes[i]
-                    sortorder = 2000 - i
-                    BTUs = self.loadratings[i] * factor * (duration / 3600) * self.convertHeat(1,self.powerunits[self.ratingunits[i]],'BTU')
-                    CO2g = self.calcCO2g(BTUs, self.sourcetypes[i])
-                    if BTUs > 0:
-                        btu_list.append({'load_pct':load_pct,'duration':duration,'BTUs':BTUs,'CO2g':CO2g,'LoadLabel':loadlabel,'Kind':kind,'SourceType':self.sourcetypes[i],'SortOrder':sortorder})
+                        kind = 6  # Continuous Roast
+                        record_continuous_energies(i, kind, duration)
+                        # Cooling portion
+                        duration = self.timex[-1] - self.timex[self.timeindex[6]]
+                        kind = 24  # Continuous Cooling
+                        record_continuous_energies(i, kind, duration)
 
                 # calculate preheat
                 if self.preheatenergies[i] != 0 and self.roastbatchpos == 1:
@@ -16539,14 +16844,25 @@ class tgraphcanvas(QObject):
                         BTUs = self.preheatenergies[i] * self.convertHeat(1,self.powerunits[self.ratingunits[i]],'BTU')
                         kind = 0  #Preheat Measured
 
-                    loadlabel = formatLoadLabel(i)
-                    sortorder = 100 + i
-                    CO2g = self.calcCO2g(BTUs, self.sourcetypes[i])
                     if BTUs > 0:
-                        btu_list.append({'load_pct':load_pct,'duration':duration,'BTUs':BTUs,'CO2g':CO2g,'LoadLabel':loadlabel,'Kind':kind,'SourceType':self.sourcetypes[i],'SortOrder':sortorder})
+                        loadlabel = formatLoadLabel(i)
+                        sortorder = 100 + i
+                        CO2g = self.calcCO2g(BTUs, self.sourcetypes[i])
+                        btu_list.append({
+                            'load_pct':load_pct,
+                            'duration':duration,
+                            'BTUs':BTUs,
+                            'CO2g':CO2g,
+                            'LoadLabel':loadlabel,
+                            'Kind':kind,
+                            'SourceType':self.sourcetypes[i],
+                            'SortOrder':sortorder
+                        })
 
-                # calculate betweenbatch
-                if self.betweenbatchenergies[i] != 0 and (self.roastbatchpos > 1 or self.betweenbatch_after_preheat or self.roastbatchpos==0):
+                # calculate betweenbatch, only when there is both CHARGE and DROP
+                if (self.betweenbatchenergies[i] != 0 and
+                    (self.roastbatchpos > 1 or self.betweenbatch_after_preheat or self.roastbatchpos==0) and
+                    self.timeindex[0] > -1 and self.timeindex[6] > 0):
                     if self.betweenbatchenergies[i] < 0 < self.betweenbatchDuration:
                         # percent load multiplied by duration
                         load_pct = abs(self.betweenbatchenergies[i] * 1000./10)
@@ -16565,14 +16881,24 @@ class tgraphcanvas(QObject):
                         BTUs = self.betweenbatchenergies[i] * self.convertHeat(1,self.powerunits[self.ratingunits[i]],'BTU')
                         kind = 2  #BBP Measured
 
-                    loadlabel = formatLoadLabel(i)
-                    sortorder = 400 + i
-                    CO2g = self.calcCO2g(BTUs, self.sourcetypes[i])
                     if BTUs > 0:
-                        btu_list.append({'load_pct':load_pct,'duration':duration,'BTUs':BTUs,'CO2g':CO2g,'LoadLabel':loadlabel,'Kind':kind,'SourceType':self.sourcetypes[i],'SortOrder':sortorder})
+                        loadlabel = formatLoadLabel(i)
+                        sortorder = 400 + i
+                        CO2g = self.calcCO2g(BTUs, self.sourcetypes[i])
+                        btu_list.append({
+                            'load_pct':load_pct,
+                            'duration':duration,
+                            'BTUs':BTUs,
+                            'CO2g':CO2g,
+                            'LoadLabel':loadlabel,
+                            'Kind':kind,
+                            'SourceType':self.sourcetypes[i],
+                            'SortOrder':sortorder
+                        })
 
-                # calculate cooling
-                if self.coolingenergies[i] != 0 and self.roastbatchpos == 1:
+                # calculate cooling, only when there is both CHARGE and DROP
+                if (self.coolingenergies[i] != 0 and self.roastbatchpos == 1 and
+                    self.timeindex[0] > -1 and self.timeindex[6] > 0):
                     if self.coolingenergies[i] < 0 < self.coolingDuration:
                         # percent load multiplied by duration
                         load_pct = abs(self.coolingenergies[i] * 1000./10)
@@ -16590,33 +16916,99 @@ class tgraphcanvas(QObject):
                         duration = 0
                         BTUs = self.coolingenergies[i] * self.convertHeat(1,self.powerunits[self.ratingunits[i]],'BTU')
                         kind = 4  #Cooling Measured
-                    loadlabel = formatLoadLabel(i)
-                    sortorder = 800 + i
-                    CO2g = self.calcCO2g(BTUs, self.sourcetypes[i])
+
                     if BTUs > 0:
-                        btu_list.append({'load_pct':load_pct,'duration':duration,'BTUs':BTUs,'CO2g':CO2g,'LoadLabel':loadlabel,'Kind':kind,'SourceType':self.sourcetypes[i],'SortOrder':sortorder})
-            #### end of loop: for i in range(0,4)
+                        loadlabel = formatLoadLabel(i)
+                        sortorder = 800 + i
+                        CO2g = self.calcCO2g(BTUs, self.sourcetypes[i])
+                        btu_list.append({
+                            'load_pct':load_pct,
+                            'duration':duration,
+                            'BTUs':BTUs,
+                            'CO2g':CO2g,
+                            'LoadLabel':loadlabel,
+                            'Kind':kind,
+                            'SourceType':self.sourcetypes[i],
+                            'SortOrder':sortorder
+                        })
+            #### end of loop through each load
 
             # Meter reads
-            btu_meter_bbp:float = 0
-            btu_meter_roast:float = 0
-            co2_meter_bbp:float = 0
-            co2_meter_roast:float = 0
+            # iterate over the 2 meters
             for j in range(2):
-                # Get the batch, roast and bbp meter reads
+                # Process the meter reads previously conditioned by conditionMeterData()
                 if self.meterreads[j][0] > 0:
-                    BTUs = self.meterreads[j][0]
-                    loadlabel = self.meterlabels[j]
-                    sortorder = j  # meter reads at the top of the details table
                     fueltype = self.meterfuels[j]
-                    CO2g = self.calcCO2g(BTUs, fueltype)
-                    kind = 8 # Meter
-                    btu_list.append({'load_pct':0,'duration':0,'BTUs':BTUs,'CO2g':CO2g,'LoadLabel':loadlabel,'Kind':kind,'SourceType':fueltype,'SortOrder':sortorder})
-                    # Get the BBP and Roastreads
-                    btu_meter_bbp += self.meterreads[j][1] # Charge
-                    btu_meter_roast += self.meterreads[j][7] - self.meterreads[j][1] # Drop minus Charge
-                    co2_meter_bbp += self.calcCO2g(btu_meter_bbp, fueltype)
-                    co2_meter_roast += self.calcCO2g(btu_meter_roast, fueltype)
+                    loadlabel = self.meterlabels[j]
+                    sortorder = (j * 10) + 1  # meter reads at the top of the details table
+                    # Get the meter reads
+                    btu_meter_bbp = self.meterreads[j][1] # Charge
+                    btu_meter_roast = self.meterreads[j][7] - self.meterreads[j][1] # Drop minus Charge
+                    btu_meter_cooling = self.meterreads[j][0] - self.meterreads[j][7] # Batch minus Drop
+                    btu_meter_batch = self.meterreads[j][0]  # ON to OFF
+                    co2g_meter_bbp = self.calcCO2g(btu_meter_bbp, fueltype)
+                    co2g_meter_roast = self.calcCO2g(btu_meter_roast, fueltype)
+                    co2g_meter_cooling = self.calcCO2g(btu_meter_cooling, fueltype)
+                    co2g_meter_batch = self.calcCO2g(btu_meter_batch, fueltype)
+                    # note durations here are based on self.timex[] and not on the corresponding self.extratimex.
+                    duration_meter_bbp = self.timex[self.timeindex[0]] - self.timex[0]
+                    duration_meter_roast = self.timex[self.timeindex[6]] - self.timex[self.timeindex[0]]
+                    duration_meter_cooling = self.timex[-1] - self.timex[self.timeindex[6]]
+                    duration_meter_batch = self.timex[-1] - self.timex[0]
+
+                    # there is no CHARGE or no DROP, events accumulate to Preheat
+                    if self.timeindex[0] == -1 or  self.timeindex[6] == 0:
+                        kind = 10 # Meter Preheat
+                        btu_list.append({
+                            'load_pct':0,
+                            'duration':duration_meter_batch,
+                            'BTUs':btu_meter_batch,
+                            'CO2g':co2g_meter_batch,
+                            'LoadLabel':loadlabel,
+                            'Kind':kind,
+                            'SourceType':fueltype,
+                            'SortOrder':sortorder
+                        })
+                        continue #j loop
+
+                    # there is a CHARGE and a DROP event
+                    # BBP
+                    kind = 11 # Meter BBP
+                    btu_list.append({
+                        'load_pct':0,
+                        'duration':duration_meter_bbp,
+                        'BTUs':btu_meter_bbp,
+                        'CO2g':co2g_meter_bbp,
+                        'LoadLabel':loadlabel,
+                        'Kind':kind,
+                        'SourceType':fueltype,
+                        'SortOrder':sortorder
+                    })
+                    # Roast
+                    kind = 12 # Meter Roast
+                    btu_list.append({
+                        'load_pct':0,
+                        'duration':duration_meter_roast,
+                        'BTUs':btu_meter_roast,
+                        'CO2g':co2g_meter_roast,
+                        'LoadLabel':loadlabel,
+                        'Kind':kind,
+                        'SourceType':fueltype,
+                        'SortOrder':sortorder
+                    })
+                    # Cooling
+                    kind = 13 # Meter Cooling
+                    btu_list.append({
+                        'load_pct':0,
+                        'duration':duration_meter_cooling,
+                        #'BTUs':BTUs,
+                        'BTUs':btu_meter_cooling,
+                        'CO2g':co2g_meter_cooling,
+                        'LoadLabel':loadlabel,
+                        'Kind':kind,
+                        'SourceType':fueltype,
+                        'SortOrder':sortorder
+                    })
 
             # sort the entries in btu list per the sort order defined for each entry
             btu_list.sort(key=lambda k : k['SortOrder'] )
@@ -16625,29 +17017,27 @@ class tgraphcanvas(QObject):
             btu_batch = btu_preheat = btu_bbp = btu_cooling = btu_roast = 0.
             co2_batch = co2_preheat = co2_bbp = co2_cooling = co2_roast = 0.
             btu_elec = btu_lpg = btu_ng = 0.
+
             for item in btu_list:
                 btu_batch += item['BTUs']
-                btu_preheat += item['BTUs'] if item['Kind'] in {0, 1} else 0
-                btu_bbp += item['BTUs'] if item['Kind'] in {2, 3} else 0
-                btu_cooling += item['BTUs'] if item['Kind'] in {4, 5} else 0
-                btu_roast += item['BTUs'] if item['Kind'] in {6, 7} else 0
+                btu_preheat += item['BTUs'] if item['Kind'] in {0, 1, 10, 17, 20, 22} else 0
+                btu_bbp += item['BTUs'] if item['Kind'] in {2, 3, 11, 14, 18, 23} else 0
+                btu_cooling += item['BTUs'] if item['Kind'] in {4, 5, 13, 16, 19, 24} else 0
+                btu_roast += item['BTUs'] if item['Kind'] in {6, 7, 12, 15} else 0
                 co2_batch += item['CO2g']
-                co2_preheat += item['CO2g'] if item['Kind'] in {0, 1} else 0
-                co2_bbp += item['CO2g'] if item['Kind'] in {2, 3} else 0
-                co2_cooling += item['CO2g'] if item['Kind'] in {4, 5} else 0
-                co2_roast += item['CO2g'] if item['Kind'] in {6, 7} else 0
+                co2_preheat += item['CO2g'] if item['Kind'] in {0, 1, 10, 17, 20, 22} else 0
+                co2_bbp += item['CO2g'] if item['Kind'] in {2, 3, 11, 14, 18, 23} else 0
+                co2_cooling += item['CO2g'] if item['Kind'] in {4, 5, 13, 16, 19, 24} else 0
+                co2_roast += item['CO2g'] if item['Kind'] in {6, 7, 12, 15} else 0
                 btu_lpg += item['BTUs'] if item['SourceType'] == 0 else 0
                 btu_ng += item['BTUs'] if item['SourceType'] == 1 else 0
                 btu_elec += item['BTUs'] if item['SourceType'] == 2 else 0
-            btu_bbp += btu_meter_bbp
-            btu_roast += btu_meter_roast
-            co2_bbp += co2_meter_bbp
-            co2_roast += co2_meter_roast
             btu_batch = float2float(btu_batch,3)
             btu_preheat = float2float(btu_preheat,3)
             btu_bbp = float2float(btu_bbp,3)
             btu_cooling = float2float(btu_cooling,3)
             btu_roast = float2float(btu_roast,3)
+
             co2_batch = float2float(co2_batch,3)
             co2_preheat = float2float(co2_preheat,3)
             co2_bbp = float2float(co2_bbp,3)
@@ -16827,7 +17217,7 @@ class tgraphcanvas(QObject):
                     self.timeB[i] -= float(step)
                 for xtB in self.extratimexB:
                     for j,_ in enumerate(xtB):
-                        xtB[j] -= float(step) # pyrefly: ignore[bad-assignment]
+                        xtB[j] -= float(step)
                 self.backgroundprofile_moved_x -= step
                 self.moveBackgroundAnnoPositionsX(-step)
 
@@ -16835,7 +17225,7 @@ class tgraphcanvas(QObject):
                 for i in range(lt):
                     self.timeB[i] += float(step)
                 for xtB in self.extratimexB:
-                    for j,_ in enumerate(xtB): # pyrefly: ignore[bad-assignment]
+                    for j,_ in enumerate(xtB):
                         xtB[j] += float(step)
                 self.backgroundprofile_moved_x += step
                 self.moveBackgroundAnnoPositionsX(step)
@@ -17075,13 +17465,13 @@ class tgraphcanvas(QObject):
                         hint = [-0.001, 0.5, 10]
                     elif power == 3:
                         hint =     [-0.00001, -0.0001, 0.5, 10]
-                    popt,_ = curve_fit(func, xa, yn, p0=hint, maxfev=3000) # pylint: disable=unbalanced-tuple-unpacking # pyrefly: ignore[bad-unpacking]
+                    popt,_ = curve_fit(func, xa, yn, p0=hint, maxfev=3000) # pylint: disable=unbalanced-tuple-unpacking
                 #perr = numpy.sqrt(numpy.diag(pcov))
                 if plot and self.ax is not None:
                     xb = numpy.array(self.timex)
                     xxb = xb + charge
                     xxa = xa + charge
-                    self.ax.plot(xxb, func(xb, *popt), color='#000000', linestyle = '-.', linewidth=3) # ty: ignore[missing-argument]
+                    self.ax.plot(xxb, func(xb, *popt), color='#000000', linestyle = '-.', linewidth=3)
                     self.ax.plot(xxa, yn, 'ro')
                     with warnings.catch_warnings():
                         warnings.simplefilter('ignore')
@@ -17145,7 +17535,6 @@ class tgraphcanvas(QObject):
                 #pylint: disable=E1101
                 from scipy import interpolate as inter # type # ignore
                 Xpoints,Ypoints = self.findpoints() #from 0 origin
-                _log.debug('PRINT ** Xpoints ** %s',Xpoints)
                 func = inter.interp1d(Xpoints, Ypoints, kind=mode)
                 newY = func(self.timex)
                 self.ax.plot(self.timex, newY, color='#000000', linestyle = '-.', linewidth=3)
@@ -17529,7 +17918,7 @@ class tgraphcanvas(QObject):
         # init designer timez
         self.designer_timez = [float(w) for w in numpy.arange(self.timex[0],self.timex[-1],self.time_step_size)]
         # set initial RoR z-axis limits
-        self.setDesignerDeltaAxisLimits(self.DeltaETflag, self.DeltaBTflag)
+        self.setDesignerDeltaAxisLimits(self.DeltaETflag and self.autodeltaxET, self.DeltaBTflag and self.autodeltaxBT)
         self.redrawdesigner(force=True)
 
     #loads main points from a profile so that they can be edited
@@ -17646,7 +18035,7 @@ class tgraphcanvas(QObject):
         # init designer timez
         self.designer_timez = [float(w) for w in numpy.arange(self.timex[0],self.timex[-1],self.time_step_size)]
         # set initial RoR z-axis limits
-        self.setDesignerDeltaAxisLimits(self.DeltaETflag, self.DeltaBTflag)
+        self.setDesignerDeltaAxisLimits(self.DeltaETflag and self.autodeltaxET, self.DeltaBTflag and self.autodeltaxBT)
 
         self.redrawdesigner(force=True)                                   #redraw the designer screen
 
@@ -17705,11 +18094,11 @@ class tgraphcanvas(QObject):
                         if self.zgrid > 0:
                             self.delta_ax.yaxis.set_major_locator(ticker.MultipleLocator(self.zgrid))
                             self.delta_ax.yaxis.set_minor_locator(ticker.AutoMinorLocator())
-                            for i in self.delta_ax.get_yticklines():
+                            for i in self.delta_ax.get_yticklines():  # pyrefly:ignore[not-callable]
                                 i.set_markersize(10)
                             for i in self.delta_ax.yaxis.get_minorticklines():
                                 i.set_markersize(5)
-                            for label in self.delta_ax.get_yticklabels() :
+                            for label in self.delta_ax.get_yticklabels():  # pyrefly:ignore[not-callable]
                                 label.set_fontsize('small')
                             if not self.LCDdecimalplaces:
                                 self.delta_ax.minorticks_off()
@@ -17884,23 +18273,23 @@ class tgraphcanvas(QObject):
 
             #convert all time values to temperature
 
-            if func2 is not None and self.DeltaBTflag and self.l_delta2 is not None and self.designer_timez is not None: # type:ignore[redundant-expr]
+            if func2 is not None and self.DeltaBTflag and self.l_delta2 is not None and self.designer_timez is not None: # type:ignore[redundant-expr] # ty:ignore[ignore]
                 funcDelta2 = func2.derivative()
                 deltabtvals = funcDelta2(self.designer_timez) * 60
                 self.l_delta2.set_data(numpy.array(self.designer_timez), deltabtvals)
                 self.ax.draw_artist(self.l_delta2)
 
-            if func1 is not None and self.DeltaETflag and self.l_delta1 is not None and self.designer_timez is not None: # type:ignore[redundant-expr]
+            if func1 is not None and self.DeltaETflag and self.l_delta1 is not None and self.designer_timez is not None: # type:ignore[redundant-expr] # ty:ignore[ignore]
                 funcDelta1 = func1.derivative()
                 deltaetvals = funcDelta1(self.designer_timez) * 60
                 self.l_delta1.set_data(numpy.array(self.designer_timez), deltaetvals)
                 self.ax.draw_artist(self.l_delta1)
 
             #add curves
-            if etvals is not None and self.ETcurve and self.l_temp1 is not None: # type:ignore[redundant-expr]
+            if etvals is not None and self.ETcurve and self.l_temp1 is not None: # type:ignore[redundant-expr] # ty:ignore[ignore]
                 self.l_temp1.set_data(numpy.array(self.designer_timez), etvals)
                 self.ax.draw_artist(self.l_temp1)
-            if btvals is not None and self.BTcurve and self.l_temp2 is not None: # type:ignore[redundant-expr]
+            if btvals is not None and self.BTcurve and self.l_temp2 is not None: # type:ignore[redundant-expr] # ty:ignore[ignore]
                 self.l_temp2.set_data(numpy.array(self.designer_timez), btvals)
                 self.ax.draw_artist(self.l_temp2)
 
@@ -17977,7 +18366,7 @@ class tgraphcanvas(QObject):
             configAction.triggered.connect(self.desconfig)
             designermenu.addAction(configAction)
 
-            designermenu.exec(QCursor.pos()) # ty:ignore
+            designermenu.exec(QCursor.pos())
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
@@ -17996,7 +18385,7 @@ class tgraphcanvas(QObject):
                     self.indexpoint = event_ind
                 elif isinstance(event_ind, (list, numpy.ndarray)):
                     if len(event_ind)>0: # pyright:ignore[reportUnknownArgumentType]
-                        i:int = event_ind[0] # ty:ignore[invalid-assignment]
+                        i:int = event_ind[0]
                         self.indexpoint = i
                     else:
                         return
@@ -18764,7 +19153,7 @@ class tgraphcanvas(QObject):
             editAction.triggered.connect(self.editmode)
             designermenu.addAction(editAction)
 
-            designermenu.exec(QCursor.pos()) # ty: ignore
+            designermenu.exec(QCursor.pos())
 
     @pyqtSlot()
     @pyqtSlot(bool)
@@ -18816,7 +19205,7 @@ class tgraphcanvas(QObject):
 
             # fixing yticks with matplotlib.ticker "FixedLocator"
             try:
-                ticks_loc = [float(tick) for tick in self.ax2.get_yticks()]
+                ticks_loc = [float(tick) for tick in self.ax2.get_yticks()]  # pyrefly:ignore[not-callable]
                 self.ax2.yaxis.set_major_locator(ticker.FixedLocator(ticks_loc))
             except Exception: # pylint: disable=broad-except
                 pass
@@ -18831,9 +19220,9 @@ class tgraphcanvas(QObject):
                 #tick.label1On = False
                 tick.label1.set_visible(False)
             #delete yaxis
-            locs = self.ax2.get_yticks()
+            locs = self.ax2.get_yticks()  # pyrefly:ignore[not-callable]
             labels = ['']*len(locs)
-            self.ax2.set_yticklabels(labels)
+            self.ax2.set_yticklabels(labels) # pyrefly:ignore[not-callable]
 
             names = self.wheelnames[:]
             Wradii:list[float] = self.wradii[:]
@@ -18907,7 +19296,7 @@ class tgraphcanvas(QObject):
                 barwheel.append(self.ax2.bar(theta, radii, width=segmentwidth, bottom=lbottom[z],edgecolor=self.wheellinecolor,
                                         linewidth=self.wheellinewidth,picker=3))
                 #set color, alpha, and text
-                for count, (_, barwheel[z]) in enumerate(zip(radii, barwheel[z], strict=True)): # noqa: B020 # type:ignore # pyright: error: "object*" is not iterable
+                for count, (_, barwheel[z]) in enumerate(zip(radii, barwheel[z], strict=True)): # noqa: B020 # pyright:ignore # pyright error: "object*" is not iterable
                     barwheel_z = barwheel[z]
                     if isinstance(barwheel_z, Rectangle):
                         barwheel_z.set_facecolor(self.wheelcolor[z][count])
@@ -18943,7 +19332,7 @@ class tgraphcanvas(QObject):
             for i in range(wlen):
                 color = QColor()
                 color.setHsv(int(round((360/wlen)*i*self.wheelcolorpattern)),255,255,255)
-                wc[i] = str(color.name()) # pyrefly: ignore[bad-assignment]
+                wc[i] = str(color.name())
 
     # sets parent and corrects segment lengths so that child fits inside parent (multiple children can be set to same parent)
     # input: z = index of parent in previous wheel    # wn = wheel number    # idx = index of element in wheel x
@@ -18976,7 +19365,7 @@ class tgraphcanvas(QObject):
 #############################     MOUSE CROSS     #############################
 
     def togglecrosslines(self) -> None:
-        if not self.crossmarker and not self.designerflag and not self.flagstart:  #if not projection flag
+        if not self.crossmarker and not self.designerflag and not self.flagon:  #if not projection flag
             #turn ON
             self.l_horizontalcrossline = None
             self.l_verticalcrossline = None
@@ -19106,7 +19495,7 @@ class tgraphcanvas(QObject):
 ###     Sample thread
 ########################################################################################
 
-class SampleThread(QThread): # pyrefly:ignore[invalid-inheritance] # pyright: ignore [reportGeneralTypeIssues] # Argument to class must be a base class
+class SampleThread(QThread):
     sample_processingSignal = pyqtSignal(bool,list,list,list)
     terminatingSignal = pyqtSignal()
 
@@ -19248,7 +19637,7 @@ class SampleThread(QThread): # pyrefly:ignore[invalid-inheritance] # pyright: ig
             while True:
                 if self.aw.qmc.flagon:
                     if next_time is None:
-                        next_time = libtime.perf_counter() + interval
+                        next_time = libtime.perf_counter()
                     else:
                         time_to_sleep = next_time - libtime.perf_counter()
                         if time_to_sleep>=0:
@@ -19267,7 +19656,7 @@ class SampleThread(QThread): # pyrefly:ignore[invalid-inheritance] # pyright: ig
                             self.aw.qmc.flagsampling = False # we signal that we are done with sampling
                     # else: we don't self.quit() and break to end the thread as the simulator (paused) might still be running
                 else:
-                    self.aw.qmc.flagsampling = False # type: ignore[unreachable] # mypy: Statement is unreachable  # we signal that we are done with sampling
+                    self.aw.qmc.flagsampling = False # type: ignore[unreachable] # ty:ignore[ignore] # mypy: Statement is unreachable  # we signal that we are done with sampling
                     # port is disconnected in OFFmonitor by calling disconnectProbes() => disconnectProbesFromSerialDevice()
                     self.quit()
                     break  #thread ends
@@ -19288,7 +19677,7 @@ class SampleThread(QThread): # pyrefly:ignore[invalid-inheritance] # pyright: ig
 ###     Artisan thread Server
 #########################################################################################################
 
-class Athreadserver(QWidget): # pyrefly:ignore[invalid-inheritance] # pylint: disable=too-few-public-methods # pyright: ignore [reportGeneralTypeIssues] # Argument to class must be a base class
+class Athreadserver(QWidget):
     terminatingSignal = pyqtSignal()
 
     def __init__(self, aw:'ApplicationWindow') -> None:
