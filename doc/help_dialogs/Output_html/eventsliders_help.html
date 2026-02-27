@@ -443,6 +443,12 @@
         </tr>
         <tr>
             <td>&#160;</td>
+            <td>orbiter(&lt;cmd&gt;[,&lt;value&gt;[,&lt;param&gt;]])</td>
+            <td>sends &lt;cmd&gt; (1byte in HEX) and optional &lt;value&gt; (0-65535) and &lt;param&gt; (0-255) to Orbiter</td>
+            <td>&#160;</td>
+        </tr>
+        <tr>
+            <td>&#160;</td>
             <td>shellyrelay(n,b)</td>
             <td>switches Shelly plug number &lt;n&gt; ON if b is true or 1, and OFF otherwise</td>
             <td>&#160;</td>
@@ -611,6 +617,12 @@
         </tr>
         <tr>
             <td>&#160;</td>
+            <td>pidSVbuttons(&lt;bool&gt;)</td>
+            <td>toggles the visibility of the PID SV buttons</td>
+            <td>&#160;</td>
+        </tr>
+        <tr>
+            <td>&#160;</td>
             <td>pidRS(&lt;rs&gt;)</td>
             <td>activates the PID Ramp-Soak pattern number &lt;rs&gt; (1-based!) or the one labeled &lt;rs&gt;</td>
             <td>&#160;</td>
@@ -684,7 +696,7 @@
         <tr>
             <td>&#160;</td>
             <td>playbackmode(&lt;int&gt;)</td>
-            <td>sets playback mode to 0: off, 1: time, 2: BT, 3: ET</td>
+            <td>sets playback mode to 0: off, 1: time, 2: BT, 3: ET; 4: BT/time; 5: ET/time</td>
             <td>&#160;</td>
         </tr>
         <tr>
@@ -708,7 +720,7 @@
         <tr>
             <td>&#160;</td>
             <td>slider(n,&lt;bool&gt;)</td>
-            <td>show/hide slider per event type n from {1,2,3,4}</td>
+            <td>show/hide slider per event type n from {1,2,3,4}; n=5 toggles the PID SV slider visibility</td>
             <td>&#160;</td>
         </tr>
         <tr>

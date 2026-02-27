@@ -29,7 +29,7 @@ import usb.util # type: ignore[import-untyped] # ty:ignore[ignore]
 
 
 if system().startswith('Windows'):
-    import libusb_package # pyright:ignore[reportMissingImports] # pylint: disable=import-error # ty:ignore[unresolved-import]
+    import libusb_package # type:ignore [import-not-found, unused-ignore] # pyright:ignore[reportMissingImports] # pylint: disable=import-error
 
 #import requests
 #from requests_file import FileAdapter # type: ignore # @UnresolvedImport # ty:ignore[ignore]
@@ -440,11 +440,11 @@ class AillioR1:
     def __sendcmd(self, cmd:list[int]) -> None:
         self.__dbg('sending command: ' + str(cmd))
         if self.usbhandle is not None and not isinstance(self.usbhandle, Generator): # pyrefly:ignore[invalid-argument,unsafe-overlap]
-            self.usbhandle.write(self.AILLIO_ENDPOINT_WR, cmd) # ty: ignore[possibly-missing-attribute]
+            self.usbhandle.write(self.AILLIO_ENDPOINT_WR, cmd) # type: ignore[union-attr, unused-ignore]
 
     def __readreply(self, length:int) -> Any:
         if self.usbhandle is not None and not isinstance(self.usbhandle, Generator): # pyrefly:ignore[invalid-argument,unsafe-overlap]
-            return self.usbhandle.read(self.AILLIO_ENDPOINT_RD, length) # ty: ignore[possibly-missing-attribute]
+            return self.usbhandle.read(self.AILLIO_ENDPOINT_RD, length) # type: ignore[union-attr, unused-ignore]
         raise OSError('not found or no permission')
 
 #def extractProfileBulletDict(data:Dict, aw:'ApplicationWindow') -> 'ProfileData':
@@ -642,14 +642,25 @@ class AillioR1:
 #            res['extraname2'] = ['RoR']
 #            res['extramathexpression1'] = ['']
 #            res['extramathexpression2'] = ['']
-#            res['extraLCDvisibility1'] = [temp3_visibility]
-#            res['extraLCDvisibility2'] = [temp4_visibility]
-#            res['extraCurveVisibility1'] = [temp3_visibility]
-#            res['extraCurveVisibility2'] = [temp4_visibility]
-#            res['extraDelta1'] = [False]
-#            res['extraDelta2'] = [True]
-#            res['extraFill1'] = [False]
-#            res['extraFill2'] = [False]
+###
+#            res['extraLCDvisibility1'] = [False] * aw.self.nLCDS
+#            res['extraLCDvisibility2'] = [False] * aw.self.nLCDS
+#            res['extraCurveVisibility1'] = [False] * aw.self.nLCDS
+#            res['extraCurveVisibility2'] = [False] * aw.self.nLCDS
+#            res['extraDelta1'] = [False] * aw.self.nLCDS
+#            res['extraDelta2'] = [False] * aw.self.nLCDS
+#            res['extraFill1'] = [0] * aw.self.nLCDS
+#            res['extraFill2'] = [0] * aw.self.nLCDS
+#            if aw.self.nLCDS>0:
+#               res['extraLCDvisibility1'][0] = temp3_visibility
+#               res['extraLCDvisibility2'][0] = temp4_visibility
+#               res['extraCurveVisibility1'][0] = temp3_visibility
+#               res['extraCurveVisibility2'][0] = temp4_visibility
+#               res['extraDelta1'][0] = False
+#               res['extraDelta2'][0] = True
+#               res['extraFill1'][0] = 0
+#               res['extraFill2'][0] = 0
+##
 #            res['extradevicecolor1'] = ['black']
 #            res['extradevicecolor2'] = ['black']
 #            res['extramarkersizes1'] = [6.0]

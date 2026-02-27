@@ -247,7 +247,8 @@ class serialport:
         'YOCTOthread','YOCTOvoltageOutputs','YOCTOcurrentOutputs','YOCTOrelays','YOCTOservos','YOCTOpwmOutputs','HH506RAid','MS6514PrevTemp1','MS6514PrevTemp2','DT301PrevTemp','EXTECH755PrevTemp',\
         'controlETpid','readBTpid','useModbusPort','showFujiLCDs','arduinoETChannel','arduinoBTChannel','arduinoATChannel',\
         'ArduinoIsInitialized','ArduinoFILT','HH806Winitflag','R1','devicefunctionlist','externalprogram',\
-        'externaloutprogram','externaloutprogramFlag','PhidgetHUMtemp','PhidgetHUMhum','PhidgetPREpre','TMP1000temp', 'colorTrackSerial', 'colorTrackBT', 'CM_ET_readings_count', 'CM_BT_readings_count', 'CM_ET_sum_of_squared_differences', 'CM_BT_sum_of_squared_differences' ]
+        'externaloutprogram','externaloutprogramFlag','PhidgetHUMtemp','PhidgetHUMhum','PhidgetPREpre','TMP1000temp', 'colorTrackSerial', 'colorTrackBT',
+        'CM_reference_timeb', 'CM_ET_readings_count', 'CM_BT_readings_count', 'CM_ET_sum_of_squared_differences', 'CM_BT_sum_of_squared_differences' ]
 
     def __init__(self, aw:'ApplicationWindow') -> None:
 
@@ -333,6 +334,7 @@ class serialport:
         self.colorTrackSerial:ColorTrack|None = None
         self.colorTrackBT:ColorTrackBLE|None = None
 
+        self.CM_reference_timeb:float|None = None # set on adding first reading to detect updated horizontal background profile alignment which resets calculation
         self.CM_ET_readings_count:int = 0
         self.CM_BT_readings_count:int = 0
         self.CM_ET_sum_of_squared_differences:float = 0
@@ -568,7 +570,12 @@ class serialport:
                                    self.Phidget_HUM1000_HumTemp,     #192
                                    self.Phidget_PRE1000,             #193
                                    self.Yocto_Meteo_HumTemp,         #194
-                                   self.Yocto_Meteo_Pressure         #195
+                                   self.Yocto_Meteo_Pressure,        #195
+                                   self.Orbiter_BTET,                #196
+                                   self.Orbiter_ITDT,                #197
+                                   self.Orbiter_Sound_Drum,          #198
+                                   self.Orbiter_Damper_Heater,       #199
+                                   self.Orbiter_Air_RoR              #200
                                    ]
         #string with the name of the program for device #27
         self.externalprogram:str = 'test.py'
@@ -1018,35 +1025,45 @@ class serialport:
     def CM_ETBT(self) -> tuple[float,float,float]:
         tx = self.aw.qmc.timeclock.elapsedMilli()
         try:
-            t1 = -1
-            t2 = -1
-            # update counts and sum_of_squared_differences
-            BTlimit = self.aw.qmc.phases[1]
-            BT = (self.aw.qmc.temp2[-1] if len(self.aw.qmc.temp2)>0 else -1)
-            if BTlimit < BT and self.aw.qmc.timeindex[6] == 0: # BT above DRY END as specified in Phased dialog and before DROP is registered
-                ET = (self.aw.qmc.temp1[-1] if len(self.aw.qmc.temp1)>0 else -1)
-                nowB = self.aw.qmc.backgroundtime2index(tx) # points to the last entry if tx > all elements in btimex
-                ETB = (self.aw.qmc.temp1B[nowB] if len(self.aw.qmc.temp1B)>nowB>-1 else -1)
-                BTB = (self.aw.qmc.temp2B[nowB] if len(self.aw.qmc.temp2B)>nowB>-1 else -1)
-                if ET > -1 and ETB > -1:
-                    self.CM_ET_readings_count += 1
-                    ET_squared_diff = (ET - ETB)**2
-                    self.CM_ET_sum_of_squared_differences += ET_squared_diff
-                if BT > -1 and BTB > -1:
-                    self.CM_BT_readings_count += 1
-                    BT_squared_diff = (BT - BTB)**2
-                    self.CM_BT_sum_of_squared_differences += BT_squared_diff
-            else:
-                self.CM_ET_readings_count = 0
-                self.CM_ET_sum_of_squared_differences = 0
-                self.CM_BT_readings_count = 0
-                self.CM_BT_sum_of_squared_differences = 0
-            # calc results
-            if self.CM_ET_readings_count > 0:
-                t1 = numpy.sqrt(self.CM_ET_sum_of_squared_differences / self.CM_ET_readings_count)
-            if self.CM_BT_readings_count > 0:
-                t2 = numpy.sqrt(self.CM_BT_sum_of_squared_differences / self.CM_BT_readings_count)
-            return tx,t2,t1
+            if self.aw.qmc.backgroundprofile is not None and len(self.aw.qmc.timeB)>0: # a non-empty background profile is loaded
+                # set CM reference timeb to first reading of the background profile, if any
+                first_timeb:float = self.aw.qmc.timeB[0]
+                t1 = -1
+                t2 = -1
+                # update counts and sum_of_squared_differences
+                BTlimit = self.aw.qmc.phases[1]
+                BT = (self.aw.qmc.temp2[-1] if len(self.aw.qmc.temp2)>0 else -1)
+                if (BTlimit < BT and self.aw.qmc.timeindex[0] > -1 and
+                        (self.CM_reference_timeb is None or self.CM_reference_timeb == first_timeb) and
+                        (tx - self.aw.qmc.timex[self.aw.qmc.timeindex[0]] > 90) and
+                        self.aw.qmc.timeindex[6] == 0):
+                    # BT above DRY END as specified in Phased dialog, at least 1:30m after CHARGE and before DROP is registered
+                    ET = (self.aw.qmc.temp1[-1] if len(self.aw.qmc.temp1)>0 else -1)
+                    nowB = self.aw.qmc.backgroundtime2index(tx) # points to the last entry if tx > all elements in btimex (-1 if btime is empty!)
+                    ETB = (self.aw.qmc.temp1B[nowB] if len(self.aw.qmc.temp1B)>nowB>-1 else -1)
+                    BTB = (self.aw.qmc.temp2B[nowB] if len(self.aw.qmc.temp2B)>nowB>-1 else -1)
+                    if ET > -1 and ETB > -1:
+                        self.CM_ET_readings_count += 1
+                        ET_squared_diff = (ET - ETB)**2
+                        self.CM_ET_sum_of_squared_differences += ET_squared_diff
+                    if BT > -1 and BTB > -1:
+                        self.CM_BT_readings_count += 1
+                        BT_squared_diff = (BT - BTB)**2
+                        self.CM_BT_sum_of_squared_differences += BT_squared_diff
+                    self.CM_reference_timeb = first_timeb
+                elif self.aw.qmc.timeindex[0] == 0 or (self.CM_reference_timeb is not None and self.CM_reference_timeb != first_timeb):
+                    # if CHARGE is not set reset readings, keep readings otherwise (eg. after DROP)
+                    self.CM_reference_timeb = None
+                    self.CM_ET_readings_count = 0
+                    self.CM_ET_sum_of_squared_differences = 0
+                    self.CM_BT_readings_count = 0
+                    self.CM_BT_sum_of_squared_differences = 0
+                # calc results
+                if self.CM_ET_readings_count > 0:
+                    t1 = numpy.sqrt(self.CM_ET_sum_of_squared_differences / self.CM_ET_readings_count)
+                if self.CM_BT_readings_count > 0:
+                    t2 = numpy.sqrt(self.CM_BT_sum_of_squared_differences / self.CM_BT_readings_count)
+                return tx,t2,t1
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
         return tx, -1, -1
@@ -1057,9 +1074,9 @@ class serialport:
             self.aw.lebrew_roastseeNEXT = Lebrew_RoastSeeNEXT(
                 connected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} connected').format('RoastSee NEXT'),True,None),
                 disconnected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} disconnected').format('RoastSee NEXT'),True,None))
-            if not self.aw.lebrew_roastseeNEXT.client_started(): # ty: ignore[possibly-missing-attribute]
-                self.aw.lebrew_roastseeNEXT.setLogging(self.aw.qmc.device_logging)  # ty: ignore[possibly-missing-attribute]
-                self.aw.lebrew_roastseeNEXT.start()  # ty: ignore[possibly-missing-attribute]
+            if not self.aw.lebrew_roastseeNEXT.client_started():
+                self.aw.lebrew_roastseeNEXT.setLogging(self.aw.qmc.device_logging)
+                self.aw.lebrew_roastseeNEXT.start()
 
     def RoastSeeNEXT_AGTRON_CRACK(self) -> tuple[float,float,float]:
         agtron:float = -1
@@ -2199,7 +2216,56 @@ class serialport:
             t1,t2 = self.aw.kaleido.getHeaterFan()
         else:
             t1 = t2 = -1
-        return tx,t2,t1 # time Fan (chan2), Heater (chan1)
+        return tx,t2,t1 # time, Fan (chan2), Heater (chan1)
+
+# Orbiter
+
+    def Orbiter_BTET(self) -> tuple[float,float,float]:
+        tx = self.aw.qmc.timeclock.elapsedMilli()
+        t1:float = -1
+        t2:float = -1
+        if self.aw.orbiter is not None:
+            t1 = self.aw.orbiter.getBT()
+            t2 = self.aw.orbiter.getET()
+        return tx,t2,t1
+
+    def Orbiter_ITDT(self) -> tuple[float,float,float]:
+        tx = self.aw.qmc.timeclock.elapsedMilli()
+        t1:float = -1
+        t2:float = -1
+        if self.aw.orbiter is not None:
+            t1 = self.aw.orbiter.getIT()
+            t2 = self.aw.orbiter.getDT()
+        return tx,t2,t1 # time, DT (chan2), IT (chan1)
+
+    def Orbiter_Sound_Drum(self) -> tuple[float,float,float]:
+        tx = self.aw.qmc.timeclock.elapsedMilli()
+        t1:float = -1
+        t2:float = -1
+        if self.aw.orbiter is not None:
+            t1 = self.aw.orbiter.getSound()
+            t2 = self.aw.orbiter.getDrum()
+        return tx,t2,t1 # time, Drum (chan2), Sound (chan1)
+
+    def Orbiter_Damper_Heater(self) -> tuple[float,float,float]:
+        tx = self.aw.qmc.timeclock.elapsedMilli()
+        t1:float = -1
+        t2:float = -1
+        if self.aw.orbiter is not None:
+            t1 = self.aw.orbiter.getDamper()
+            t2 = self.aw.orbiter.getHeater()
+        return tx,t2,t1 # time, Heater (chan2), Damper (chan1)
+
+    def Orbiter_Air_RoR(self) -> tuple[float,float,float]:
+        tx = self.aw.qmc.timeclock.elapsedMilli()
+        t1:float = -1
+        t2:float = -1
+        if self.aw.orbiter is not None:
+            t1 = self.aw.orbiter.getAir()
+            t2 = self.aw.orbiter.getRoR()
+        return tx,t2,t1 # time, RoR (chan2), Air (chan1)
+
+# IKAWA
 
     def Ikawa(self) -> tuple[float,float,float]:
         tx = self.aw.qmc.timeclock.elapsedMilli()
@@ -2408,29 +2474,29 @@ class serialport:
             # Temperature
             if self.aw.ser.TMP1000temp is None:
                 self.aw.ser.TMP1000temp = PhidgetTemperatureSensor()
-            if not self.aw.ser.TMP1000temp.getAttached() and self.aw.qmc.phidgetManager is not None:  # ty:ignore[possibly-missing-attribute]
+            if not self.aw.ser.TMP1000temp.getAttached() and self.aw.qmc.phidgetManager is not None:
                 ser, port = self.aw.qmc.phidgetManager.getFirstMatchingPhidget(
                     'PhidgetTemperatureSensor',
                     DeviceID.PHIDID_TMP1000,
                     remote=self.aw.qmc.phidgetRemoteFlag,
                     remoteOnly=self.aw.qmc.phidgetRemoteOnlyFlag)
                 if ser:
-                    self.aw.ser.TMP1000temp.setDeviceSerialNumber(ser) # ty:ignore[possibly-missing-attribute]
-                    self.aw.ser.TMP1000temp.setHubPort(port)  # ty:ignore[possibly-missing-attribute]  #explicitly set the port to where the HUM is attached
+                    self.aw.ser.TMP1000temp.setDeviceSerialNumber(ser)
+                    self.aw.ser.TMP1000temp.setHubPort(port)  # explicitly set the port to where the HUM is attached
                     if self.aw.qmc.phidgetRemoteFlag:
                         self.addPhidgetServer()
                     if self.aw.qmc.phidgetRemoteFlag and self.aw.qmc.phidgetRemoteOnlyFlag:
-                        self.aw.ser.TMP1000temp.setIsRemote(True) # ty:ignore[possibly-missing-attribute]
-                        self.aw.ser.TMP1000temp.setIsLocal(False) # ty:ignore[possibly-missing-attribute]
-                    self.aw.ser.TMP1000temp.openWaitForAttachment(1500) # ty:ignore[possibly-missing-attribute]
-                    if self.aw.ser.TMP1000temp.getAttached():  # ty:ignore[possibly-missing-attribute]
+                        self.aw.ser.TMP1000temp.setIsRemote(True)
+                        self.aw.ser.TMP1000temp.setIsLocal(False)
+                    self.aw.ser.TMP1000temp.openWaitForAttachment(1500)
+                    if self.aw.ser.TMP1000temp.getAttached():
                         _log.debug('Phidget TMP1000 temperature channel attached')
                         libtime.sleep(0.3)
                         # note that we do not register the attach in the aw.qmc.phidgetManager as we only support one of those devices
                     else:
                         _log.debug('Phidget TEMP1000 temperature could not be attached')
-            if self.aw.ser.TMP1000temp.getAttached():  # ty:ignore[possibly-missing-attribute]
-                res = float(self.aw.ser.TMP1000temp.getTemperature()) # ty:ignore[possibly-missing-attribute]
+            if self.aw.ser.TMP1000temp.getAttached():
+                res = float(self.aw.ser.TMP1000temp.getTemperature())
                 _log.debug('Phidget TMP1000 temperature received: %s', res)
                 return res
             return None
@@ -2453,7 +2519,7 @@ class serialport:
             # HUM Temperature
             if self.aw.ser.PhidgetHUMtemp is None:
                 self.aw.ser.PhidgetHUMtemp = PhidgetTemperatureSensor()
-            if not self.aw.ser.PhidgetHUMtemp.getAttached() and self.aw.qmc.phidgetManager is not None:  # ty:ignore[possibly-missing-attribute]
+            if not self.aw.ser.PhidgetHUMtemp.getAttached() and self.aw.qmc.phidgetManager is not None:
                 ser, port = self.aw.qmc.phidgetManager.getFirstMatchingPhidget(
                     'PhidgetTemperatureSensor',
                     DeviceID.PHIDID_HUM1000,
@@ -2466,22 +2532,22 @@ class serialport:
                         remote=self.aw.qmc.phidgetRemoteFlag,
                         remoteOnly=self.aw.qmc.phidgetRemoteOnlyFlag)
                 if ser:
-                    self.aw.ser.PhidgetHUMtemp.setDeviceSerialNumber(ser)  # ty:ignore[possibly-missing-attribute]
-                    self.aw.ser.PhidgetHUMtemp.setHubPort(port)  # ty:ignore[possibly-missing-attribute]  #explicitly set the port to where the HUM is attached
+                    self.aw.ser.PhidgetHUMtemp.setDeviceSerialNumber(ser)
+                    self.aw.ser.PhidgetHUMtemp.setHubPort(port)  # explicitly set the port to where the HUM is attached
                     if self.aw.qmc.phidgetRemoteFlag:
                         self.addPhidgetServer()
                     if self.aw.qmc.phidgetRemoteFlag and self.aw.qmc.phidgetRemoteOnlyFlag:
-                        self.aw.ser.PhidgetHUMtemp.setIsRemote(True) # ty:ignore[possibly-missing-attribute]
-                        self.aw.ser.PhidgetHUMtemp.setIsLocal(False) # ty:ignore[possibly-missing-attribute]
-                    self.aw.ser.PhidgetHUMtemp.openWaitForAttachment(1500)  # ty:ignore[possibly-missing-attribute]
-                    if self.aw.ser.PhidgetHUMtemp.getAttached():  # ty:ignore[possibly-missing-attribute]
+                        self.aw.ser.PhidgetHUMtemp.setIsRemote(True)
+                        self.aw.ser.PhidgetHUMtemp.setIsLocal(False)
+                    self.aw.ser.PhidgetHUMtemp.openWaitForAttachment(1500)
+                    if self.aw.ser.PhidgetHUMtemp.getAttached():
                         _log.debug('Phidget HUM100x temperature channel attached')
                         libtime.sleep(0.3)
                         # note that we do not register the attach in the aw.qmc.phidgetManager as we only support one of those devices
                     else:
                         _log.debug('Phidget HUM100x temperature could not be attached')
-            if self.aw.ser.PhidgetHUMtemp.getAttached():  # ty:ignore[possibly-missing-attribute]
-                res = float(self.aw.ser.PhidgetHUMtemp.getTemperature())  # ty:ignore[possibly-missing-attribute]
+            if self.aw.ser.PhidgetHUMtemp.getAttached():
+                res = float(self.aw.ser.PhidgetHUMtemp.getTemperature())
                 _log.debug('Phidget HUM100x temperature received: %s', res)
                 # we don't close the HUM here, but in closePhidgetAMBIENTs
                 return res
@@ -2505,7 +2571,7 @@ class serialport:
             # HUM Humidity
             if self.aw.ser.PhidgetHUMhum is None:
                 self.aw.ser.PhidgetHUMhum = PhidgetHumiditySensor()
-            if not self.aw.ser.PhidgetHUMhum.getAttached() and self.aw.qmc.phidgetManager is not None:  # ty:ignore[possibly-missing-attribute]
+            if not self.aw.ser.PhidgetHUMhum.getAttached() and self.aw.qmc.phidgetManager is not None:
                 ser, port = self.aw.qmc.phidgetManager.getFirstMatchingPhidget(
                     'PhidgetTemperatureSensor',
                     DeviceID.PHIDID_HUM1000,
@@ -2518,22 +2584,22 @@ class serialport:
                         remote=self.aw.qmc.phidgetRemoteFlag,
                         remoteOnly=self.aw.qmc.phidgetRemoteOnlyFlag)
                 if ser:
-                    self.aw.ser.PhidgetHUMhum.setDeviceSerialNumber(ser)  # ty:ignore[possibly-missing-attribute]
-                    self.aw.ser.PhidgetHUMhum.setHubPort(port)  # ty:ignore[possibly-missing-attribute]  #explicitly set the port to where the HUM is attached
+                    self.aw.ser.PhidgetHUMhum.setDeviceSerialNumber(ser)
+                    self.aw.ser.PhidgetHUMhum.setHubPort(port)  # explicitly set the port to where the HUM is attached
                     if self.aw.qmc.phidgetRemoteFlag:
                         self.addPhidgetServer()
                     if self.aw.qmc.phidgetRemoteFlag and self.aw.qmc.phidgetRemoteOnlyFlag:
-                        self.aw.ser.PhidgetHUMhum.setIsRemote(True)  # ty:ignore[possibly-missing-attribute]
-                        self.aw.ser.PhidgetHUMhum.setIsLocal(False)  # ty:ignore[possibly-missing-attribute]
-                    self.aw.ser.PhidgetHUMhum.openWaitForAttachment(1500)  # ty:ignore[possibly-missing-attribute]
-                    if self.aw.ser.PhidgetHUMhum.getAttached():  # ty:ignore[possibly-missing-attribute]
+                        self.aw.ser.PhidgetHUMhum.setIsRemote(True)
+                        self.aw.ser.PhidgetHUMhum.setIsLocal(False)
+                    self.aw.ser.PhidgetHUMhum.openWaitForAttachment(1500)
+                    if self.aw.ser.PhidgetHUMhum.getAttached():
                         _log.debug('Phidget HUM100x humidity channel attached')
                         libtime.sleep(0.3)
                         # note that we do not register the attach in the aw.qmc.phidgetManager as we only support one of those devices
                     else:
                         _log.debug('Phidget HUM100x humidity could not be attached')
-            if self.aw.ser.PhidgetHUMhum.getAttached():  # ty:ignore[possibly-missing-attribute]
-                res = float(self.aw.ser.PhidgetHUMhum.getHumidity())  # ty:ignore[possibly-missing-attribute]
+            if self.aw.ser.PhidgetHUMhum.getAttached():
+                res = float(self.aw.ser.PhidgetHUMhum.getHumidity())
                 _log.debug('Phidget HUM100x humidity received: %s', res)
                 # we don't close the HUM here, but in closePhidgetAMBIENTs
                 return res
@@ -2557,29 +2623,29 @@ class serialport:
             # PRE Pressure
             if self.aw.ser.PhidgetPREpre is None:
                 self.aw.ser.PhidgetPREpre = PhidgetPressureSensor()
-            if not self.aw.ser.PhidgetPREpre.getAttached() and self.aw.qmc.phidgetManager is not None:  # ty:ignore[possibly-missing-attribute]
+            if not self.aw.ser.PhidgetPREpre.getAttached() and self.aw.qmc.phidgetManager is not None:
                 ser, port = self.aw.qmc.phidgetManager.getFirstMatchingPhidget(
                     'PhidgetPressureSensor',
                     DeviceID.PHIDID_PRE1000,
                     remote=self.aw.qmc.phidgetRemoteFlag,
                     remoteOnly=self.aw.qmc.phidgetRemoteOnlyFlag)
                 if ser:
-                    self.aw.ser.PhidgetPREpre.setDeviceSerialNumber(ser)  # ty:ignore[possibly-missing-attribute]
-                    self.aw.ser.PhidgetPREpre.setHubPort(port)    # ty:ignore[possibly-missing-attribute] #explicitly set the port to where the HUM is attached
+                    self.aw.ser.PhidgetPREpre.setDeviceSerialNumber(ser)
+                    self.aw.ser.PhidgetPREpre.setHubPort(port)     # explicitly set the port to where the HUM is attached
                     if self.aw.qmc.phidgetRemoteFlag:
                         self.addPhidgetServer()
                     if self.aw.qmc.phidgetRemoteFlag and self.aw.qmc.phidgetRemoteOnlyFlag:
-                        self.aw.ser.PhidgetPREpre.setIsRemote(True)  # ty:ignore[possibly-missing-attribute]
-                        self.aw.ser.PhidgetPREpre.setIsLocal(False)  # ty:ignore[possibly-missing-attribute]
-                    self.aw.ser.PhidgetPREpre.openWaitForAttachment(1500)  # ty:ignore[possibly-missing-attribute]
-                    if self.aw.ser.PhidgetPREpre.getAttached():  # ty:ignore[possibly-missing-attribute]
+                        self.aw.ser.PhidgetPREpre.setIsRemote(True)
+                        self.aw.ser.PhidgetPREpre.setIsLocal(False)
+                    self.aw.ser.PhidgetPREpre.openWaitForAttachment(1500)
+                    if self.aw.ser.PhidgetPREpre.getAttached():
                         _log.debug('Phidget PRE1000 pressure channel attached')
                         libtime.sleep(0.3)
                         # note that we do not register the attach in the aw.qmc.phidgetManager as we only support one of those devices
                     else:
                         _log.debug('Phidget PRE1000 pressure could not be attached')
-            if self.aw.ser.PhidgetPREpre.getAttached(): # ty:ignore[possibly-missing-attribute]
-                res = float(self.aw.ser.PhidgetPREpre.getPressure()) # ty:ignore[possibly-missing-attribute]
+            if self.aw.ser.PhidgetPREpre.getAttached():
+                res = float(self.aw.ser.PhidgetPREpre.getPressure())
                 _log.debug('Phidget PRE1000 pressure received: %s', res)
                 # we don't close the PRE here, but in closePhidgetAMBIENTs
                 return res
@@ -6755,7 +6821,7 @@ class serialport:
                         else:
                             self.YOCTOlastvalues[0] = probe1
                     if probe1 == -1 and self.YOCTOsensor and self.YOCTOsensor.isOnline():
-                        probe1 = self.YOCTOsensor.get_currentValue()
+                        probe1 = cast(float, self.YOCTOsensor.get_currentValue())
                     if probe1 != -1:
                         # convert temperature scale
                         if self.aw.qmc.YOCTOchanUnit == 'C' and self.aw.qmc.mode == 'F':
@@ -6817,8 +6883,8 @@ class serialport:
     # if chan is given, it is expected to be a string <s> send along the "CHAN;<s>" command on each call
     # (not sending the unit or filter commands afterwards) and overwriting the self.arduinoETChannel and self.arduinoBTChannel settings
     def ARDUINOTC4temperature(self, chan:str|None = None) -> tuple[float, float]:
-        t1:float = 0.
-        t2:float = 0.
+        t1:float = -1.
+        t2:float = -1.
         res:list[str] = []
         command = ''
         try:

@@ -3110,6 +3110,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             _t, _e, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' resetextradevices(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
+    # x the index of the extra device to be deleted
     def delextradevice(self, x:int) -> None:
         try:
             self.aw.qmc.extradevices.pop(x)
@@ -3147,10 +3148,11 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             if self.aw.extraCurveVisibility2[x]:
                 self.aw.qmc.extratemp2lines.pop(before2)
 
+            # lists of constant length (self.aw.nLCDS)
             self.aw.extraLCDvisibility1.pop(x)
-            self.aw.extraLCDvisibility1.append(True) # keep length constant (self.aw.nLCDS)
+            self.aw.extraLCDvisibility1.append(False) # keep length constant (self.aw.nLCDS)
             self.aw.extraLCDvisibility2.pop(x)
-            self.aw.extraLCDvisibility2.append(True) # keep length constant (self.aw.nLCDS)
+            self.aw.extraLCDvisibility2.append(False) # keep length constant (self.aw.nLCDS)
             self.aw.extraCurveVisibility1.pop(x)
             self.aw.extraCurveVisibility1.append(True) # keep length constant (self.aw.nLCDS)
             self.aw.extraCurveVisibility2.pop(x)
@@ -4470,6 +4472,30 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 ##########################
                 ####  DEVICE 195 is +Yocto Meteo Pressure
                 ##########################
+                ##########################
+                ####  DEVICE 196 is Kaleido BT/ET
+                elif meter == 'Orbiter BT/ET':
+                    self.aw.qmc.device = 196
+                    #self.aw.ser.comport = "COM4"
+                    self.aw.ser.baudrate = 115200
+                    self.aw.ser.bytesize = 8
+                    self.aw.ser.parity= 'N'
+                    self.aw.ser.stopbits = 1
+                    self.aw.ser.timeout = 1.0
+                    message = QApplication.translate('Message','Device set to {0}').format(meter)
+                ##########################
+                ##########################
+                ####  DEVICE 197 is +Orbiter IT/DT but +DEVICE cannot be set as main device
+                ##########################
+                ##########################
+                ####  DEVICE 198 is +Orbiter Sound/Drum but +DEVICE cannot be set as main device
+                ##########################
+                ##########################
+                ####  DEVICE 199 is +Orbiter Damper/Heater but +DEVICE cannot be set as main device
+                ##########################
+                ##########################
+                ####  DEVICE 200 is +Orbiter Air/RoR but +DEVICE cannot be set as main device
+                ##########################
 
 
                 # ADD DEVICE:
@@ -4685,7 +4711,12 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 3, # 192
                 3, # 193
                 3, # 194
-                3  # 195
+                3, # 195
+                8, # 196
+                8, # 197
+                8, # 198
+                8, # 199
+                8  # 200
                 ]
             #init serial settings of extra devices
             for i, _ in enumerate(self.aw.qmc.extradevices):

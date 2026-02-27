@@ -13,7 +13,7 @@
 # the GNU General Public License for more details.
 #
 # AUTHOR
-# Dave Baxter, Marko Luther 2025
+# Dave Baxter, Marko Luther 2026
 """
 
 Usage:
@@ -118,6 +118,9 @@ BINARIES = [(os.path.join(get_package_paths('snap7')[1], 'lib/libsnap7.dylib'), 
 # add yocto libs
 yocto_lib_path = os.path.join(get_package_paths('yoctopuce')[1], 'cdll')
 BINARIES.extend([(os.path.join(yocto_lib_path, fn),'yoctopuce/cdll') for fn in os.listdir(yocto_lib_path) if fn.endswith('.dylib')])
+# add phidgets libs
+BINARIES.extend([(os.path.join(get_package_paths('Phidget22')[1], '.libs/libphidget22.dylib'), 'Phidget22/.libs' )])
+
 # brew installed libusb is added automatically by pyinstaller
 
 a = Analysis(['artisan.py'],
@@ -126,7 +129,7 @@ a = Analysis(['artisan.py'],
              hiddenimports=['babel.numbers'], # should not be needed as it got fixed in pyinstaller 6.11
              hooksconfig={
                 'matplotlib': {
-                'backends': ['QtAgg', 'svg'] # 'auto',  # auto-detect; the default behavior (QtAgg
+                'backends': ['QtAgg', 'svg', 'pdf'] # 'auto',  # auto-detect; the default behavior (QtAgg
                 },
              },
              hookspath=[],
@@ -165,7 +168,7 @@ exe = EXE(pyz,
 try:
     minimumSystemVersion = os.environ['MACOSX_DEPLOYMENT_TARGET']
 except Exception: # pylint: disable=broad-except
-    minimumSystemVersion = '14.0' # assuming the new-style numpy/scipy libs which define the minimum; Qt 6.10 requires >= 13.0
+    minimumSystemVersion = '13.0' # assuming the new-style numpy/scipy libs which define the minimum; Qt 6.10 requires >= 13.0
 
 plist = {}
 with open('Info.plist', 'rb') as infile:
@@ -284,7 +287,7 @@ qt_plugin_files = [
     'libqjpeg.dylib',
 #    'libqmacjp2.dylib',
 #    'libqpdf.dylib',
-	'libqsvg.dylib',
+    'libqsvg.dylib',
 #    'libqtga.dylib',
 #   'libqtiff.dylib',
 #    'libqwbmp.dylib',
@@ -293,7 +296,6 @@ qt_plugin_files = [
     'libcocoaprintersupport.dylib',
     'libqmacstyle.dylib'
 ]
-
 
 ## remove unused Qt frameworks libs (not in Qt_modules_frameworks)
 for subdir, dirs, _files in os.walk('./Artisan.app/Contents/Frameworks/PyQt6/Qt6/lib'):
@@ -430,12 +432,12 @@ for root, _, files in os.walk(f'./Artisan.app/Contents/Resources/babel/locale-da
 #            print('Deleting', file)
             os.remove(os.path.join(root,file))
 
-
-print('*** Removing Phidget driver libs not for this platforms ***')
-try:
-    subprocess.check_call(f'rm -f ./Artisan.app/Contents/Frameworks/phidget22.dll',shell = True)
-except Exception: # pylint: disable=broad-except
-    pass
+# NOT NEEDED for pyinstaller builds
+#print('*** Removing Phidget driver libs not for this platforms ***')
+#try:
+#    subprocess.check_call(f'rm -f ./Artisan.app/Contents/Frameworks/phidget22.dll',shell = True)
+#except Exception: # pylint: disable=broad-except
+#    pass
 
 
 print('*** Removing mypy completely ***')

@@ -543,7 +543,7 @@ class editGraphDlg(ArtisanResizeablDialog):
     readScaleSignal = pyqtSignal()
 
     # if start_recording_on_exit is set, on leaving the dialog with OK, the recording is started in case plus is connected and beans have been set
-    # and the flags "Open on CHARGE" andn "Open on DROP" are not set
+    # and the flags "Open on CHARGE" and "Open on DROP" are not set
     def __init__(self, parent:QWidget, aw:'ApplicationWindow', activeTab:int = 0, start_recording_on_exit:bool = False) -> None:
         super().__init__(parent, aw)
 
@@ -1677,6 +1677,16 @@ class editGraphDlg(ArtisanResizeablDialog):
         totallayout.setContentsMargins(10,10,10,0) # left, top, right, bottom
         totallayout.setSpacing(0)
         self.volume_percent()
+
+        if start_recording_on_exit:
+            from PyQt6.QtWidgets import QMessageBox
+            string = QApplication.translate('Message', 'artisan.plus needs to know the beans you are roasting')
+            mbox = QMessageBox(self.aw)
+            mbox.setText(string)
+            plus.util.setPlusIcon(mbox)
+            mbox.setStandardButtons(QMessageBox.StandardButton.Ok)
+            mbox.exec()
+
         self.setLayout(totallayout)
 
         self.populatePlusCoffeeBlendCombos()
@@ -1782,7 +1792,7 @@ class editGraphDlg(ArtisanResizeablDialog):
             if res is not None: # not canceled
                 self.aw.qmc.plus_custom_blend = res
                 self.populatePlusCoffeeBlendCombos() # we update the blend menu to reflect the current custom blend
-                if self.aw.qmc.plus_custom_blend.name.strip() == '' and self.plus_blend_selected_spec is not None and 'hr_id' in self.plus_blend_selected_spec and self.plus_blend_selected_spec['hr_id'] == '': # ty:ignore[possibly-missing-attribute]
+                if self.aw.qmc.plus_custom_blend.name.strip() == '' and self.plus_blend_selected_spec is not None and 'hr_id' in self.plus_blend_selected_spec and self.plus_blend_selected_spec['hr_id'] == '':
                     # if the custom blend entry was selected before, which is now removed, we select the empty first entry
                     self.plus_blends_combo.setCurrentIndex(0)
                     self.blendSelectionChanged(0)
@@ -1956,6 +1966,19 @@ class editGraphDlg(ArtisanResizeablDialog):
                     line = line + str(int(round(i['ratio']*100))) + '% ' + c
             if line and len(line)>0 and self.plus_store_selected is not None and self.plus_store_selected_label is not None:
                 line = line + f'  (<a href="{plus.util.storeLink(self.plus_store_selected)}"{dark_mode_link_color}>{self.plus_store_selected_label}</a>)'
+            ok_button: QPushButton|None
+            if line == '':
+                # beans not specified
+                line = QApplication.translate('Label','Choose beans')
+                if self.start_recording_on_exit:
+                    ok_button = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
+                    if ok_button is not None:
+                        ok_button.setEnabled(False)
+            elif self.start_recording_on_exit:
+                ok_button = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
+                if ok_button is not None:
+                    ok_button.setEnabled(True)
+
             self.plus_selected_line.setText(line)
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
@@ -4142,7 +4165,7 @@ class editGraphDlg(ArtisanResizeablDialog):
         if not self.tabInitialized[5]:
             # fill Setup tab
             self.setup_ui = SetupWidget.Ui_SetupWidget()
-            self.setup_ui.setupUi(self.C6Widget)
+            self.setup_ui.setupUi(self.C6Widget) # zuban:ignore[no-untyped-call]
             self.setup_ui.doubleSpinBoxRoasterSize.setLocale(QLocale('C'))
             # explicitly reset labels to have them translated with a controlled context
             self.setup_ui.doubleSpinBoxRoasterSize.setToolTip(QApplication.translate('Tooltip', 'The maximum nominal batch size of the machine in kg'))
@@ -5890,7 +5913,7 @@ class EnergyMeasuringDialog(ArtisanDialog):
     def __init__(self, parent:QWidget, aw:'ApplicationWindow') -> None:
         super().__init__(parent, aw)
         self.ui = MeasureDialog.Ui_setMeasureDialog()
-        self.ui.setupUi(self)
+        self.ui.setupUi(self) # zuban:ignore[no-untyped-call]
         self.setWindowTitle(QApplication.translate('Form Caption','Set Measure from Profile'))
         self.ui.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Apply)
         # hack to assign the Apply button the AcceptRole without losing default system translations

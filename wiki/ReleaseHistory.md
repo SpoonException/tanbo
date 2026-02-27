@@ -2,14 +2,27 @@ Detailed Release History
 ========================
 
 ----
-v3.6.0 (Jan XX, 2026)
+v4.0.2 (Feb 7, 2026)
+------------------
+
+* CHANGES
+  - event replay is OFF by default for all event types
+  - reset CM ET/BT device calculation on background profile horizontal re-alignment
+
+* FIXES
+  - fixes regression where cut/copy/paste shortcuts are not working in file selector dialogs ([Issue #2114](../../../issues/2114))
+  - fixes build issues which broke PDF reports on Linux and macOS ([Issue #2113](../../../issues/2113))
+  - fixes issue with delta axis assignments in extra device setups on loading background profiles
+
+----
+v4.0.0 (Jan 28, 2026)
 ------------------
 
 * ADDITIONS
   - adds UI modes (production, standard, expert)
-  - adds support of the [Lebrew RoastSee NEXT](https://lebrewtech.com/products/roastsee-next) real-time Agtron and crack analyzer
+  - adds support for [Lebrew RoastSee NEXT](https://lebrewtech.com/products/roastsee-next) real-time Agtron and crack analyzer
   - adds support for [Acaia Pyxis Black (2025)](https://eu.acaia.co/products/pyxis-black)
-  - adds support for Yoccto Meteo as well as Phidget TMP1000, HUM1000 and PRE1000 as extra devices
+  - adds support for Yoccto Meteo as well as Phidget TMP1000, HUM1000 and PRE1000 configured as extra devices ([Issue #1251](../../../issues/1251))
   - adds Kaleido CSV importer ([PR #2090](../../../pull/2090) contributed by [Terracotta-6](https://github.com/Terracotta-6))
   - adds possibility to overwrite the event button value on alarm action `Event Button` by the number given after the button number and the `>` sign, like in `1>3,3>2,4 # activate button 1 with value 3, button 3 with value 2 and button 4`
   - adds relative percent event types ([Issue #2086](../../../issues/2086))
@@ -20,19 +33,24 @@ v3.6.0 (Jan XX, 2026)
   - adds calculation of energy data from PID Duty %
   - adds OPTION click on ET/BT or DeltaET/DeltaBT LCDs to hide/show the corresponding background curves
   - adds title click shortcut to open Roast Properties dialog
-  - adds deselection of selected event using key ESC
+  - adds deselection of selected custom event using key ESC
   - adds temporary autozoom gesture (double-click on the graph canvas) to scale the y-axis such that all data is rendered on screen
+  - adds legend to cupping spider chart
 
 * CHANGES
   - improved ramping event tracking with lookahead, avoiding non-linearities and bumps
   - removed the term `slave` from the project but for 2 lines (to be removed in later versions) needed to keep compatibility with older settings
   - removes support for Qt5, Python versions before v3.12 as well as previous legacy build infrastructure
 
+* FIXES
+  - fixes regression which skipped the second sample ([Issue #2091](../../../issues/2091))
+  - fixes encoding errors on loading points in designer ([Issue #2103](../../../issues/2103))
+
 ----
 v3.4.0 (Oct 31, 2025)
 ------------------
 
-Last version featuring legacy builds supporting macOS 10.13+, Window 8, as well as last version supporting macOS 13 and RPi OS bookworm.
+Last version featuring legacy builds supporting macOS 10.13+, Window 8, as well as last version supporting RPi OS bookworm.
 
 * ADDITIONS
   - adds tooltip to phases widget in Comparator displaying 2nd and 3rd phase bean temperatures (or RoR if ALT/Option key is pressed) limits ([Issue #1906](../../../issues/1906))
