@@ -24,12 +24,12 @@ environment:
   #PYUPGRADE_MACOS_V: 3.12.1  # when upgrading see the notes in the deploy phase
 
   matrix:
-  - job_name: windows
-    appveyor_build_worker_image: Visual Studio 2022
+#  - job_name: windows
+#    appveyor_build_worker_image: Visual Studio 2022
   - job_name: macos
     appveyor_build_worker_image: macos-ventura
-  - job_name: linux
-    appveyor_build_worker_image: Ubuntu2204
+#  - job_name: linux
+#    appveyor_build_worker_image: Ubuntu2204
 
 
 # Generic build number, later set to commit hash by init

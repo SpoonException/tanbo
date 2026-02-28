@@ -5058,6 +5058,7 @@ class ApplicationWindow(QMainWindow):
 
     @pyqtSlot()
     def donate(self) -> None:
+        return  # 禁用赞助弹窗
         try:
             everytime = 4*30*24*60*60 # 4 month in seconds
             everystarts = 30 # number of recordings
