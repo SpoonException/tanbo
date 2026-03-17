@@ -501,7 +501,7 @@ class Artisan(QtSingleApplication):
                 aw:ApplicationWindow|None = self.activationWindow()
                 if aw is not None:
                     url:QUrl = cast(QUrl, a0.url()) # type: ignore[attr-defined] # "QEvent" has no attribute "url"
-                    # files cannot be opend while
+                    # files cannot be opened while
                     # - sampling
                     # - in Designer mode
                     # - in Wheel graph mode
@@ -1429,7 +1429,7 @@ class ApplicationWindow(QMainWindow):
     santokerSendMessageSignal = pyqtSignal(bytes,int)
     kaleidoSendMessageSignal = pyqtSignal(str,str)
     kaleidoSendMessageAwaitSignal = pyqtSignal(str,str,int,int)
-    orbiterSendMessageSignal = pyqtSignal(bytes,bytes,bytes)
+    orbiterSendMessageSignal = pyqtSignal(bytes,bytes,bytes,int)
     addEventSignal = pyqtSignal(int,int,bool,bool,bool)
     addRawEventSignal = pyqtSignal(int,float,int,bool,bool,bool)
     updateMessageLogSignal = pyqtSignal()
@@ -9578,7 +9578,7 @@ class ApplicationWindow(QMainWindow):
                                                         orbiter_data = min(65535, max(0, int(round(float(parts[1]))))).to_bytes(2, 'little')
                                                     else:
                                                         orbiter_data = b'\x00\x00'
-                                                    self.orbiterSendMessageSignal.emit(orbiter_cmd, orbiter_data, orbiter_param)
+                                                    self.orbiterSendMessageSignal.emit(orbiter_cmd, orbiter_data, orbiter_param, self.qmc.current_time())
                                             except Exception as e: # pylint: disable=broad-except
                                                 _log.error(e)
 
@@ -17830,10 +17830,10 @@ class ApplicationWindow(QMainWindow):
             self.kaleido.send_msg(target, value)
 
     # orbiterSendMessage() just sends out the message to the machine without waiting for a response
-    @pyqtSlot(bytes,bytes,bytes)
-    def orbiterSendMessage(self, cmd:bytes, data:bytes, param:bytes) -> None:
+    @pyqtSlot(bytes,bytes,bytes,int)
+    def orbiterSendMessage(self, cmd:bytes, data:bytes, param:bytes, time:int) -> None:
         if self.orbiter is not None:
-            self.orbiter.send_msg(cmd, data, param)
+            self.orbiter.send_msg(cmd, data, param, time)
 
     # if record is True, an event is added during recording, otherwise only the slider is moved
     # if fire_slider_action is True, the slider action is fired
@@ -24772,7 +24772,7 @@ class ApplicationWindow(QMainWindow):
                 self.buttonCONTROL.setStyleSheet(self.pushbuttonstyles['PID'])
 
     def HottopControlOn(self, autosuper:bool=True) -> None:
-        # if super holds, the superusermode is autoatically activated (if control is activated via an HOTTOP Command 'control')
+        # if super holds, the superusermode is automatically activated (if control is activated via an HOTTOP Command 'control')
         # on just pressing the CONTROL button the superusermode is not automatically activated and has to be activated manually by the user (for safety reasons)
         if autosuper:
             self.superusermode = True

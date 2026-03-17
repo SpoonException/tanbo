@@ -1348,6 +1348,11 @@ class tgraphcanvas(QObject):
         self.roastpropertiesflag:int = 1  #resets roast properties if not zero
         self.roastpropertiesAutoOpenFlag:int = 0  #open roast properties dialog on CHARGE if not zero
         self.roastpropertiesAutoOpenDropFlag:int = 0  #open roast properties dialog on DROP if not zero
+
+        # if True and plus is connected reminds user to set beans and open Roast Properties dialog if not yet set (once)
+        # this flag is reset after the warning dialog popped up once and is set to True again on OFF and
+        self.plus_beans_reminder_on_start:bool = True
+
         self.title:str = QApplication.translate('Scope Title', 'Roaster Scope')
         self.title_show_always:bool = False
         self.ambientTemp:float = 0.
@@ -1609,7 +1614,7 @@ class tgraphcanvas(QObject):
         self.batchprefix:str = '#'
         self.neverUpdateBatchCounter:bool = False
         # profile batch nr
-        self.roastbatchnr:int = 0 # batch number of the roast; if roastbatchnr=0, prefix/counter is hidden/inactiv (initialized to 0 on roast START)
+        self.roastbatchnr:int = 0 # batch number of the roast; if roastbatchnr=0, prefix/counter is hidden/inactive (initialized to 0 on roast START)
         self.roastbatchprefix:str = self.batchprefix # batch prefix of the roast
         self.roastbatchpos:int = 1 # position of the roast in the roast session (first batch, second batch,..)
         self.roasttzoffset:int = libtime.timezone # timezone offset to be added to roastepoch to get time in local timezone; NOTE: this is not set/updated on loading a .alog profile!
@@ -4605,6 +4610,47 @@ class tgraphcanvas(QObject):
             self.afterTP = True
         return self.afterTP
 
+    @staticmethod # pre condition: 1 < left_index <= len(temp) = len(timex)
+    def compute_ror_simple(timex:list[float], temp:list[float], left_index:int) -> float:
+        timed = timex[-1] - timex[-left_index]   #time difference between last readings
+        # average the left point of the RoR interval (3 points) without introducing a delay
+        if len(temp)>=left_index+2 and 2-left_index<0:
+            return ((temp[-1] - (temp[-left_index - 2] + temp[-left_index - 1] + temp[-left_index] + temp[-left_index + 1] + temp[-left_index + 2])/5.)/timed)*60.  #delta BT (degrees/minute)
+        if len(temp)>=left_index+1 and 1-left_index<0:
+            return ((temp[-1] - (temp[-left_index - 1] + temp[-left_index] + temp[-left_index + 1])/3.)/timed)*60.  #delta BT (degrees/minute)
+        return ((temp[-1] - temp[-left_index])/timed)*60.  #delta BT (degrees/minute)
+
+    def compute_ror(self, t_final:float, timex:list[float], temp:list[float], unfiltereddelta:list[float], deltaTempSamples:int) -> float:
+        # compute RoR
+        try:
+            if t_final == -1 or len(timex)<2:  # we repeat the last RoR if underlying temperature dropped
+                if unfiltereddelta:
+                    return unfiltereddelta[-1]
+                return 0.
+            # normal data received
+            #   Delta T = (changeTemp/ChangeTime)*60. =  degrees per minute;
+            left_index = min(len(timex),len(temp),max(2, deltaTempSamples + 1))
+            # ****** Instead of basing the estimate on the window extremal points,
+            #        grab the full set of points and do a formal LS solution to a straight line and use the slope estimate for RoR
+            if self.polyfitRoRcalc:
+                try:
+                    time_vec = timex[-left_index:]
+                    temp_samples = temp[-left_index:]
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore')
+                        # using stable polyfit from numpy polyfit module
+                        LS_fit = numpy.polynomial.polynomial.polyfit(time_vec, temp_samples, 1)
+                        return float(LS_fit[1]*60.)
+                except Exception: # pylint: disable=broad-except
+                    # a numpy/OpenBLAS polyfit bug can cause polyfit to throw an exception "SVD did not converge in Linear Least Squares" on Windows Windows 10 update 2004
+                    # https://github.com/numpy/numpy/issues/16744
+                    # we fall back to the two point algo below
+                    pass
+            return self.compute_ror_simple(timex, temp, left_index)
+        except Exception as e: # pylint: disable=broad-except
+            _log.error(e)
+            return 0.
+
     # sample devices at interval self.delay milliseconds.
     # we can assume within the processing of sample_processing() that flagon=True
     # NOTE: sample_processing is processed in the GUI thread NOT the sample thread!
@@ -4931,72 +4977,10 @@ class tgraphcanvas(QObject):
                     #we need a minimum of two readings to calculate rate of change
                     if length_of_qmc_timex > 1:
                         # compute T1 RoR
-                        try:
-                            if t1_final == -1 or len(sample_ctimex1)<2:  # we repeat the last RoR if underlying temperature dropped
-                                if sample_unfiltereddelta1:
-                                    self.rateofchange1 = sample_unfiltereddelta1[-1]
-                                else:
-                                    self.rateofchange1 = 0.
-                            else: # normal data received
-                                #   Delta T = (changeTemp/ChangeTime)*60. =  degrees per minute;
-                                left_index = min(len(sample_ctimex1),len(sample_tstemp1),max(2, self.deltaETsamples + 1))
-                                # ****** Instead of basing the estimate on the window extremal points,
-                                #        grab the full set of points and do a formal LS solution to a straight line and use the slope estimate for RoR
-                                if self.polyfitRoRcalc:
-                                    try:
-                                        time_vec = sample_ctimex1[-left_index:]
-                                        temp_samples = sample_tstemp1[-left_index:]
-                                        with warnings.catch_warnings():
-                                            warnings.simplefilter('ignore')
-                                            # using stable polyfit from numpy polyfit module
-                                            LS_fit = numpy.polynomial.polynomial.polyfit(time_vec, temp_samples, 1)
-                                            self.rateofchange1 = LS_fit[1]*60.
-                                    except Exception: # pylint: disable=broad-except
-                                        # a numpy/OpenBLAS polyfit bug can cause polyfit to throw an exception "SVD did not converge in Linear Least Squares" on Windows Windows 10 update 2004
-                                        # https://github.com/numpy/numpy/issues/16744
-                                        # we fall back to the two point algo
-                                        timed = sample_ctimex1[-1] - sample_ctimex1[-left_index]   #time difference between last self.deltaETsamples readings
-                                        self.rateofchange1 = ((sample_tstemp1[-1] - sample_tstemp1[-left_index])/timed)*60.  #delta ET (degrees/minute)
-                                else:
-                                    timed = sample_ctimex1[-1] - sample_ctimex1[-left_index]   #time difference between last self.deltaETsamples readings
-                                    self.rateofchange1 = ((sample_tstemp1[-1] - sample_tstemp1[-left_index])/timed)*60.  #delta ET (degrees/minute)
-                        except Exception as e: # pylint: disable=broad-except
-                            _log.error(e)
-                            self.rateofchange1 = 0.
+                        self.rateofchange1 = self.compute_ror(t1_final, sample_ctimex1, sample_tstemp1, sample_unfiltereddelta1, self.deltaETsamples)
 
                         # compute T2 RoR
-                        try:
-                            if t2_final == -1 or len(sample_ctimex2)<2:  # we repeat the last RoR if underlying temperature dropped
-                                if sample_unfiltereddelta2:
-                                    self.rateofchange2 = sample_unfiltereddelta2[-1]
-                                else:
-                                    self.rateofchange2 = 0.
-                            else: # normal data received
-                                #   Delta T = (changeTemp/ChangeTime)*60. =  degrees per minute;
-                                left_index = min(len(sample_ctimex2),len(sample_tstemp2),max(2, self.deltaBTsamples + 1))
-                                # ****** Instead of basing the estimate on the window extremal points,
-                                #        grab the full set of points and do a formal LS solution to a straight line and use the slope estimate for RoR
-                                if self.polyfitRoRcalc:
-                                    try:
-                                        time_vec = sample_ctimex2[-left_index:]
-                                        temp_samples = sample_tstemp2[-left_index:]
-                                        with warnings.catch_warnings():
-                                            warnings.simplefilter('ignore')
-                                            LS_fit = numpy.polynomial.polynomial.polyfit(time_vec, temp_samples, 1)
-                                            self.rateofchange2 = LS_fit[1]*60.
-                                    except Exception: # pylint: disable=broad-except
-                                        # a numpy/OpenBLAS polyfit bug can cause polyfit to throw an exception "SVD did not converge in Linear Least Squares" on Windows Windows 10 update 2004
-                                        # https://github.com/numpy/numpy/issues/16744
-                                        # we fall back to the two point algo
-                                        timed = sample_ctimex2[-1] - sample_ctimex2[-left_index]   #time difference between last self.deltaBTsamples readings
-                                        self.rateofchange2 = ((sample_tstemp2[-1] - sample_tstemp2[-left_index])/timed)*60.  #delta BT (degrees/minute)
-                                else:
-                                    timed = sample_ctimex2[-1] - sample_ctimex2[-left_index]   #time difference between last self.deltaBTsamples readings
-                                    self.rateofchange2 = ((sample_tstemp2[-1] - sample_tstemp2[-left_index])/timed)*60.  #delta BT (degrees/minute)
-                        except Exception as e: # pylint: disable=broad-except
-                            _log.error(e)
-                            self.rateofchange1 = 0.
-
+                        self.rateofchange2 = self.compute_ror(t2_final, sample_ctimex2, sample_tstemp2, sample_unfiltereddelta2, self.deltaBTsamples)
 
                         # self.unfiltereddelta{1,2}_pure contain the RoR values respecting the delta_span, but without any delta smoothing NOR delta mathformulas applied
                         self.unfiltereddelta1_pure.append(self.rateofchange1)
@@ -5077,10 +5061,13 @@ class tgraphcanvas(QObject):
                                 self.l_delta2.set_data([], [])
 
                         #readjust xlimit of plot if needed
-                        if  not self.fixmaxtime and not self.locktimex:
-                            now = (sample_timex[-1] if self.timeindex[0] == -1 else sample_timex[-1] - sample_timex[self.timeindex[0]])
-                            if now > (self.endofx - 45*self.delay/1000):         # if difference is smaller than 45 seconds on 1sec sampling interval
-                                self.endofx = now + 3*60*self.delay/1000    # increase x limit by 3 minutes (180.) if sampling interval is 1sec
+                        if not self.fixmaxtime and not self.locktimex:
+                            charge_offset:float = (0 if self.timeindex[0] == -1 else sample_timex[self.timeindex[0]])
+                            now = sample_timex[-1] - charge_offset
+                            trigger_period:float = (self.endofx - self.startofx - charge_offset) / 14 # 14th part of the total x-axis length
+                            if now > (self.endofx - trigger_period):
+                                extension_period:float = trigger_period * 4
+                                self.endofx = now + extension_period
                                 self.xaxistosm()
                         if self.ETprojectFlag or self.BTprojectFlag:
                             self.updateProjection()
@@ -5812,6 +5799,27 @@ class tgraphcanvas(QObject):
                 _log.exception(e)
             finally:
                 QTimer.singleShot(int(round(nextreading)),self.updateLCDtime)
+
+
+    # return current preheating/roasting/cooling time in seconds; reset to 00:00 @ CHARGE and DROP
+    def current_time(self) -> int:
+        if self.flagstart and self.flagon:
+            tx = self.timeclock.elapsedMilli()
+            try:
+                if self.aw.sample_loop_running and len(self.timeindex) == 8: # ensure we have a valid self.timeindex array
+                    if self.timeindex[0] != -1 and len(self.timex) > self.timeindex[0]:
+                        ts = tx - self.timex[self.timeindex[0]]
+                    else:
+                        ts = tx
+                    if self.timeindex[6] and not self.timeindex[7] and len(self.timex)>self.timeindex[6]:
+                        # cooling; reset time to 00:00 at cooling start
+                        ts = tx - self.timex[self.timeindex[6]]
+                    elif self.timeindex[7]:
+                        ts = 0
+                    return max(0,int(round(ts)))
+            except Exception as e: # pylint: disable=broad-except
+                _log.exception(e)
+        return 0
 
     # redraws at least the canvas if redraw=True and force=True
     def timealign(self, redraw:bool = True, recompute:bool = False, force:bool = False) -> None:
@@ -9387,13 +9395,15 @@ class tgraphcanvas(QObject):
     @pyqtSlot(bool,bool,bool,bool,bool)
     def redraw(self, recomputeAllDeltas:bool = True, re_smooth_foreground:bool = True, takelock:bool = True, forceRenewAxis:bool = False, re_smooth_background:bool = False) -> None: # pyright: ignore [reportGeneralTypeIssues] # Code is too complex to analyze; reduce complexity by refactoring into subroutines or reducing conditional code paths
 #        _log.debug("PRINT redraw(recomputeAllDeltas: %s, re_smooth_foreground: %s, takelock: %s, forceRenewAxis: %s, re_smooth_background: %s)",recomputeAllDeltas, re_smooth_foreground, takelock, forceRenewAxis, re_smooth_background)
+
         if self.designerflag:
             self.redrawdesigner(force=True)
         elif self.aw.comparator is not None:
             self.aw.comparator.redraw()
             if self.aw.qpc is not None:
                 self.aw.qpc.redraw_phases()
-        else:
+        elif self.ax is not None:
+            ax:Axes = self.ax
             titleB = ''
             try:
                 #### lock shared resources   ####
@@ -9415,7 +9425,7 @@ class tgraphcanvas(QObject):
                     rcParams['path.sketch'] = (scale, length, randomness)
 
                     # if no axis are set, we need to forceRenewAxis in any case
-                    if self.ax is None or self.delta_ax is None:
+                    if self.delta_ax is None:
                         forceRenewAxis = True
 
                     xlabel_alpha_color = to_hex(to_rgba(self.palette['xlabel'], 0.47), keep_alpha=True)
@@ -11031,31 +11041,32 @@ class tgraphcanvas(QObject):
                             self.drawDeltaBT(trans,0,0)
 
                     if self.delta_ax is not None:
-                        self.delta_ax.set_yticks([]) # pyrefly:ignore[not-callable]
+                        delta_ax:_AxesBase = self.delta_ax
+                        delta_ax.set_yticks([]) # pyrefly:ignore[not-callable]
                         if two_ax_mode:
                             self.aw.autoAdjustAxis(timex=False)
-                            self.delta_ax.set_ylim(self.zlimit_min,self.zlimit)
+                            delta_ax.set_ylim(self.zlimit_min,self.zlimit)
                             if self.zgrid > 0:
                                 major_locator = ticker.MultipleLocator(self.zgrid)
-                                self.delta_ax.yaxis.set_major_locator(major_locator)
+                                delta_ax.yaxis.set_major_locator(major_locator)
                                 if len(major_locator()) > 50: # accept a maximum of 20 major ticks
                                     min_grid = (self.aw.qmc.zlimit - self.aw.qmc.zlimit_min) / 50
                                     # set grid to closest of min_grid from regular grids [1, 2, 5, 10, 20, 50, 100]
                                     major_locator.set_params(min([1, 2, 5, 10, 20, 50, 100], key=lambda x:abs(x-min_grid)))
-                                delta_major_tick_lines:list[Line2D] = self.delta_ax.get_yticklines() # pyrefly:ignore[not-callable]
+                                delta_major_tick_lines:list[Line2D] = delta_ax.get_yticklines() # pyrefly:ignore[not-callable]
                                 for ytl in delta_major_tick_lines:
                                     ytl.set_markersize(10)
-                                for label in self.delta_ax.get_yticklabels(): # pyrefly:ignore[not-callable]
+                                for label in delta_ax.get_yticklabels(): # pyrefly:ignore[not-callable]
                                     label.set_fontsize('small')
                                 if not self.LCDdecimalplaces:
-                                    self.delta_ax.minorticks_off()
+                                    delta_ax.minorticks_off()
                                 else:
                                     minor_locator = ticker.AutoMinorLocator() # locator parameter n, default: n='auto' => 4 or 5, n=2 => 1
-                                    self.delta_ax.yaxis.set_minor_locator(minor_locator)
+                                    delta_ax.yaxis.set_minor_locator(minor_locator)
                                     if len(minor_locator()) > 50:
                                         # we limit the total number of minor tick locators for performance and esthetic reasons
-                                        self.delta_ax.yaxis.set_minor_locator(ticker.NullLocator())
-                                    delta_minor_tick_lines:list[Line2D] = self.delta_ax.yaxis.get_minorticklines()
+                                        delta_ax.yaxis.set_minor_locator(ticker.NullLocator())
+                                    delta_minor_tick_lines:list[Line2D] = delta_ax.yaxis.get_minorticklines()
                                     for mtl in delta_minor_tick_lines:
                                         mtl.set_markersize(5)
 
@@ -11101,9 +11112,10 @@ class tgraphcanvas(QObject):
                                         self.extrastemp1[i] = self.extratemp1[i]
 
                                 if self.aw.extraDelta1[i] and self.delta_ax is not None:
-                                    trans = self.delta_ax.transData
+                                    delta_ax = self.delta_ax
+                                    trans = delta_ax.transData
                                 else:
-                                    trans = self.ax.transData
+                                    trans = ax.transData
                                 visible_extratemp1 : npt.NDArray[numpy.double]
                                 if not self.flagstart and not self.foregroundShowFullflag and (not self.autotimex or self.autotimexMode == 0) and len(self.extrastemp1[i]) > 0:
                                     visible_extratemp1 = numpy.concatenate((
@@ -11118,8 +11130,8 @@ class tgraphcanvas(QObject):
                                     visible_extratemp1 = numpy.array(self.extrastemp1[i], dtype=numpy.double)
                                 # first draw the fill if any, but not during recording!
                                 if not self.flagstart and self.aw.extraFill1[i] > 0:
-                                    self.ax.fill_between(self.extratimex[i], 0, visible_extratemp1,transform=trans,color=self.extradevicecolor1[i],alpha=self.aw.extraFill1[i]/100.,sketch_params=None)
-                                self.extratemp1lines.append(self.ax.plot(self.extratimex[i],visible_extratemp1,transform=trans,color=self.extradevicecolor1[i],
+                                    ax.fill_between(self.extratimex[i], 0, visible_extratemp1,transform=trans,color=self.extradevicecolor1[i],alpha=self.aw.extraFill1[i]/100.,sketch_params=None)
+                                self.extratemp1lines.append(ax.plot(self.extratimex[i],visible_extratemp1,transform=trans,color=self.extradevicecolor1[i],
                                     sketch_params=None,
                                     path_effects=self.line_path_effects(self.glow, self.patheffects, self.aw.light_background_p, self.extralinewidths1[i],self.extradevicecolor1[i]),
                                     markersize=self.extramarkersizes1[i],
@@ -11152,9 +11164,10 @@ class tgraphcanvas(QObject):
                                         self.extrastemp2[i] = self.extratemp2[i]
 
                                 if self.aw.extraDelta2[i] and self.delta_ax is not None:
-                                    trans = self.delta_ax.transData
+                                    delta_ax = self.delta_ax
+                                    trans = delta_ax.transData
                                 else:
-                                    trans = self.ax.transData
+                                    trans = ax.transData
                                 visible_extratemp2 : npt.NDArray[numpy.double]
                                 if not self.flagstart and not self.foregroundShowFullflag and (not self.autotimex or self.autotimexMode == 0) and len(self.extrastemp2[i]) > 0:
                                     visible_extratemp2 = numpy.concatenate((
@@ -11169,8 +11182,8 @@ class tgraphcanvas(QObject):
                                     visible_extratemp2 = numpy.array(self.extrastemp2[i], dtype=numpy.double)
                                 # first draw the fill if any
                                 if not self.flagstart and self.aw.extraFill2[i] > 0:
-                                    self.ax.fill_between(self.extratimex[i], 0, visible_extratemp2,transform=trans,color=self.extradevicecolor2[i],alpha=self.aw.extraFill2[i]/100.,sketch_params=None)
-                                self.extratemp2lines.append(self.ax.plot(self.extratimex[i],visible_extratemp2,transform=trans,color=self.extradevicecolor2[i],
+                                    ax.fill_between(self.extratimex[i], 0, visible_extratemp2,transform=trans,color=self.extradevicecolor2[i],alpha=self.aw.extraFill2[i]/100.,sketch_params=None)
+                                self.extratemp2lines.append(ax.plot(self.extratimex[i],visible_extratemp2,transform=trans,color=self.extradevicecolor2[i],
                                     sketch_params=None,
                                     path_effects=self.line_path_effects(self.glow, self.patheffects, self.aw.light_background_p, self.extralinewidths2[i],self.extradevicecolor2[i]),
                                     markersize=self.extramarkersizes2[i],
@@ -11312,12 +11325,13 @@ class tgraphcanvas(QObject):
                         self.drawAUC()
 
                     #update label rotating_colors
-                    for label in self.ax.xaxis.get_ticklabels():
+                    for label in ax.xaxis.get_ticklabels():
                         label.set_color(self.palette['xlabel'])
-                    for label in self.ax.yaxis.get_ticklabels():
+                    for label in ax.yaxis.get_ticklabels():
                         label.set_color(self.palette['ylabel'])
                     if two_ax_mode and self.delta_ax is not None:
-                        for label in self.delta_ax.yaxis.get_ticklabels():
+                        delta_ax = self.delta_ax
+                        for label in delta_ax.yaxis.get_ticklabels():
                             label.set_color(self.palette['ylabel'])
 
                     #write legend
@@ -11340,7 +11354,7 @@ class tgraphcanvas(QObject):
                         else:
                             loc = self.legend._loc # type: ignore[attr-defined] # "Legend" has no attribute "_loc" # pylint: disable=protected-access
                         try:
-                            leg = self.ax.legend(self.handles,self.labels, loc=loc,
+                            leg = ax.legend(self.handles,self.labels, loc=loc,
                                 ncols=ncol,fancybox=True,prop=prop,shadow=False,frameon=True)
                             leg.set_in_layout(False) # remove legend from tight_layout calculation
                             self.legend = leg
@@ -11383,37 +11397,39 @@ class tgraphcanvas(QObject):
                 # add projection and AUC guide lines last as those are removed by updategraphics for optimized redrawing and not cached
                 if self.ETprojectFlag:
                     if self.ETcurve:
-                        self.l_ETprojection, = self.ax.plot(self.ETprojection_tx, self.ETprojection_temp,color = self.palette['et'],
+                        self.l_ETprojection, = ax.plot(self.ETprojection_tx, self.ETprojection_temp,color = self.palette['et'],
                                                     dashes=dashes_setup,
                                                     label=self.aw.arabicReshape(QApplication.translate('Label', 'ETprojection')),
                                                     linestyle = '-.', linewidth= 8, alpha = .3,sketch_params=None,path_effects=[])
                     if self.projectDeltaFlag and self.DeltaETflag and self.delta_ax is not None:
-                        trans = self.delta_ax.transData
-                        self.l_DeltaETprojection, = self.ax.plot(self.DeltaETprojection_tx, self.DeltaETprojection_temp,color = self.palette['deltaet'],
+                        delta_ax = self.delta_ax
+                        trans = delta_ax.transData
+                        self.l_DeltaETprojection, = ax.plot(self.DeltaETprojection_tx, self.DeltaETprojection_temp,color = self.palette['deltaet'],
                                                     dashes=dashes_setup,
                                                     transform=trans,
                                                     label=self.aw.arabicReshape(QApplication.translate('Label', 'DeltaETprojection')),
                                                     linestyle = '-.', linewidth= 8, alpha = .3,sketch_params=None,path_effects=[])
                 if self.BTprojectFlag:
                     if self.BTcurve:
-                        self.l_BTprojection, = self.ax.plot(self.BTprojection_tx, self.BTprojection_temp,color = self.palette['bt'],
+                        self.l_BTprojection, = ax.plot(self.BTprojection_tx, self.BTprojection_temp,color = self.palette['bt'],
                                                     dashes=dashes_setup,
                                                     label=self.aw.arabicReshape(QApplication.translate('Label', 'BTprojection')),
                                                     linestyle = '-.', linewidth= 8, alpha = .3,sketch_params=None,path_effects=[])
                     if self.projectDeltaFlag and self.DeltaBTflag and self.delta_ax is not None:
-                        trans = self.delta_ax.transData
-                        self.l_DeltaBTprojection, = self.ax.plot(self.DeltaBTprojection_tx, self.DeltaBTprojection_temp,color = self.palette['deltabt'],
+                        delta_ax = self.delta_ax
+                        trans = delta_ax.transData
+                        self.l_DeltaBTprojection, = ax.plot(self.DeltaBTprojection_tx, self.DeltaBTprojection_temp,color = self.palette['deltabt'],
                                                     dashes=dashes_setup,
                                                     transform=trans,
                                                     label=self.aw.arabicReshape(QApplication.translate('Label', 'DeltaBTprojection')),
                                                     linestyle = '-.', linewidth= 8, alpha = .3,sketch_params=None,path_effects=[])
                 if (self.device == 18 and self.aw.simulator is None) or self.showtimeguide: # not NONE device
-                    self.l_timeline = self.ax.axvline(self.timeclock.elapsedMilli(),color = self.palette['timeguide'],
+                    self.l_timeline = ax.axvline(self.timeclock.elapsedMilli(),color = self.palette['timeguide'],
                                             label=self.aw.arabicReshape(QApplication.translate('Label', 'TIMEguide')),
                                             visible=self.flagstart,
                                             linestyle = '-', linewidth= 1, alpha = .5,sketch_params=None,path_effects=[])
-                if self.AUCguideFlag:
-                    self.l_AUCguide = self.ax.axvline(self.AUCguideTime,visible=(self.AUCguideTime > 0 and self.AUCguideTime < self.endofx),color = self.palette['aucguide'],
+                if self.AUCguideFlag and self.ax is not None:
+                    self.l_AUCguide = ax.axvline(self.AUCguideTime,visible=(self.AUCguideTime > 0 and self.AUCguideTime < self.endofx),color = self.palette['aucguide'],
                                                 label=self.aw.arabicReshape(QApplication.translate('Label', 'AUCguide')),
                                                 linestyle = '-', linewidth= 1, alpha = .5,sketch_params=None,path_effects=[])
 
@@ -13298,7 +13314,8 @@ class tgraphcanvas(QObject):
                                 bytesize = self.aw.ser.bytesize,
                                 stopbits = self.aw.ser.stopbits,
                                 parity = self.aw.ser.parity,
-                                timeout = self.aw.ser.timeout)
+                                timeout = self.aw.ser.timeout,
+                                clear_HUPCL = False)
                     self.aw.hottop = Hottop(
                         serial=hottop_serial,
                         connected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} connected').format('Hottop'),True,None),
@@ -13316,7 +13333,8 @@ class tgraphcanvas(QObject):
                                 bytesize = self.aw.ser.bytesize,
                                 stopbits = self.aw.ser.stopbits,
                                 parity = self.aw.ser.parity,
-                                timeout = self.aw.ser.timeout)
+                                timeout = self.aw.ser.timeout,
+                                clear_HUPCL = False)
                     self.aw.santoker = Santoker(self.aw.santokerHost, self.aw.santokerPort,
                         santoker_serial, self.aw.santokerBLE,
                         connected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} connected').format('Santoker'),True,None),
@@ -13359,7 +13377,8 @@ class tgraphcanvas(QObject):
                                 bytesize = self.aw.ser.bytesize,
                                 stopbits = self.aw.ser.stopbits,
                                 parity = self.aw.ser.parity,
-                                timeout = self.aw.ser.timeout)
+                                timeout = self.aw.ser.timeout,
+                                clear_HUPCL = False)
                     self.aw.kaleido.start(self.mode, self.aw.kaleidoHost, self.aw.kaleidoPort,
                         serial=kaleido_serial,
                         connected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} connected').format('Kaleido'),True,None),
@@ -13395,7 +13414,8 @@ class tgraphcanvas(QObject):
                                 bytesize = self.aw.ser.bytesize,
                                 stopbits = self.aw.ser.stopbits,
                                 parity = self.aw.ser.parity,
-                                timeout = self.aw.ser.timeout)
+                                timeout = self.aw.ser.timeout,
+                                clear_HUPCL = True)
                     self.aw.orbiter = Orbiter(orbiter_serial,
                         connected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} connected').format('Orbiter'),True,None),
                         disconnected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} disconnected').format('Orbiter'),True,None))
@@ -13664,7 +13684,10 @@ class tgraphcanvas(QObject):
         _log.info('MODE: OFF MONITOR')
         if self.flagon:
             try:
-                # first activate "Stopping Mode" to ensure that sample() is not resetting the timer now (independent of the flagstart state)
+                # reset
+                self.plus_beans_reminder_on_start = True # ensure that for the next recording the corresponding warning is shown if beans are not specified for plus
+
+                # activate "Stopping Mode" to ensure that sample() is not resetting the timer now (independent of the flagstart state)
 
                 self.aw.buttonONOFF.setEnabled(False)
                 ge:QGraphicsEffect|None = self.aw.buttonONOFF.graphicsEffect()
@@ -13686,8 +13709,10 @@ class tgraphcanvas(QObject):
 
                 try:
                     # trigger event action before disconnecting from devices
-                    if self.extrabuttonactions[1] != 18: # Artisan Commands are executed after the OFFMonitor action is fully executed as they might trigger another buttons
+                    if self.extrabuttonactions[1] not in {0, 18}: # Artisan Commands are executed after the OFFMonitor action is fully executed as they might trigger other buttons
+                        # for all actions (buttonaction!=0) which are not Artisan Command (buttonaction!=18)
                         self.aw.eventactionx(self.extrabuttonactions[1],self.extrabuttonactionstrings[1])
+                        libtime.sleep(.3) # we wait a moment to increase the change that a potential write command can be succeed before connections are closed
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
 
@@ -14350,6 +14375,7 @@ class tgraphcanvas(QObject):
             if (self.aw.plus_account is not None and              # plus connected
                     not self.roastpropertiesAutoOpenFlag and      # no "Open on CHARGE"
                     not self.roastpropertiesAutoOpenDropFlag and  # no "Open on DROP"
+                    self.plus_beans_reminder_on_start and         # warning was not yet shown for this recording
                     (self.plus_coffee is None and self.plus_blend_spec is None and self.beans == '') and # beans are not set
                     (self.aw.schedule_window is None or self.aw.schedule_window.selected_remaining_item is None) # scheduler is off or no schedule item selected
                     ):

@@ -1797,7 +1797,8 @@ class serialport:
                     bytesize = self.bytesize,
                     stopbits = self.stopbits,
                     parity = self.parity,
-                    timeout = self.timeout)
+                    timeout = self.timeout,
+                    clear_HUPCL = False)
                 self.colorTrackSerial = ColorTrack(serial=colortrack_serial)
                 self.colorTrackSerial.setLogging(self.aw.qmc.device_logging)
                 self.colorTrackSerial.start()
@@ -2167,7 +2168,7 @@ class serialport:
                     # only after 7min into the roast and if CHARGE is marked
                     self.aw.qmc.autoDropIdx = len(self.aw.qmc.timex) - 2
                     self.aw.qmc.markDropSignal.emit(True) # DROP
-#                elif event_flag == 9 and self.aw.qmc.timeindex[7] == 0:
+#                elif event_flag == 9 and self.aw.qmc.timeindex[0] > -1 and self.aw.qmc.timeindex[6] >= 0 and self.aw.qmc.timeindex[7] == 0:
 #                    self.aw.qmc.markCoolSignal.emit(True) # COOL
             except Exception as e: # pylint: disable=broad-except
                 _log.error(e)
@@ -2225,8 +2226,18 @@ class serialport:
         t1:float = -1
         t2:float = -1
         if self.aw.orbiter is not None:
-            t1 = self.aw.orbiter.getBT()
+            previous_isRoaster_Roasting:bool = self.aw.orbiter.isRoaster_Roasting # keep previous roasting state to be able to detect a change after getting new data via getBT()
+            t1 = self.aw.orbiter.getBT(self.aw.qmc.current_time())
             t2 = self.aw.orbiter.getET()
+
+            # autoCHARGE/autoDROP triggered by machine
+            if self.aw.qmc.timeindex[0] == -1 and self.aw.orbiter.isRoaster_Roasting:
+                self.aw.qmc.markChargeSignal.emit(True) # CHARGE
+            elif (self.aw.qmc.timeindex[0] > -1 and self.aw.qmc.timeindex[6] == 0 and self.aw.qmc.autoDropIdx == 0 and
+                    previous_isRoaster_Roasting and not self.aw.orbiter.isRoaster_Roasting):
+                self.aw.qmc.autoDropIdx = len(self.aw.qmc.timex) - 1
+                self.aw.qmc.markDropSignal.emit(True) # DROP
+
         return tx,t2,t1
 
     def Orbiter_ITDT(self) -> tuple[float,float,float]:
