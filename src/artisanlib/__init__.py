@@ -3,5 +3,5 @@ __revision__ = ''
 __build__ = '0'
 
 __release_sponsor_name__ = ''
-__release_sponsor_domain__ = 'total-link.cn'
+__release_sponsor_domain__ = ''
 __release_sponsor_url__ = 'http://www.total-link.cn/'
