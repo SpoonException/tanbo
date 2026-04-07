@@ -87,7 +87,7 @@ class BLE:
             address:str|None) -> 'tuple[BLEDevice|None, str|None]':
         try:
             async with asyncio.timeout(scan_timeout):
-                async with BleakScanner() as scanner: # pyrefly: ignore[bad-context-manager] # ty: ignore[invalid-context-manager]
+                async with BleakScanner() as scanner: # pyrefly: ignore[bad-context-manager]
                     self._terminate_scan_event.clear()
                     async for bd, ad in scanner.advertisement_data():
                         if self._terminate_scan_event.is_set():
@@ -437,9 +437,14 @@ class ClientBLE(QObject):
                 coro = BleakScanner.discover(
                     timeout=scan_timeout,
                     return_adv=True)
-                res = asyncio.run_coroutine_threadsafe(
-                    coro,
-                    self._async_loop_thread.loop).result()
+                try:
+                    res = asyncio.run_coroutine_threadsafe(
+                        coro,
+                        self._async_loop_thread.loop).result()
+                except Exception:  # pylint: disable=broad-except
+                    # ble scan might have been canceled
+                    _log.debug('scan_ble canceled')
+                    return []
                 _log.debug('scan_ble ended')
                 if res:
                     return list(res.values())
@@ -488,7 +493,7 @@ class ClientBLE(QObject):
             _log.debug('BLE client stopped')
             self.on_stop()
         else:
-            _log.error('BLE client not running')
+            _log.debug('BLE client not running')
 
 
 

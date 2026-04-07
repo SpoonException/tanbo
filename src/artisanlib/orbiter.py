@@ -21,6 +21,7 @@ import asyncio
 import logging
 import time as libtime
 
+from pathlib import Path
 from collections.abc import Callable
 from PyQt6.QtCore import Qt, QDateTime, QDate, QTime
 from PyQt6.QtWidgets import QApplication
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
 from artisanlib.async_comm import AsyncComm, IteratorReader
 from artisanlib.atypes import ProfileData
 from artisanlib.util import (replace_duplicates, encodeLocalStrict, encodeLocal, decodeLocalStrict, weight_units,
-    convertWeight, fromFtoCstrict, events_internal_to_external_value)
+    convertWeight, fromFtoCstrict, events_internal_to_external_value, to_ascii)
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -63,10 +64,9 @@ class Orbiter(AsyncComm):
 
     HEADER:Final[bytes] = b'\xFF\xFF'
     EVENT:Final[bytes] = b'\x00'
-    CMD_INIT:Final[bytes] = b'\x01'
     CMD_SYNC:Final[bytes] = b'\x00'
 
-    __slots__ = [ 'send_timeout', '_connected', '_new_readings_available', '_BT', '_ET', '_IT', '_DT', '_air', '_drum', '_damper',
+    __slots__ = [ 'send_timeout', 'connected', 'outer_connected_handler', 'outer_disconnected_handler', '_ACK_received', '_BT', '_ET', '_IT', '_DT', '_air', '_drum', '_damper',
             '_heater', '_sound', '_RoR', '_master_control', '_SERIAL',  '_FW_VERSION', '_PCB_VERSION', '_DASHBOARD_STATUS', '_MODEL', '_MODEL_NUM',
             'isRoaster_Roasting' ]
 
@@ -74,16 +74,20 @@ class Orbiter(AsyncComm):
                 connected_handler:Callable[[], None]|None = None,
                 disconnected_handler:Callable[[], None]|None = None) -> None:
 
-        super().__init__(serial=serial, connected_handler=connected_handler, disconnected_handler=disconnected_handler)
+        self.outer_connected_handler:Callable[[], None]|None = connected_handler
+        self.outer_disconnected_handler:Callable[[], None]|None = disconnected_handler
+
+        super().__init__(serial=serial, connected_handler=self.connected_handler, disconnected_handler=self.disconnected_handler)
 
         # configuration
-        self.send_timeout:Final[float] = 0.6    # in seconds
+        self.send_timeout:Final[float] = 0.5    # in seconds (note that this period spans the full request/response pair)
         self._logging = False # if True device communication is logged
 
+        #
+        self._ACK_received:asyncio.Event = asyncio.Event() # not threadsafe! Only to be used in the async thread
+        self.connected:bool = False
+
         # current readings
-        self._connected:int = 0  # connection status (0:disconnected, 1:connected)
-        self._new_readings_available:asyncio.Event = asyncio.Event()
-        #-
         self._BT:float = -1      # bean temperature
         self._ET:float = -1      # environmental temperature
         self._IT:float = -1      # interlayer temperature
@@ -106,6 +110,18 @@ class Orbiter(AsyncComm):
         # machine status
         self.isRoaster_Roasting:bool = False
 
+    def connected_handler(self) -> None:
+        self.connected = True
+        if self.outer_connected_handler is not None:
+            self.outer_connected_handler()
+
+    def disconnected_handler(self) -> None:
+        self.connected = False
+        self.resetReadings()
+        if self.outer_disconnected_handler is not None:
+            self.outer_disconnected_handler()
+
+
     @override
     def setLogging(self, b:bool) -> None:
         self._logging = b
@@ -116,9 +132,7 @@ class Orbiter(AsyncComm):
     # getBT triggers fetching a complete set of new readings
     # time is the preheat/roasting/cooling time in seconds send along the sync command to the machine
     def getBT(self, time:int = 0) -> float:
-        if not self._new_readings_available.is_set():
-            self.send_sync_await(time)
-        self._new_readings_available.clear()
+        self.send_sync_await(time)
         return self._BT
     def getET(self) -> float:
         return self._ET
@@ -142,7 +156,6 @@ class Orbiter(AsyncComm):
         return self._master_control
 
     def resetReadings(self) -> None:
-        self._connected = 0
         self._BT = -1
         self._ET = -1
         self._IT = -1
@@ -178,7 +191,7 @@ class Orbiter(AsyncComm):
         # check for the second header byte
         if await stream.readexactly(1) == self.HEADER[1:2]:
             cmd = await stream.readexactly(1)
-            if cmd[0] == 0: # sync data (total 28 bytes)
+            if cmd[0] == 0: # sync data ACK (total 28 bytes)
                 if self._logging:
                     _log.debug('Orbiter CMD sync data')
                 data = await stream.readexactly(25)
@@ -207,11 +220,11 @@ class Orbiter(AsyncComm):
                         self._damper = data[21]
                         self._sound = data[22]
                         self._master_control = data[23]
-                        self._new_readings_available.set()
                     else:
                         _log.debug('Orbiter CRC failed: %s != %s', compute_crc(cmd[0:1] + data[:24]), data[24])
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
+                self._ACK_received.set()
             elif cmd[0] == 1: # init ack (total 28 bytes)
                 if self._logging:
                     _log.debug('Orbiter CMD init ack')
@@ -241,6 +254,7 @@ class Orbiter(AsyncComm):
                         _log.debug('Orbiter CRC failed: %s != %s', compute_crc(cmd[0:1] + data[:24]), data[24])
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
+                self._ACK_received.set()
 
 
     # send message interface
@@ -257,30 +271,23 @@ class Orbiter(AsyncComm):
         return self.HEADER + payload + crc.to_bytes(1, 'little')
 
     # data byte order: LSB last (little-endian); eg. data=b'\x07\x00' equals 7
-    def send_msg(self, cmd:bytes, data:bytes = b'\x00\x00', param:bytes = b'\x00', time:int = 0) -> None:
-        # send via socket
-        self.send(self.create_msg(cmd, data, param, time))
-
-    def send_msg_await(self, event:asyncio.Event, timeout:float, cmd:bytes, data:bytes = b'\x00\x00', param:bytes = b'\x00', time:int = 0) -> None:
-        # send via socket
-        self.send_await(self.create_msg(cmd, data, param, time), event, timeout)
+    # returns True if response was received in time, otherwise False
+    def send_msg_await(self, cmd:bytes, data:bytes = b'\x00\x00', param:bytes = b'\x00', time:int = 0) -> bool:
+        # send via socket using a request/response pattern (serialize=True) awaiting a response that sets the _ACK_received event
+        # ensuring a 100ms delay between those request/response pairs
+        return self.send_await(self.create_msg(cmd, data, param, time), self._ACK_received, self.send_timeout, serialize=True, delay=0.1)
 
     #
 
-    def send_init(self) -> None:
-        self.send_msg(self.CMD_INIT)
-
-    def send_sync(self) -> None:
-        self.send_msg(self.CMD_SYNC)
-
-    def send_sync_await(self, time:int) -> None:
-        self.send_msg_await(self._new_readings_available, self.send_timeout, self.CMD_SYNC, time=time)
+    def send_sync_await(self, time:int) -> bool:
+        return self.send_msg_await(self.CMD_SYNC, time=time)
 
     #
 
     @override
     def start(self, connect_timeout:float=5) -> None:
         super().start(connect_timeout)
+
 
 #    @override
 #    def stop(self) -> None:
@@ -495,7 +502,7 @@ def saveOrbiterROP(filename:str, profile:ProfileData) -> bool:
     with ZipFile(filename, 'w') as zip_file:
         buffer = io.BytesIO()
         with buffer as file:
-            res = saveOrbiter(file, profile)
+            res = saveOrbiter(Path(filename).name.rstrip('.zip').rstrip('.rop'), file, profile)
             filename = os.path.basename(filename)
             root, ext = os.path.splitext(filename)
             if ext != '.zip':
@@ -505,11 +512,14 @@ def saveOrbiterROP(filename:str, profile:ProfileData) -> bool:
             zip_file.writestr(root, buffer.getvalue())
     return res
 
-def saveOrbiter(outfile:IO[bytes], profile:ProfileData) -> bool:
+# store given profile in Orbiter format to outfile
+def saveOrbiter(filename:str, outfile:IO[bytes], profile:ProfileData) -> bool:
     readings:list[bytes] = []
     try:
         default_title:str = QApplication.translate('Scope Title', 'Roaster Scope')
         title:str = decodeLocalStrict(profile.get('title', default_title), default_title)
+        if title == default_title:
+            title = filename
         date:QDate = (QDate.fromString(decodeLocalStrict(profile['roastisodate']),Qt.DateFormat.ISODate) if 'roastisodate' in profile else QDate())
         mode:str = profile.get('mode', 'C')
         weight:list[float|str] = [0,0,'g']
@@ -555,6 +565,7 @@ def saveOrbiter(outfile:IO[bytes], profile:ProfileData) -> bool:
         FCs:bool = False
         SCs:bool = False
         DROP:bool = False
+        CHARGE_idx = (timeindex[0] if timeindex[0]>=0 else 0)
         for idx,tx in enumerate(timex):
             if not (DROP or (timeindex[0] > -1 and tx < timex[timeindex[0]])): # ignore all readings before CHARGE and after DROP
                 if len(specialevents)>0 and idx >= specialevents[0]:
@@ -570,10 +581,10 @@ def saveOrbiter(outfile:IO[bytes], profile:ProfileData) -> bool:
                     specialeventstype = specialeventstype[1:]
                     specialeventsvalue = specialeventsvalue[1:]
 
-                if not CHARGE: # and timeindex[0] > -1 and tx >= timex[timeindex[0]]: # mark the first reading as CHARGE
+                if not CHARGE: # mark the first reading as CHARGE
                     event = 0
                     CHARGE = True
-                    time_offset = timex[timeindex[0]]
+                    time_offset = (timex[CHARGE_idx] if len(timex)>CHARGE_idx else 0)
                 elif not DRY and timeindex[1] > 0 and tx >= timex[timeindex[1]]:
                     event = 3
                     DRY = True
@@ -610,15 +621,17 @@ def saveOrbiter(outfile:IO[bytes], profile:ProfileData) -> bool:
                     readings.append(values)
 
         title_length:int = 30
-        title_bytes = title.encode('utf-8')[:title_length].ljust(title_length, b'\00')
+        title_bytes = to_ascii(title).encode('utf-8')[:title_length].ljust(title_length, b'\00')
+        preheat_temperature = int(round(temp2[CHARGE_idx] if len(temp2)>CHARGE_idx else 0))
+        drop_time_seconds:int = (int(round(timex[-1])) if len(timex)>0 else 0)
         header = b'\xff\xff'
         # header
         header_data = b'\x00\x00' + \
             (len(readings) + 3).to_bytes(2, 'little') + \
             batchsize.to_bytes(2, 'little') + \
             roasted_weight.to_bytes(2, 'little') + \
-            b'\x00\x00' + \
-            int(round(timex[-1])).to_bytes(2, 'little') + \
+            preheat_temperature.to_bytes(2, 'little') + \
+            drop_time_seconds.to_bytes(2, 'little') + \
             b'\x00\x00' + b'\x00\x00' + b'\x00\x00' + \
             b'\x00\x00\x00\x00\x00'
         header_data_crc = compute_crc(header_data)
@@ -672,7 +685,7 @@ def main() -> None:
     for _ in range(4):
         print('>>> hallo')
         val:int = 7
-        orbiter.send_msg(b'\x0D', val.to_bytes(2, 'little')) # set power to 7
+        orbiter.send_msg_await(b'\x0D', val.to_bytes(2, 'little')) # set power to 7
         time.sleep(1)
         print('BT', orbiter.getBT())
         time.sleep(1)
