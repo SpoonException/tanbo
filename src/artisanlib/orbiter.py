@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QApplication
 from typing import override, Final, TypedDict, IO, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from artisanlib.atypes import SerialSettings # pylint: disable=unused-import
+    from artisanlib.atypes import SerialSettings, ComputedProfileInformation # pylint: disable=unused-import
 
 from artisanlib.async_comm import AsyncComm, IteratorReader
 from artisanlib.atypes import ProfileData
@@ -66,8 +66,11 @@ class Orbiter(AsyncComm):
     EVENT:Final[bytes] = b'\x00'
     CMD_SYNC:Final[bytes] = b'\x00'
 
-    __slots__ = [ 'send_timeout', 'connected', 'outer_connected_handler', 'outer_disconnected_handler', '_ACK_received', '_BT', '_ET', '_IT', '_DT', '_air', '_drum', '_damper',
-            '_heater', '_sound', '_RoR', '_master_control', '_SERIAL',  '_FW_VERSION', '_PCB_VERSION', '_DASHBOARD_STATUS', '_MODEL', '_MODEL_NUM',
+    WRITE_ERRORS_WITHOUT_DISCONNECT:Final[int] = 1
+
+    __slots__ = [ 'send_timeout', 'connected', 'outer_connected_handler', 'outer_disconnected_handler',
+            '_BT', '_ET', '_IT', '_DT', '_air', '_drum', '_damper', '_heater', '_sound', '_RoR', '_master_control',
+            '_SERIAL',  '_FW_VERSION', '_PCB_VERSION', '_DASHBOARD_STATUS', '_MODEL', '_MODEL_NUM',
             'isRoaster_Roasting' ]
 
     def __init__(self, serial:'SerialSettings',
@@ -77,14 +80,14 @@ class Orbiter(AsyncComm):
         self.outer_connected_handler:Callable[[], None]|None = connected_handler
         self.outer_disconnected_handler:Callable[[], None]|None = disconnected_handler
 
-        super().__init__(serial=serial, connected_handler=self.connected_handler, disconnected_handler=self.disconnected_handler)
+        super().__init__(serial=serial, connected_handler=self.connected_handler, disconnected_handler=self.disconnected_handler,
+            write_errors_without_disconnect=self.WRITE_ERRORS_WITHOUT_DISCONNECT)
 
         # configuration
         self.send_timeout:Final[float] = 0.5    # in seconds (note that this period spans the full request/response pair)
         self._logging = False # if True device communication is logged
 
         #
-        self._ACK_received:asyncio.Event = asyncio.Event() # not threadsafe! Only to be used in the async thread
         self.connected:bool = False
 
         # current readings
@@ -117,7 +120,6 @@ class Orbiter(AsyncComm):
 
     def disconnected_handler(self) -> None:
         self.connected = False
-        self.resetReadings()
         if self.outer_disconnected_handler is not None:
             self.outer_disconnected_handler()
 
@@ -155,7 +157,8 @@ class Orbiter(AsyncComm):
     def getMasterControl(self) -> float:
         return self._master_control
 
-    def resetReadings(self) -> None:
+    @override
+    def reset_readings(self) -> None:
         self._BT = -1
         self._ET = -1
         self._IT = -1
@@ -225,7 +228,7 @@ class Orbiter(AsyncComm):
                         _log.debug('Orbiter CRC failed: %s != %s', compute_crc(cmd[0:1] + data[:24]), data[24])
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
-                self._ACK_received.set()
+                self.acknowledge_received()
             elif cmd[0] == 1: # init ack (total 28 bytes)
                 if self._logging:
                     _log.debug('Orbiter CMD init ack')
@@ -255,8 +258,7 @@ class Orbiter(AsyncComm):
                         _log.debug('Orbiter CRC failed: %s != %s', compute_crc(cmd[0:1] + data[:24]), data[24])
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
-                self._ACK_received.set()
-
+                self.acknowledge_received()
 
     # send message interface
 
@@ -274,9 +276,9 @@ class Orbiter(AsyncComm):
     # data byte order: LSB last (little-endian); eg. data=b'\x07\x00' equals 7
     # returns True if response was received in time, otherwise False
     def send_msg_await(self, cmd:bytes, data:bytes = b'\x00\x00', param:bytes = b'\x00', time:int = 0) -> bool:
-        # send via socket using a request/response pattern (serialize=True) awaiting a response that sets the _ACK_received event
+        # send via socket using a request/response pattern (serialize=True) awaiting a response that sets the acknowledge_received() event
         # ensuring a 100ms delay between those request/response pairs
-        return self.send_await(self.create_msg(cmd, data, param, time), self._ACK_received, self.send_timeout, serialize=True, delay=0.1)
+        return self.send_await(self.create_msg(cmd, data, param, time), self.send_timeout, serialize=True, delay=0.1)
 
     #
 
@@ -474,6 +476,8 @@ def extractProfileOrbiter(f:IO[bytes],
         res['extraLCDvisibility2'] = [False, False, False, True, True, True, True, True, True, True]
         res['extraCurveVisibility1'] = [True, False, False, False, True, True, True, True, True, True]
         res['extraCurveVisibility2'] = [False, False, False, True, True, True, True, True, True, True]
+        res['extraDelta1'] = [False, False, False, False, False, False, False, False, False, False]
+        res['extraDelta2'] = [False, False, False, True, False, False, False, False, False, False]
 
         if len(specialevents) > 0:
             res['specialevents'] = specialevents
@@ -562,12 +566,18 @@ def saveOrbiter(filename:str, outfile:IO[bytes], profile:ProfileData) -> bool:
         damper:int = 0
         event:int = 255 # main event
         CHARGE:bool = False
+        TP:bool = False
         DRY:bool = False
         FCs:bool = False
         SCs:bool = False
         DROP:bool = False
         CHARGE_idx = max(0, (timeindex[0] if timeindex[0]>=0 else 0))
         DROP_idx = max(0, (timeindex[6] if timeindex[6]>0 else len(timex) - 1))
+        computed:ComputedProfileInformation|None = None
+        TP_idx:int|None = None
+        if 'computed' in profile:
+            computed = profile['computed']
+            TP_idx = computed.get('TP_idx', None)
         for idx,tx in enumerate(timex):
             if not (DROP or (timeindex[0] > -1 and tx < timex[timeindex[0]])): # ignore all readings before CHARGE and after DROP
                 if len(specialevents)>0 and idx >= specialevents[0]:
@@ -587,6 +597,9 @@ def saveOrbiter(filename:str, outfile:IO[bytes], profile:ProfileData) -> bool:
                     event = 0
                     CHARGE = True
                     time_offset = (timex[CHARGE_idx] if len(timex)>CHARGE_idx else 0)
+                elif not TP and TP_idx is not None and TP_idx > 0 and tx >= timex[TP_idx]:
+                    event = 1
+                    TP = True
                 elif not DRY and timeindex[1] > 0 and tx >= timex[timeindex[1]]:
                     event = 3
                     DRY = True

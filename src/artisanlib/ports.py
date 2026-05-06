@@ -565,9 +565,7 @@ class comportDlg(ArtisanResizeablDialog):
             modbus_inputDecode.setFixedWidth(85)
             self.modbus_inputDecodes[i] = modbus_inputDecode
 
-        modbus_endianlabel = QLabel(QApplication.translate('Label', 'little-endian'))
-
-        self.modbus_littleEndianWords = QCheckBox(QApplication.translate('ComboBox','words'))
+        self.modbus_littleEndianWords = QCheckBox(f'{QApplication.translate('Label', 'little-endian')} {QApplication.translate('ComboBox','words')}')
         self.modbus_littleEndianWords.setChecked(self.aw.modbus.wordorderLittle)
         self.modbus_littleEndianWords.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
@@ -909,8 +907,6 @@ class comportDlg(ArtisanResizeablDialog):
         modbus_setup.addWidget(scanButton)
         modbus_setup.addStretch()
         modbus_setup.addSpacing(7)
-        modbus_setup.addWidget(modbus_endianlabel)
-        modbus_setup.addSpacing(5)
         modbus_setup.addWidget(self.modbus_littleEndianWords)
         modbus_setup.addStretch()
         modbus_setup.addSpacing(15)
@@ -1845,7 +1841,11 @@ class comportDlg(ArtisanResizeablDialog):
                 for i in range(nssdevices):
                     if len(self.aw.qmc.extradevices) > i:
                         devid = self.aw.qmc.extradevices[i]
-                        devicename = self.aw.qmc.devices[max(0,devid-1)]
+                        try:
+                            devicename = self.aw.qmc.devices[max(0,devid-1)]
+                        except Exception: # pylint: disable=broad-except
+                            # if referenced device id is out of range we resolve to the default
+                            devicename = self.aw.qmc.devices[24] # +Virtual
                         if devicename[0] == '+':
                             devname = devicename[1:]
                         else:
@@ -1874,7 +1874,6 @@ class comportDlg(ArtisanResizeablDialog):
                                 stopbitsComboBox.setCurrentIndex(self.stopbits.index(str(self.aw.extrastopbits[i])))
                             timeoutEdit = QLineEdit(str(self.aw.extratimeout[i]))
                             timeoutEdit.setValidator(self.aw.createCLocaleDoubleValidator(0,5,1,timeoutEdit))
-#                            timeoutEdit.setFixedWidth(65)
                             timeoutEdit.setMinimumWidth(65)
                             timeoutEdit.setAlignment(Qt.AlignmentFlag.AlignRight)
                             #add widgets to the table
@@ -1896,20 +1895,21 @@ class comportDlg(ArtisanResizeablDialog):
             for i in range(ser_ports):
                 if len(self.aw.qmc.extradevices) > i:
                     devid = self.aw.qmc.extradevices[i]
-                    devicename = self.aw.qmc.devices[devid-1]    #type identification of the device. Non editable
-                    if (devid not in self.aw.qmc.nonSerialDevices) and devid != 29 and devicename[0] != '+': # hide serial confs for MODBUS and "+XX" extra devices
-                        comportComboBox = cast(PortComboBox, self.serialtable.cellWidget(i,1))
-                        self.aw.extracomport[i] = str(comportComboBox.getSelection())
-                        baudComboBox = cast(QComboBox, self.serialtable.cellWidget(i,2))
-                        self.aw.extrabaudrate[i] = toInt(str(baudComboBox.currentText()))
-                        byteComboBox = cast(QComboBox, self.serialtable.cellWidget(i,3))
-                        self.aw.extrabytesize[i] = toInt(str(byteComboBox.currentText()))
-                        parityComboBox = cast(QComboBox, self.serialtable.cellWidget(i,4))
-                        self.aw.extraparity[i] = str(parityComboBox.currentText())
-                        stopbitsComboBox = cast(QComboBox, self.serialtable.cellWidget(i,5))
-                        self.aw.extrastopbits[i] = toInt(str(stopbitsComboBox.currentText()))
-                        timeoutEdit = cast(QLineEdit, self.serialtable.cellWidget(i,6))
-                        self.aw.extratimeout[i] = float(str(timeoutEdit.text()))
+                    if devid-1 < len(self.aw.qmc.devices):
+                        devicename = self.aw.qmc.devices[devid-1]    #type identification of the device. Non editable
+                        if (devid not in self.aw.qmc.nonSerialDevices) and devid != 29 and devicename[0] != '+': # hide serial confs for MODBUS and "+XX" extra devices
+                            comportComboBox = cast(PortComboBox, self.serialtable.cellWidget(i,1))
+                            self.aw.extracomport[i] = str(comportComboBox.getSelection())
+                            baudComboBox = cast(QComboBox, self.serialtable.cellWidget(i,2))
+                            self.aw.extrabaudrate[i] = toInt(str(baudComboBox.currentText()))
+                            byteComboBox = cast(QComboBox, self.serialtable.cellWidget(i,3))
+                            self.aw.extrabytesize[i] = toInt(str(byteComboBox.currentText()))
+                            parityComboBox = cast(QComboBox, self.serialtable.cellWidget(i,4))
+                            self.aw.extraparity[i] = str(parityComboBox.currentText())
+                            stopbitsComboBox = cast(QComboBox, self.serialtable.cellWidget(i,5))
+                            self.aw.extrastopbits[i] = toInt(str(stopbitsComboBox.currentText()))
+                            timeoutEdit = cast(QLineEdit, self.serialtable.cellWidget(i,6))
+                            self.aw.extratimeout[i] = float(str(timeoutEdit.text()))
             #create serial ports for each extra device
             self.aw.extraser = []
             #load the settings for the extra serial ports found

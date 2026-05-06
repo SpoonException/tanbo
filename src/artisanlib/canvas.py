@@ -4102,7 +4102,7 @@ class tgraphcanvas(QObject):
                     self.fig.canvas.draw_idle()
                     return
 
-                if not self.designerflag and not self.wheelflag and event.inaxes is None and not self.flagstart and not self.flagon and event.button == 1 and \
+                if not self.designerflag and not self.wheelflag and event.inaxes is None and event.button == 1 and \
                         event.x < event.y:
                     if event.dblclick and self.roastUUID is not None:
                         self.single_click_mpl_upperleft_corner_timer.stop()
@@ -4544,13 +4544,29 @@ class tgraphcanvas(QObject):
                 pdtemp = tempx[-1] - tempx[-n]
                 pdtime = timex[-1] - timex[-n]
                 if pdtime > 0:
+
+# old (asymmetric):
+#                    pRoR = abs(pdtemp/pdtime)
+#                    dtemp = tempx[-1] - temp
+#                    dtime = timex[-1] - time
+
+# new (symmetric and more conservative:
                     pRoR = pdtemp/pdtime
-                    dtemp = temp - tempx[-1]
-                    dtime = time - timex[-1]
+                    dtemp = temp - tempx[-n + 1]
+                    dtime = time - timex[-n + 1]
+
                     if dtime > 0:
+
+# old (asymmetric)
+#                        RoR = abs(dtemp/dtime)
+#                        if RoR > (pRoR + dRoR_limit):
+#                            wrong_reading = 2
+
+# new (symmetric and more conservative):
                         RoR = dtemp/dtime
-                        if (pRoR - dRoR_limit) < RoR < (pRoR + dRoR_limit):
+                        if (pRoR + dRoR_limit) < RoR < (pRoR - dRoR_limit):
                             wrong_reading = 2
+
             #########################
             # c) handle outliers if it could be detected
             if wrong_reading:
@@ -7204,14 +7220,14 @@ class tgraphcanvas(QObject):
                                         else:
                                             delta_readings = self.delta2B
                                         if k == 0:
-                                            val, evalsign = self.shiftValueEvalsign(delta_readings,index,sign,Yshiftval)
+                                            val, evalsign = self.shiftValueEvalsign(delta_readings,index,sign,Yshiftval) # pyright:ignore[reportUnknownArgumentType]
                                         else:
                                             #if sampling
                                             if RTsname is not None and RTsname != '':
                                                 idx = index + 1
                                             else:
                                                 idx = index
-                                            val, evalsign = self.shiftValueEvalsignBackground(sample_timex, self.timeB,delta_readings,idx,sign,Yshiftval)
+                                            val, evalsign = self.shiftValueEvalsignBackground(sample_timex, self.timeB,delta_readings,idx,sign,Yshiftval)  # pyright:ignore[reportUnknownArgumentType]
 
                                         #add expression and values found
                                         evaltimeexpression = ''.join((c,mathexpression[i+k+1],evalsign*2,mathexpression[i+k+4],seconddigitstr,evalsign))
@@ -7918,6 +7934,7 @@ class tgraphcanvas(QObject):
     # if keepProperties=True (a call from OnMonitor()), we keep all the pre-set roast properties
     # onMonitor is set if called from onMonitor
     def reset(self,redraw:bool = True, soundOn:bool = True, keepProperties:bool = False, fireResetAction:bool = True, onMonitor:bool = False) -> bool:
+        _log.debug('PRINT reset(keepProperties=%s,onMonitor=%s)',keepProperties,onMonitor)
         try:
             focused_widget = QApplication.focusWidget()
             if focused_widget and focused_widget != self.aw.centralWidget():
@@ -13392,7 +13409,7 @@ class tgraphcanvas(QObject):
 
             # warm up software PID (write current p-i-d settings,..) configured
             if self.aw.pidcontrol.externalPIDControl() == 0  and self.Controlbuttonflag:
-                self.aw.pidcontrol.confSoftwarePID()
+                self.aw.pidcontrol.confSoftwarePID(reset=True) # we initialize the software pid (iTerm=0, derivative filter cleared and conf. with current sampling rate)
                 self.aw.pidcontrol.setSV(self.aw.sliderSV.value())
 
             # ADD DEVICE: # start communication/connect
@@ -13568,23 +13585,16 @@ class tgraphcanvas(QObject):
             self.block_update = False # unblock the updating of the bitblit canvas
             self.aw.updateReadingsLCDsVisibility() # this one triggers the resize and the recreation of the bitblit canvas
 
-            if self.device == 138:
-                # if Kaleido Serial or Network is selected we run the ON action before starting the sample thread
-                try:
-                    self.aw.eventactionx(self.extrabuttonactions[0],self.extrabuttonactionstrings[0])
-                except Exception as e: # pylint: disable=broad-except
-                    _log.exception(e)
-                QApplication.processEvents()
-            self.threadserver.createSampleThread()
-            if self.device != 138:
+            if self.device in {138, 196}:
+                # if Kaleido Serial or Network, or Orbiter, is selected we run the ON action before starting the sample thread
+                QTimer.singleShot(1,self.runOnEventAction)
+            QTimer.singleShot(200,self.threadserver.createSampleThread)
+            if self.device not in {138, 196}:
                 # if not Kaleido Serial or Network we run the ON action after starting the sample thread which might start the connection in the first place
-                try:
-                    self.aw.eventactionx(self.extrabuttonactions[0],self.extrabuttonactionstrings[0])
-                except Exception as e: # pylint: disable=broad-except
-                    _log.exception(e)
+                QTimer.singleShot(300,self.runOnEventAction)
 
             if not bool(self.aw.simulator):
-                QTimer.singleShot(300,self.StartAsyncSamplingAction)
+                QTimer.singleShot(400,self.StartAsyncSamplingAction)
             _log.info('MODE: ON MONITOR (sampling @%ss)', float2float(self.delay/1000))
         except Exception as ex: # pylint: disable=broad-except
             _log.exception(ex)
@@ -13592,6 +13602,13 @@ class tgraphcanvas(QObject):
             self.adderror((QApplication.translate('Error Message', 'Exception:') + ' OnMonitor() {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
         finally:
             self.block_update = False # unblock the updating of the bitblit canvas
+
+    @pyqtSlot()
+    def runOnEventAction(self) -> None:
+        try:
+            self.aw.eventactionx(self.extrabuttonactions[0],self.extrabuttonactionstrings[0])
+        except Exception as e: # pylint: disable=broad-except
+            _log.exception(e)
 
     # OffMonitorCloseDown is called after the sampling loop stopped
     @pyqtSlot()

@@ -2552,6 +2552,7 @@ class ApplicationWindow(QMainWindow):
         # use s.encode("ascii", 'backslashreplace').decode("utf-8") and remove the duplicate \\
         for iso, name in [
                 ('ar', '\u0627\u0644\u0639\u0631\u0628\u064a\u0629'),
+                ('bg', '\u0431\u044a\u043b\u0433\u0430\u0440\u0441\u043a\u0438'),
                 ('cs', '\u010d\u0065\u0161\u0074\u0069\u006e\u0061'),
                 ('da', 'Dansk'),
                 ('de', 'Deutsch'),
@@ -12488,7 +12489,12 @@ class ApplicationWindow(QMainWindow):
                             self.qmc.redraw()
                         # load background when there are no modifiers
                         elif no_modifier or control_modifier:
-                            filename = self.ArtisanOpenFileDialog(msg=QApplication.translate('Message','Load Background'),ext='*.alog')
+                            # path
+                            path:str|None = None
+                            if bool(self.qmc.backgroundprofile is not None) and self.qmc.backgroundpath:
+                                # if a background profile is loaded we open the file selector using its path
+                                path = self.qmc.backgroundpath
+                            filename = self.ArtisanOpenFileDialog(msg=QApplication.translate('Message','Load Background'),path =path, ext='*.alog')
                             if len(filename) != 0:
                                 self.loadBackgroundSignal.emit(filename)
                 elif k == Qt.Key.Key_L and no_modifier and self.ui_mode is not UI_MODE.PRODUCTION: # 76:       #L (load alarms)
@@ -12816,7 +12822,7 @@ class ApplicationWindow(QMainWindow):
                         self.sendmessage(f"{QApplication.translate('Label','Event button')}", append=False)
                     elif no_modifier and not self.app.artisanviewerMode and not self.qmc.designerflag and not self.qmc.wheelflag:
                         self.toggleextraeventrows()
-                elif k == Qt.Key.Key_M and no_modifier: # 77:                          #M (hides/shows standard buttons row)
+                elif k == Qt.Key.Key_M and no_modifier: # 77:          #M (hides/shows standard buttons row)
                     if self.qmc.flagstart:
                         self.standardButtonsVisibility()
                 #Extra event buttons palette. Numerical keys [0,1,2,3,4,5,6,7,8,9]
@@ -14240,19 +14246,19 @@ class ApplicationWindow(QMainWindow):
                 f.close()
                 profile = deserialize(filename)
                 self.plusAddPath(profile, filename)
-                self.qmc.backgroundprofile = cast('ProfileData',profile)
-                tb = profile['timex']
-                t1 = profile['temp1']
-                t2 = profile['temp2']
+                self.qmc.backgroundprofile = cast('ProfileData', profile)
+                tb:list[float] = profile['timex']
+                t1:list[float] = profile['temp1']
+                t2:list[float] = profile['temp2']
                 # ensure that timex, temp1 and temp2 are all of the same (minimal-)length
                 data_len:int = min(len(tb), len(t1), len(t2))
                 tb = tb[:data_len]
                 t1 = t1[:data_len]
                 t2 = t2[:data_len]
 
-                timex = profile['extratimex']
-                t1x = profile['extratemp1']
-                t2x = profile['extratemp2']
+                timex:list[list[float]] = profile['extratimex']
+                t1x:list[list[float]] = profile['extratemp1']
+                t2x:list[list[float]] = profile['extratemp2']
                 # ensure that number of extra device data is consistent
                 number_extra_devices = min(len(timex), len(t1x), len(t2x))
                 timex = timex[:number_extra_devices]
@@ -14266,9 +14272,9 @@ class ApplicationWindow(QMainWindow):
                     if len(timex[c]) != data_len:
                         timex[c] = tb[:]
                     if len(t1x[c]) != data_len:
-                        t1x[c] = [-1]*data_len
+                        t1x[c] = [-1.]*data_len
                     if len(t2x[c]) != data_len:
-                        t2x[c] = [-1]*data_len
+                        t2x[c] = [-1.]*data_len
 
 
                 # reset the movebackground cache:
@@ -14301,7 +14307,7 @@ class ApplicationWindow(QMainWindow):
 
                 names1x = [decodeLocalStrict(x) for x in profile['extraname1']]
                 names2x = [decodeLocalStrict(x) for x in profile['extraname2']]
-                self.qmc.temp1B,self.qmc.temp2B,self.qmc.timeB, self.qmc.temp1BX, self.qmc.temp2BX = t1,t2,tb,t1x,t2x
+                self.qmc.temp1B,self.qmc.temp2B,self.qmc.timeB, self.qmc.temp1BX, self.qmc.temp2BX = t1,t2,tb,[numpy.array(tx) for tx in t1x],[numpy.array(tx) for tx in t2x]
                 self.qmc.abs_timeB = tb.copy()  #invariant copy of timeB
                 self.qmc.extratimexB = timex
 
@@ -14326,7 +14332,7 @@ class ApplicationWindow(QMainWindow):
 
                 # we resample the temperatures to regular interval timestamps
                 tb_lin:numpy.ndarray[tuple[Literal[1]],numpy.dtype[numpy.double]]|None = None
-                if tb is not None and tb:
+                if tb:
                     tb_lin = cast(numpy.ndarray[tuple[Literal[1]]], numpy.linspace(tb[0],tb[-1],len(tb)))
                 decay_smoothing_p = not self.qmc.optimalSmoothing
                 b1 = self.qmc.smooth_list(tb,t1,window_len=self.qmc.curvefilter,decay_smoothing=decay_smoothing_p,a_lin=tb_lin)
@@ -14345,7 +14351,7 @@ class ApplicationWindow(QMainWindow):
                     if (self.qmc.xtcurveidx > 0 and n3 == i) or (self.qmc.ytcurveidx > 0 and n4 == i): # this is the 3rd or 4th background curve to be drawn, we smooth it
                         tx=timex[i]
                         tx_lin:numpy.ndarray[tuple[Literal[1]],numpy.dtype[numpy.double]]|None = None
-                        if tx is not None and tx:
+                        if tx:
                             tx_lin = cast(numpy.ndarray[tuple[Literal[1]],numpy.dtype[numpy.double]], numpy.linspace(tx[0],tx[-1],len(tx)))
                         if (self.qmc.xtcurveidx > 0 and n3 == i and self.qmc.xtcurveidx % 2) or (self.qmc.ytcurveidx > 0 and n4 == i and self.qmc.ytcurveidx % 2):
                             b1x.append(self.qmc.smooth_list(tx,t1x[i],window_len=self.qmc.curvefilter,decay_smoothing=decay_smoothing_p,a_lin=tx_lin))
@@ -17272,7 +17278,7 @@ class ApplicationWindow(QMainWindow):
             try:
                 ds = list(self.qmc.extradevices)
                 ds.insert(0,self.qmc.device)
-                profile['devices'] = [('PID' if d==0 else self.qmc.devices[d-1]) for d in ds]
+                profile['devices'] = [('PID' if d==0 else (self.qmc.devices[24] if d > len(self.qmc.devices) else self.qmc.devices[d-1])) for d in ds]
             except Exception: # pylint: disable=broad-except
                 pass
             profile['elevation'] = self.qmc.elevation
@@ -18123,7 +18129,7 @@ class ApplicationWindow(QMainWindow):
 
             if self.resetqsettings or (filename is None and QApplication.queryKeyboardModifiers() == (Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.ShiftModifier)):
                 self.resetqsettings = 0
-#                settings.clear() # this allows to get rid of old Artisan settings via "Save Settings >> Factory Reset >> Load Settings"
+                settings.clear() # this allows to get rid of old Artisan settings via "Save Settings >> Factory Reset >> Load Settings"
                 if 'canvas' in self.qmc.palette:
                     self.updateCanvasColors(checkColors=False)
                 # remove window geometry and splitter settings
@@ -19160,7 +19166,7 @@ class ApplicationWindow(QMainWindow):
 
             try:
                 _log.info('machine: %s (%s, %skg, %s)', self.qmc.machinesetup, self.qmc.roastertype_setup, self.qmc.roastersize_setup, ([''] + self.qmc.sourcenames)[self.qmc.roasterheating_setup])
-                _log.info('device: %s (%s extra devices)', (['Fuji PID']+self.qmc.devices)[self.qmc.device], len(self.qmc.extradevices))
+                _log.info('device: %s (%s extra devices)', ('??' if self.qmc.device > len(self.qmc.devices) else (['PID']+self.qmc.devices)[self.qmc.device]), len(self.qmc.extradevices))
                 _log.info('serial: %s @%s', self.ser.comport, self.ser.baudrate)
                 _log.info('MODBUS %s: %s, %s %s%s%s@%s (%s, %s, %s / %s, %s)', ['Serial RTU','Serial ASCII','Serial Binary','TCP','UDP'][self.modbus.type],
                         self.modbus.host, self.modbus.comport, self.modbus.bytesize, self.modbus.parity, self.modbus.stopbits, self.modbus.baudrate, self.modbus.timeout, self.modbus.modbus_serial_connect_delay, self.modbus.serial_readRetries, self.modbus.IP_timeout, self.modbus.IP_retries)
@@ -28013,9 +28019,9 @@ def initialize_locale(my_app:Artisan) -> str:
 #        'qtwebengine' # we do not use any UI
     ]
 
-    # NOTE: on updates, need to update util.py:locale2full_local() as well
     supported_languages:list[str] = [
         'ar',
+        'bg',
         'cs',
         'da',
         'de',
