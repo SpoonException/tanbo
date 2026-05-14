@@ -132,6 +132,7 @@ class ProfileData(TypedDict, total=False):
     version: str
     revision: str
     build: str
+    signature: str
     artisan_os: str
     artisan_os_version: str
     artisan_os_arch: str
@@ -332,6 +333,7 @@ class ProfileData(TypedDict, total=False):
     bbp_dropbt: float
     bbp_dropet: float
     bbp_drop_to_end: float
+    hash: str
 
 class ExtraDeviceSettings(TypedDict):
     extradevices           : list[int]
