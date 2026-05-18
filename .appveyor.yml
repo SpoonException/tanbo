@@ -133,8 +133,7 @@ for:
     - ps: move -force newfile artisanlib/__init__.py
 
     # Generate signature
-    - ps: $env:ARTISAN_KEY = "tanbo"
-    - python generate_signature.py
+    # - python generate_signature.py
 
     # run the build script
     - cmd: build-win3-pi.bat
