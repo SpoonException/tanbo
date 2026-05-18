@@ -43,7 +43,7 @@ Color = tuple[int, int, int] # RGB color with valid values from 0-255
 class SCALE_CLASS(IntEnum):
     LEGACY = 1 # eg. Pearl Legacy, Lunar Legacy
         # split messages between several (mostly 2) payloads
-    MODERN = 2 # eg. Lunar 2021, Pearl, Pearl 2021, Pearl S, Cinco, Pyxis
+    MODERN = 2 # e.g. Lunar 2021, Pearl, Pearl 2021, Pearl S, Cinco, Pyxis
         # report weight in unit indicated by byte 2 of STATUS_A message
     RELAY = 3  # relaying scales without display eg. Umbra, ..
 
@@ -239,7 +239,7 @@ class AcaiaBLE(ClientBLE): # pyright: ignore [reportGeneralTypeIssues] # Argumen
     def __init__(self, connected_handler:Callable[[], None]|None = None,
                        disconnected_handler:Callable[[], None]|None = None,
                        stable_only:bool=True, # if True only stable weight readings are reported by weight_changed_signal
-                       decimals:int=1): # number of significant decimals (0, 1, ..) of the weight signal
+                       decimals:int=1): # number of significant decimals (0, 1, .) of the weight signal
         super().__init__()
 
         # handlers
@@ -904,7 +904,7 @@ class AcaiaBLE(ClientBLE): # pyright: ignore [reportGeneralTypeIssues] # Argumen
         self.send_event(
             bytes([ # pairs of key/setting
                     0,  # weight id
-                    1,  #i f self.scale_class == SCALE_CLASS.RELAY # 0: only weight changes are reported; 1: streaming weight changes at 1/10
+                    1,  #if self.scale_class == SCALE_CLASS.RELAY # 0: only weight changes are reported; 1: streaming weight changes at 1/10
                         # 0, 1, 3, 5, 7, 15, 31, 63, 127  # weight argument (speed of notifications in 1/10 sec) # larger values => slower updates
                         # 5 or 7 seems to be good values for this app in Artisan
 #                    1,   # battery id
@@ -938,7 +938,7 @@ class AcaiaBLE(ClientBLE): # pyright: ignore [reportGeneralTypeIssues] # Argumen
 
     async def reader(self) -> None:
         self._read_queue = asyncio.Queue(maxsize=200) # queue needs to be started in the current async event loop!
-        stream = IteratorReader(AsyncIterable(self._read_queue))
+        stream = IteratorReader(AsyncIterable(self._read_queue))    # type: ignore[arg-type]
         while True:
             try:
                 await stream.readuntil(self.HEADER1)
