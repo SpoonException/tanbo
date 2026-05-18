@@ -1454,7 +1454,8 @@ class ApplicationWindow(QMainWindow):
     comparatorAddProfileURLSignal = pyqtSignal(QUrl)
     comparatorAddProfileSignal = pyqtSignal(str)
     updateScheduleSignal = pyqtSignal()
-    disconnectPlusSignal = pyqtSignal()
+    disconnectPlusSignal = pyqtSignal() # connected/disconnected in plus/scheduler.py
+    setTimerColorSignal = pyqtSignal(str)
 
     __slots__ = [ 'locale_str', 'app', 'superusermode', 'sample_loop_running', 'time_stopped', 'plus_account', 'plus_account_id', 'plus_remember_credentials', 'plus_email', 'plus_language', 'plus_subscription', 'percent_decimals',
         'plus_paidUntil', 'plus_rlimit', 'plus_used', 'plus_readonly', 'plus_user_id', 'appearance', 'mpl_fontproperties', 'full_screen_mode_active', 'processingKeyEvent', 'quickEventShortCut',
@@ -3719,7 +3720,7 @@ class ApplicationWindow(QMainWindow):
                              self.qmc.mark2Cstart,self.qmc.mark2Cend,self.qmc.markDrop,self.qmc.markCoolEnd,self.qmc.EventRecord]
         # list of buttons that can be controlled via the keyboard
         # RESET -> ON/OFF -> .. -> EVENT (RESET at index 0 is never used)
-        self.keyboardButtonList = [ # this list corresponds to the self.qmc.buttonvisibility, but has additionally the entry for the EVENT button
+        self.keyboardButtonList:list[EventPushButton] = [ # this list corresponds to the self.qmc.buttonvisibility, but has additionally the entry for the EVENT button
             self.buttonCHARGE,  # 0 CHARGE
             self.buttonDRY, # 1 DRY END
             self.buttonFCs,  # 2 FC START
@@ -4332,6 +4333,7 @@ class ApplicationWindow(QMainWindow):
         self.comparatorAddProfileURLSignal.connect(self.comparatorAddProfileURLSlot, type=Qt.ConnectionType.QueuedConnection)  # type: ignore[call-arg]
         self.comparatorAddProfileSignal.connect(self.comparatorAddProfileSlot, type=Qt.ConnectionType.QueuedConnection)  # type: ignore[call-arg]
         self.updateScheduleSignal.connect(self.updateSchedule, type=Qt.ConnectionType.QueuedConnection)  # type: ignore[call-arg]
+        self.setTimerColorSignal.connect(self.setTimerColor, type=Qt.ConnectionType.QueuedConnection)  # type: ignore[call-arg]
 
         self.notificationManager:NotificationManager|None = None
         if not self.app.artisanviewerMode:
@@ -4727,16 +4729,10 @@ class ApplicationWindow(QMainWindow):
 
 
     # timer_color one of "timer" (black), "slowcoolingtimer" (red), "rstimer" (blue)
+    @pyqtSlot(str)
     def setTimerColor(self, timer_color:str) -> None:
         self.lcd1.setStyleSheet(f'QLCDNumber {{ border-radius: 4; color: {rgba_colorname2argb_colorname(self.lcdpaletteF[timer_color])}; background-color: {rgba_colorname2argb_colorname(self.lcdpaletteB[timer_color])};}}')
         self.qmc.setTimerLargeLCDcolorSignal.emit(self.lcdpaletteF[timer_color], self.lcdpaletteB[timer_color])
-        # HACK: PID/CONTROL button changes shape/shadow on setTimerColor() as triggered by RESET
-        # there reason remains unclear
-        # the following prevents this
-        try:
-            self.buttonCONTROL.setStyleSheet(self.buttonCONTROL.styleSheet())
-        except Exception:  # pylint: disable=broad-except
-            pass
 
     @override
     def mousePressEvent(self, a0:'QMouseEvent|None') -> None:
@@ -6452,7 +6448,7 @@ class ApplicationWindow(QMainWindow):
         self.lcdpaletteF['rstimer'] = '#000000'
         self.lcdpaletteB['slowcoolingtimer'] = '#000000'
         self.lcdpaletteF['slowcoolingtimer'] = '#ffffff'
-        self.setTimerColor('timer')
+        self.setTimerColorSignal.emit('timer')
         self.lcd2.setStyleSheet(f"QLCDNumber {{ border-radius: 4; color: {rgba_colorname2argb_colorname(self.lcdpaletteF['et'])}; background-color: {rgba_colorname2argb_colorname(self.lcdpaletteB['et'])};}}")
         self.setLabelColor(self.label2,self.qmc.palette['et'], self.qmc.ETcurve)
         self.lcd3.setStyleSheet(f"QLCDNumber {{ border-radius: 4; color: {rgba_colorname2argb_colorname(self.lcdpaletteF['bt'])}; background-color: {rgba_colorname2argb_colorname(self.lcdpaletteB['bt'])};}}")
@@ -8990,6 +8986,7 @@ class ApplicationWindow(QMainWindow):
                     return
 
                 cmd_str = str(cmd)
+                eval_limit:int = 300 # size limit of the input string to handed over to eval()
 
                 # we add {BT}, {ET}, {t}ime substitutions for Serial/CallProgram/MODBUS/S7/Artisan/WebSocket command actions
                 if action in {1, 2, 4, 7, 15, 20, 22}:
@@ -9071,7 +9068,7 @@ class ApplicationWindow(QMainWindow):
                     for cs in cmd_list:
                         if cs.startswith('sleep'):
                             try:
-                                cmds = eval(cs[len('sleep'):]) # pylint: disable=eval-used
+                                cmds = eval(cs[len('sleep'):eval_limit]) # pylint: disable=eval-used
                                 if isinstance(cmds,(float, int)):
                                     # cmd has format "sleep(xx.yy)"
                                     libtime.sleep(cmds)
@@ -9101,7 +9098,7 @@ class ApplicationWindow(QMainWindow):
                                 #libtime.sleep(followupCmd) #this guarantees a minimum of 30 milliseconds between readings and 80ms between writes (according to the Modbus spec)
                             if cs.startswith('writem'):
                                 try:
-                                    cmds = eval(cs[len('writem'):])  # pylint: disable=eval-used
+                                    cmds = eval(cs[len('writem'):eval_limit])  # pylint: disable=eval-used
                                     if isinstance(cmds,tuple) and len(cmds) == 3:
                                         # cmd has format "writem(s,r,[v1,..,vn])"
                                         self.modbus.writeRegisters(*cmds)
@@ -9110,7 +9107,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('sleep'):
                                 try:
-                                    cmds = eval(cs[len('sleep'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('sleep'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,(float, int)):
                                         # cmd has format "sleep(xx.yy)"
                                         libtime.sleep(cmds)
@@ -9119,7 +9116,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('writeBCD'):
                                 try:
-                                    cmds = eval(cs[len('writeBCD'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('writeBCD'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple):
                                         if len(cmds) == 3 and not isinstance(cmds[0],list):
                                             # cmd has format "writeBCD(s,r,v)"
@@ -9140,7 +9137,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('writeWord'): # writing directly floats
                                 try:
-                                    cmds = eval(cs[len('writeWord'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('writeWord'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple):
                                         if len(cmds) == 3 and not isinstance(cmds[0],list):
                                             # cmd has format "writeWord(s,r,v)"
@@ -9161,7 +9158,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('writeLong'): # writing directly 32bit integers in two consecutive registers
                                 try:
-                                    cmds = eval(cs[len('writeLong'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('writeLong'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple):
                                         if len(cmds) == 3 and not isinstance(cmds[0],list):
                                             # cmd has format "writeLong(s,r,v)"
@@ -9182,7 +9179,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('writeSingle'):
                                 try:
-                                    cmds = eval(cs[len('writeSingle'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('writeSingle'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple):
                                         if len(cmds) == 3 and not isinstance(cmds[0],list):
                                             # cmd has format "writeSingle(s,r,v)"
@@ -9203,7 +9200,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('write'):
                                 try:
-                                    cmds = eval(cs[len('write'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('write'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple):
                                         if len(cmds) == 3 and not isinstance(cmds[0],list):
                                             # cmd has format "write(s,r,v)"
@@ -9224,7 +9221,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('mwrite'):
                                 try:
-                                    cmds = eval(cs[len('mwrite'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('mwrite'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple):
                                         if len(cmds) == 4 and not isinstance(cmds[0],list):
                                             # cmd has format "mwrite(s,r,am,om)"
@@ -9252,7 +9249,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('wcoils'):
                                 try:
-                                    cmds = eval(cs[len('wcoils'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('wcoils'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple) and len(cmds) == 3 and not isinstance(cmds[0],list):
                                         # cmd has format "wcoils(s,r,[<b>,..<b>])"
                                         self.modbus.writeCoils(*cmds)
@@ -9261,7 +9258,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('wcoil'):
                                 try:
-                                    cmds = eval(cs[len('wcoil'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('wcoil'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple) and len(cmds) == 3:
                                         # cmd has format "wcoil(s,r,<b>)"
                                         self.modbus.writeCoil(*cmds)
@@ -9270,7 +9267,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('read'):
                                 try:
-                                    cmds = eval(cs[len('read'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('read'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple) and len(cmds) == 2:
                                         # cmd has format "read(s,r)"
                                         self.modbus.lastReadResult = self.modbus.readSingleRegister(*cmds,force=True)  # pyrefly: ignore[bad-keyword-argument]
@@ -9279,7 +9276,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('readSigned'):
                                 try:
-                                    cmds = eval(cs[len('readSigned'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('readSigned'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple) and len(cmds) == 2:
                                         # cmd has format "readSigned(s,r)"
                                         self.modbus.lastReadResult = self.modbus.readSingleRegister(*cmds,force=True,signed=True)  # pyrefly: ignore[bad-keyword-argument]
@@ -9288,7 +9285,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('readBCD'):
                                 try:
-                                    cmds = eval(cs[len('readBCD'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('readBCD'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple) and len(cmds) == 2:
                                         # cmd has format "readBCD(s,r)"
                                         self.modbus.lastReadResult = self.modbus.readBCDint(*cmds,force=True)  # pyrefly: ignore[bad-keyword-argument]
@@ -9297,7 +9294,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('read32'):
                                 try:
-                                    cmds = eval(cs[len('read32'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('read32'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple) and len(cmds) == 2:
                                         # cmd has format "read32(s,r)"
                                         self.modbus.lastReadResult = self.modbus.readInt32(*cmds,force=True)  # pyrefly: ignore[bad-keyword-argument]
@@ -9306,7 +9303,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('read32Signed'):
                                 try:
-                                    cmds = eval(cs[len('read32Signed'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('read32Signed'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple) and len(cmds) == 2:
                                         # cmd has format "read32Signed(s,r)"
                                         self.modbus.lastReadResult = self.modbus.readInt32(*cmds,force=True,signed=True)  # pyrefly: ignore[bad-keyword-argument]
@@ -9315,7 +9312,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('read32BCD'):
                                 try:
-                                    cmds = eval(cs[len('read32BCD'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('read32BCD'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple) and len(cmds) == 2:
                                         # cmd has format "read32BCD(s,r)"
                                         self.modbus.lastReadResult = self.modbus.readBCD(*cmds,force=True)  # pyrefly: ignore[bad-keyword-argument]
@@ -9324,7 +9321,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('readFloat'):
                                 try:
-                                    cmds = eval(cs[len('readFloat'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('readFloat'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple) and len(cmds) == 2:
                                         # cmd has format "readFloat(s,r)"
                                         res:float|None = self.modbus.readFloat(*cmds,force=True)  # pyrefly: ignore[bad-keyword-argument]
@@ -9336,7 +9333,7 @@ class ApplicationWindow(QMainWindow):
                                 # cmd has format "button(<bool>)" # 0 or 1 or True or False
                                 try:
                                     try:
-                                        args = eval(cs[len('button'):]) # pylint: disable=eval-used
+                                        args = eval(cs[len('button'):eval_limit]) # pylint: disable=eval-used
                                     except Exception: # pylint: disable=broad-except
                                         arg = cs[len('button('):-1]
                                         if ',' in arg and '(' not in arg:
@@ -9500,7 +9497,7 @@ class ApplicationWindow(QMainWindow):
                                     cs_len = len(cs_a)
                                     if cs_len > 2:
                                         sn = cs_a[3] if cs_len > 3 else None
-                                        if not self.ser.phidgetVOUTsetVOUT(toInt(cs_a[1]), toFloat(eval(cs_a[2])),sn): # pylint: disable=eval-used
+                                        if not self.ser.phidgetVOUTsetVOUT(toInt(cs_a[1]), toFloat(eval(cs_a[2][:eval_limit])),sn): # pylint: disable=eval-used
                                             self.sendmessage(QApplication.translate('Message', f'Failed to set VOUT({cs_a[1]}, {cs_a[2]})')) # pylint: disable=consider-using-f-string
 
                                 elif c.startswith('accel'):
@@ -9508,21 +9505,21 @@ class ApplicationWindow(QMainWindow):
                                     cs_len = len(cs_a)
                                     if cs_len > 2:
                                         sn = cs_a[3] if cs_len > 3 else None
-                                        self.ser.phidgetDCMotorSetAcceleration(toInt(cs_a[1]), toFloat(eval(cs_a[2])),sn) # pylint: disable=eval-used
+                                        self.ser.phidgetDCMotorSetAcceleration(toInt(cs_a[1]), toFloat(eval(cs_a[2][:eval_limit])),sn) # pylint: disable=eval-used
 
                                 elif c.startswith('vel'):
                                     cs_a = re.findall(r'[0-9a-zA-Z-.:]+', c)
                                     cs_len = len(cs_a)
                                     if cs_len > 2:
                                         sn = cs_a[3] if cs_len > 3 else None
-                                        self.ser.phidgetDCMotorSetVelocity(toInt(cs_a[1]), toFloat(eval(cs_a[2])),sn) # pylint: disable=eval-used
+                                        self.ser.phidgetDCMotorSetVelocity(toInt(cs_a[1]), toFloat(eval(cs_a[2][:eval_limit])),sn) # pylint: disable=eval-used
 
                                 elif c.startswith('limit'):
                                     cs_a = re.findall(r'[0-9a-zA-Z-.:]+', c)
                                     cs_len = len(cs_a)
                                     if cs_len > 2:
                                         sn = cs_a[3] if cs_len > 3 else None
-                                        self.ser.phidgetDCMotorSetCurrentLimit(toInt(cs_a[1]), toFloat(eval(cs_a[2])),sn) # pylint: disable=eval-used
+                                        self.ser.phidgetDCMotorSetCurrentLimit(toInt(cs_a[1]), toFloat(eval(cs_a[2][:eval_limit])),sn) # pylint: disable=eval-used
 
                                 elif c.startswith('slider'):
                                     cs_a = re.findall(r'[0-9a-zA-Z-.:]+', c)
@@ -9533,7 +9530,7 @@ class ApplicationWindow(QMainWindow):
 
                                 elif c.startswith('button'):
                                     try:
-                                        cs_ab = eval(c[len('button'):])  # pylint: disable=eval-used
+                                        cs_ab = eval(c[len('button'):eval_limit])  # pylint: disable=eval-used
                                     except Exception: # pylint: disable=broad-except
                                         arg = cs[len('button('):-1]
                                         if ',' in arg and '(' not in arg:
@@ -9594,7 +9591,7 @@ class ApplicationWindow(QMainWindow):
                                             self.setExtraEventButtonStyleSignal.emit(lastbuttonpressed, 'pressed')
 
                                 elif c.startswith('sleep'): # in seconds
-                                    cs_aa = eval(c[len('sleep'):])  # pylint: disable=eval-used
+                                    cs_aa = eval(c[len('sleep'):eval_limit])  # pylint: disable=eval-used
                                     if isinstance(cs_aa,(float,int)):
                                         # cmd has format "sleep(xx.yy)"
                                         libtime.sleep(cs_aa)
@@ -9606,7 +9603,7 @@ class ApplicationWindow(QMainWindow):
                                         if args.startswith('(') and args.endswith(')'):
                                             comma_pos = args.index(',')
                                             target = args[1:comma_pos]
-                                            fv = float(eval(args[comma_pos+1:-1])) # pylint: disable=eval-used
+                                            fv = float(eval(args[comma_pos+1:-1][:eval_limit])) # pylint: disable=eval-used
                                             # interpret target as hex string
                                             bts = bytes.fromhex(target)
                                             if len(bts)>0:
@@ -9622,7 +9619,7 @@ class ApplicationWindow(QMainWindow):
                                             vs:str = args[comma_pos+1:-1].strip()
                                             try:
                                                 # <value> can be a formula like "1 - _" or "1 - $"
-                                                vs = str(eval(vs)) # pylint: disable=eval-used
+                                                vs = str(eval(vs[:eval_limit])) # pylint: disable=eval-used
                                             except Exception:  # pylint: disable=broad-except
                                                 # or <value> is just a string like "UP", "DW"
                                                 pass
@@ -9690,7 +9687,7 @@ class ApplicationWindow(QMainWindow):
                                         if args.startswith('(') and args.endswith(')'):
                                             comma_pos = args.index(',')
                                             topic = args[1:comma_pos]
-                                            data = eval(args[comma_pos+1:-1]) # pylint: disable=eval-used
+                                            data = eval(args[comma_pos+1:-1][:eval_limit]) # pylint: disable=eval-used
                                             self.mqtt.publish(topic, data, self.qmc.device_logging)
 
                                 # Yoctopuce Relay Command Actions
@@ -9780,21 +9777,21 @@ class ApplicationWindow(QMainWindow):
                             cs = c.strip()
                             if cs.startswith('heater'):
                                 try:
-                                    cmds = eval(cs[len('heater'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('heater'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,int):
                                         self.hottop.setHottop(heater = min(max(cmds,0),100))
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
                             elif cs.startswith('fan'):
                                 try:
-                                    cmds = eval(cs[len('fan'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('fan'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,int):
                                         self.hottop.setHottop(main_fan = int(min(max(cmds,0),10) * 10))
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
                             elif cs.startswith('drum'): # drum as an alias for motor
                                 try:
-                                    cmds = eval(cs[len('drum'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('drum'):eval_limit]) # pylint: disable=eval-used
                                     if cmds:
                                         self.hottop.setHottop(drum_motor=True)
                                     else:
@@ -9803,7 +9800,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('motor'):
                                 try:
-                                    cmds = eval(cs[len('motor'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('motor'):eval_limit]) # pylint: disable=eval-used
                                     if cmds:
                                         self.hottop.setHottop(drum_motor=True)
                                     else:
@@ -9812,7 +9809,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('solenoid'):
                                 try:
-                                    cmds = eval(cs[len('solenoid'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('solenoid'):eval_limit]) # pylint: disable=eval-used
                                     if cmds:
                                         self.hottop.setHottop(solenoid=True)
                                     else:
@@ -9821,7 +9818,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('stirrer'):
                                 try:
-                                    cmds = eval(cs[len('stirrer'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('stirrer'):eval_limit]) # pylint: disable=eval-used
                                     if cmds:
                                         self.hottop.setHottop(cooling_motor=True)
                                     else:
@@ -9830,7 +9827,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('sleep') and cs.endswith(')'): # in seconds
                                 try:
-                                    cmds = eval(cs[len('sleep'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('sleep'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,(float,int)):
                                         # cmd has format "sleep(xx.yy)"
                                         libtime.sleep(cmds)
@@ -9838,7 +9835,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('control'):
                                 try:
-                                    cmds = eval(cs[len('control'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('control'):eval_limit]) # pylint: disable=eval-used
                                     if cmds:
                                         QTimer.singleShot(1, self.HottopControlOn)
                                     else:
@@ -9896,7 +9893,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             if cs.startswith('write'):
                                 try:
-                                    cmds = eval(cs[len('write'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('write'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,tuple):
                                         if len(cmds) == 3 and not isinstance(cmds[0],list):
                                             # cmd has format "write(s,r,v)"
@@ -9945,7 +9942,7 @@ class ApplicationWindow(QMainWindow):
                                     cs_split = cs[4:-1].split(',')
                                     if len(cs_split)>1:
                                         channel=toInt(cs_split[0])
-                                        float_value:float = float(eval(cs_split[1])) # pylint: disable=eval-used
+                                        float_value:float = float(eval(cs_split[1][:eval_limit])) # pylint: disable=eval-used
                                         if len(cs_split) == 2:
                                             self.ser.phidgetOUTsetPWM(channel, float_value)
                                         elif len(cs_split) == 3:
@@ -9954,9 +9951,9 @@ class ApplicationWindow(QMainWindow):
                                 elif cs.startswith('frequency(') and len(cs)>14:
                                     cs_split = cs[10:-1].split(',')
                                     if len(cs_split) == 2:
-                                        self.ser.phidgetOUTsetPWMfrequency(int(cs_split[0]),toFloat(eval(cs_split[1]))) # pylint: disable=eval-used
+                                        self.ser.phidgetOUTsetPWMfrequency(int(cs_split[0]),toFloat(eval(cs_split[1][:eval_limit]))) # pylint: disable=eval-used
                                     elif len(cs_split) == 3:
-                                        self.ser.phidgetOUTsetPWMfrequency(int(cs_split[0]),toFloat(eval(cs_split[1])),cs_split[2]) # pylint: disable=eval-used
+                                        self.ser.phidgetOUTsetPWMfrequency(int(cs_split[0]),toFloat(eval(cs_split[1][:eval_limit])),cs_split[2]) # pylint: disable=eval-used
                                 elif cs.startswith('toggle(') and len(cs)>8:
                                     cs_split = cs[7:-1].split(',')
                                     if len(cs_split) == 1:
@@ -9966,9 +9963,9 @@ class ApplicationWindow(QMainWindow):
                                 elif cs.startswith('outhub(') and len(cs)>10:
                                     cs_split = cs[7:-1].split(',')
                                     if len(cs_split) == 2:
-                                        self.ser.phidgetOUTsetPWMhub(int(cs_split[0]),float(eval(cs_split[1]))) # pylint: disable=eval-used
+                                        self.ser.phidgetOUTsetPWMhub(int(cs_split[0]),float(eval(cs_split[1:eval_limit]))) # pylint: disable=eval-used
                                     elif len(cs_split) == 3:
-                                        self.ser.phidgetOUTsetPWMhub(int(cs_split[0]),float(eval(cs_split[1])),cs_split[2]) # pylint: disable=eval-used
+                                        self.ser.phidgetOUTsetPWMhub(int(cs_split[0]),float(eval(cs_split[1:eval_limit])),cs_split[2]) # pylint: disable=eval-used
                                 elif cs.startswith('togglehub(') and len(cs)>11:
                                     cs_split = cs[10:-1].split(',')
                                     if len(cs_split) == 1:
@@ -9988,7 +9985,7 @@ class ApplicationWindow(QMainWindow):
                                     elif len(cs_split) == 3:
                                         self.ser.phidgetOUTpulsePWM(int(cs_split[0]),int(round(float(cs_split[1]))),cs_split[2])
                                 elif cs.startswith('sleep') and cs.endswith(')'): # in seconds
-                                    cmds = eval(cs[len('sleep'):]) # pylint: disable=eval-used # pylint: disable=W0123
+                                    cmds = eval(cs[len('sleep'):eval_limit]) # pylint: disable=eval-used # pylint: disable=W0123
                                     if isinstance(cmds,(float,int)):
                                         # cmd has format "sleep(xx.yy)"
                                         libtime.sleep(cmds)
@@ -10001,9 +9998,9 @@ class ApplicationWindow(QMainWindow):
                                     try:
                                         cs_split = cs[len('enabled('):-1].split(',')
                                         if len(cs_split) > 2:
-                                            self.ser.yoctoPWMenabled(int(cs_split[0]),toBool(eval(cs_split[1])),cs_split[2]) # pylint: disable=eval-used
+                                            self.ser.yoctoPWMenabled(int(cs_split[0]),toBool(eval(cs_split[1][:eval_limit])),cs_split[2]) # pylint: disable=eval-used
                                         else:
-                                            self.ser.yoctoPWMenabled(int(cs_split[0]),toBool(eval(cs_split[1]))) # pylint: disable=eval-used
+                                            self.ser.yoctoPWMenabled(int(cs_split[0]),toBool(eval(cs_split[1][:eval_limit]))) # pylint: disable=eval-used
                                     except Exception as e: # pylint: disable=broad-except
                                         _log.exception(e)
                                 # freq(c,f[,sn])
@@ -10011,9 +10008,9 @@ class ApplicationWindow(QMainWindow):
                                     try:
                                         cs_split = cs[len('freq('):-1].split(',')
                                         if len(cs_split) > 2:
-                                            self.ser.yoctoPWMsetFrequency(int(cs_split[0]),toInt(eval(cs_split[1])),cs_split[2]) # pylint: disable=eval-used
+                                            self.ser.yoctoPWMsetFrequency(int(cs_split[0]),toInt(eval(cs_split[1][:eval_limit])),cs_split[2]) # pylint: disable=eval-used
                                         else:
-                                            self.ser.yoctoPWMsetFrequency(int(cs_split[0]),toInt(eval(cs_split[1]))) # pylint: disable=eval-used
+                                            self.ser.yoctoPWMsetFrequency(int(cs_split[0]),toInt(eval(cs_split[1][:eval_limit]))) # pylint: disable=eval-used
                                     except Exception as e: # pylint: disable=broad-except
                                         _log.exception(e)
                                 # duty(c,d[,sn])
@@ -10021,9 +10018,9 @@ class ApplicationWindow(QMainWindow):
                                     try:
                                         cs_split = cs[len('duty('):-1].split(',')
                                         if len(cs_split) > 2:
-                                            self.ser.yoctoPWMsetDuty(int(cs_split[0]),toFloat(eval(cs_split[1])),cs_split[2]) # pylint: disable=eval-used
+                                            self.ser.yoctoPWMsetDuty(int(cs_split[0]),toFloat(eval(cs_split[1][:eval_limit])),cs_split[2]) # pylint: disable=eval-used
                                         else:
-                                            self.ser.yoctoPWMsetDuty(int(cs_split[0]),toFloat(eval(cs_split[1]))) # pylint: disable=eval-used
+                                            self.ser.yoctoPWMsetDuty(int(cs_split[0]),toFloat(eval(cs_split[1][:eval_limit]))) # pylint: disable=eval-used
                                     except Exception as e: # pylint: disable=broad-except
                                         _log.exception(e)
                                 # move(c,d,t[,sn])
@@ -10031,9 +10028,9 @@ class ApplicationWindow(QMainWindow):
                                     try:
                                         cs_split = cs[len('move('):-1].split(',')
                                         if len(cs_split) > 3:
-                                            self.ser.yoctoPWMmove(int(cs_split[0]),toFloat(eval(cs_split[1])),int(cs_split[2]),cs_split[3]) # pylint: disable=eval-used
+                                            self.ser.yoctoPWMmove(int(cs_split[0]),toFloat(eval(cs_split[1][:eval_limit])),int(cs_split[2]),cs_split[3]) # pylint: disable=eval-used
                                         else:
-                                            self.ser.yoctoPWMmove(int(cs_split[0]),toFloat(eval(cs_split[1])),int(cs_split[2])) # pylint: disable=eval-used
+                                            self.ser.yoctoPWMmove(int(cs_split[0]),toFloat(eval(cs_split[1][:eval_limit])),int(cs_split[2])) # pylint: disable=eval-used
                                     except Exception as e: # pylint: disable=broad-except
                                         _log.exception(e)
                                 else:
@@ -10051,9 +10048,9 @@ class ApplicationWindow(QMainWindow):
                                 try:
                                     cs_split = cs[4:-1].split(',')
                                     if len(cs_split) == 2:
-                                        self.ser.phidgetVOUTsetVOUT(int(cs_split[0]),toFloat(eval(cs_split[1]))) # pylint: disable=eval-used
+                                        self.ser.phidgetVOUTsetVOUT(int(cs_split[0]),toFloat(eval(cs_split[1][:eval_limit]))) # pylint: disable=eval-used
                                     elif len(cs_split) == 3:
-                                        self.ser.phidgetVOUTsetVOUT(int(cs_split[0]),toFloat(eval(cs_split[1])),cs_split[2]) # pylint: disable=eval-used
+                                        self.ser.phidgetVOUTsetVOUT(int(cs_split[0]),toFloat(eval(cs_split[1][:eval_limit])),cs_split[2]) # pylint: disable=eval-used
                                 except Exception as e:  # pylint: disable=broad-except
                                     _log.exception(e)
                             elif cs.startswith('range(') and len(cs)>7:
@@ -10070,9 +10067,9 @@ class ApplicationWindow(QMainWindow):
                                 try:
                                     cs_split = cs[5:-1].split(',')
                                     if len(cs_split) > 2:
-                                        self.ser.yoctoVOUTsetVOUT(int(cs_split[0]),toFloat(eval(cs_split[1])),cs_split[2]) # pylint: disable=eval-used
+                                        self.ser.yoctoVOUTsetVOUT(int(cs_split[0]),toFloat(eval(cs_split[1][:eval_limit])),cs_split[2]) # pylint: disable=eval-used
                                     else:
-                                        self.ser.yoctoVOUTsetVOUT(int(cs_split[0]),toFloat(eval(cs_split[1]))) # pylint: disable=eval-used
+                                        self.ser.yoctoVOUTsetVOUT(int(cs_split[0]),toFloat(eval(cs_split[1][:eval_limit]))) # pylint: disable=eval-used
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
                             # for YOCTOPUCE CURRENT OUT modules "cout(c[,sn])" with c the current as float [3.0-21.0] and the optional sn either the modules serial number or its name
@@ -10081,14 +10078,14 @@ class ApplicationWindow(QMainWindow):
                                     #c = cs[5:-1]
                                     cs_split = cs[5:-1].split(',')
                                     if len(cs_split) > 1:
-                                        self.ser.yoctoCOUTsetCOUT(toFloat(eval(cs_split[0])),cs_split[1]) # pylint: disable=eval-used
+                                        self.ser.yoctoCOUTsetCOUT(toFloat(eval(cs_split[0][:eval_limit])),cs_split[1]) # pylint: disable=eval-used
                                     else:
-                                        self.ser.yoctoCOUTsetCOUT(toFloat(eval(cs_split[0]))) # pylint: disable=eval-used
+                                        self.ser.yoctoCOUTsetCOUT(toFloat(eval(cs_split[0][:eval_limit]))) # pylint: disable=eval-used
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
                             elif cs.startswith('sleep') and cs.endswith(')'): # in seconds
                                 try:
-                                    cmds = eval(cs[len('sleep'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('sleep'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,(float, int)):
                                         # cmd has format "sleep(xx.yy)"
                                         libtime.sleep(cmds)
@@ -10123,13 +10120,13 @@ class ApplicationWindow(QMainWindow):
                             if cs.startswith('setDBint(') and len(cs) > 14:
                                 try:
                                     dbnr,s,v_str = cs[len('setDBint('):-1].split(',')
-                                    self.s7.writeInt(5,int(dbnr),int(s),eval(v_str)) # pylint: disable=eval-used
+                                    self.s7.writeInt(5,int(dbnr),int(s),eval(v_str[:eval_limit])) # pylint: disable=eval-used
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
                             elif cs.startswith('msetDBint(') and len(cs) > 16:
                                 try:
                                     dbnr,s,a,o,v_str = cs[len('msetDBint('):-1].split(',')
-                                    self.s7.maskWriteInt(5,int(dbnr),int(s),int(a),int(o),eval(v_str)) # pylint: disable=eval-used
+                                    self.s7.maskWriteInt(5,int(dbnr),int(s),int(a),int(o),eval(v_str[:eval_limit])) # pylint: disable=eval-used
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
                             elif cs.startswith('getDBint(') and len(cs) > 13:
@@ -10143,7 +10140,7 @@ class ApplicationWindow(QMainWindow):
                             elif cs.startswith('setDBfloat(') and len(cs) > 16:
                                 try:
                                     dbnr,s,v_str = cs[len('setDBfloat('):-1].split(',')
-                                    self.s7.writeFloat(5,int(dbnr),int(s),eval(v_str)) # pylint: disable=eval-used
+                                    self.s7.writeFloat(5,int(dbnr),int(s),eval(v_str[:eval_limit])) # pylint: disable=eval-used
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
                             elif cs.startswith('getDBfloat(') and len(cs) > 14:
@@ -10157,7 +10154,7 @@ class ApplicationWindow(QMainWindow):
                             elif cs.startswith('setDBbool(') and len(cs) > 17:
                                 try:
                                     dbnr,s,si,v_str = cs[len('setDBbool('):-1].split(',')
-                                    self.s7.writeBool(5,int(dbnr),int(s),int(si),eval(v_str)) # pylint: disable=eval-used
+                                    self.s7.writeBool(5,int(dbnr),int(s),int(si),eval(v_str[:eval_limit])) # pylint: disable=eval-used
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
                             elif cs.startswith('getDBbool(') and len(cs) > 15:
@@ -10174,7 +10171,7 @@ class ApplicationWindow(QMainWindow):
                                 try:
                                     args = []
                                     try:
-                                        args = eval(cs[len('button'):]) # pylint: disable=eval-used
+                                        args = eval(cs[len('button'):eval_limit]) # pylint: disable=eval-used
                                     except Exception: # pylint: disable=broad-except
                                         arg = cs[len('button('):-1]
                                         if ',' in arg and '(' not in arg:
@@ -10223,7 +10220,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('sleep') and cs.endswith(')'): # in seconds
                                 try:
-                                    cmds = eval(cs[len('sleep'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('sleep'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,(float,int)):
                                         # cmd has format "sleep(xx.yy)"
                                         libtime.sleep(cmds)
@@ -10260,7 +10257,7 @@ class ApplicationWindow(QMainWindow):
                                         alarm_nr = int(args[0])
                                         if alarm_nr>0 and len(self.qmc.alarmflag) > alarm_nr-1:
                                             try:
-                                                self.qmc.alarmflag[alarm_nr-1] = toBool(eval(args[1])) # pylint: disable=eval-used
+                                                self.qmc.alarmflag[alarm_nr-1] = toBool(eval(args[1][:eval_limit])) # pylint: disable=eval-used
                                             except Exception: # pylint: disable=broad-except
                                                 value_str = args[1].strip()
                                                 if value_str.lower() in {'yes', 'true', 't', '1'}:
@@ -10308,7 +10305,7 @@ class ApplicationWindow(QMainWindow):
                             # sleep(<n>) sleep <n> seconds (might be a float like in "sleep(1.2)"
                             elif cs.startswith('sleep') and cs.endswith(')'): # in seconds
                                 try:
-                                    cmds = eval(cs[len('sleep'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('sleep'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,(float,int)):
                                         # cmd has format "sleep(xx.yy)"
                                         libtime.sleep(cmds)
@@ -10317,7 +10314,7 @@ class ApplicationWindow(QMainWindow):
                             # tare(<n>) tare channel <n> with 1 => ET, 2 => BT, 3 => E1c1, 4: E1c2,..
                             elif cs.startswith('tare') and cs.endswith(')'): # in seconds
                                 try:
-                                    cmds = eval(cs[len('tare'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('tare'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,(int, float)):
                                         self.setTareSignal.emit(int(cmds)-1)
                                         self.sendmessage(f'Artisan Command: {cs}')
@@ -10449,10 +10446,10 @@ class ApplicationWindow(QMainWindow):
                                 try:
                                     # quoted string message
                                     values = cs[len('popup('):-1].split(',')
-                                    message = str(eval(values[0])) # pylint: disable=eval-used
+                                    message = str(eval(values[0][:eval_limit])) # pylint: disable=eval-used
                                     timeout = 0
                                     if len(values)>1:
-                                        timeout = int(round(float(eval(values[1])))) # pylint: disable=eval-used
+                                        timeout = int(round(float(eval(values[1][:eval_limit])))) # pylint: disable=eval-used
                                     self.qmc.showAlarmPopupSignal.emit(message,timeout)
                                 except Exception: # pylint: disable=broad-except
                                     # sequence of character message
@@ -10460,14 +10457,14 @@ class ApplicationWindow(QMainWindow):
                                         message = str(values[0])
                                         timeout = 0
                                         if len(values)>1:
-                                            timeout = int(eval(values[1])) # pylint: disable=eval-used
+                                            timeout = int(eval(values[1][:eval_limit])) # pylint: disable=eval-used
                                         self.qmc.showAlarmPopupSignal.emit(message,timeout)
                                     except Exception as e: # pylint: disable=broad-except
                                         _log.exception(e)
                             # message(<m>) with <m> the message
                             elif cs.startswith('message(') and cs.endswith(')'):
                                 try:
-                                    message = str(eval(cs[len('message('):-1])) # pylint: disable=eval-used
+                                    message = str(eval(cs[len('message('):-1][:eval_limit])) # pylint: disable=eval-used
                                     self.sendmessageSignal.emit(message,True,None)
                                 except Exception: # pylint: disable=broad-except
                                     try:
@@ -10480,13 +10477,13 @@ class ApplicationWindow(QMainWindow):
                                 try:
                                     cs_split = cs[len('notify('):-1].split(',')
                                     try:
-                                        title = str(eval(cs_split[0])) # pylint: disable=eval-used
+                                        title = str(eval(cs_split[0][:eval_limit])) # pylint: disable=eval-used
                                     except Exception: # pylint: disable=broad-except
                                         title = str(cs_split[0])
                                     message = ''
                                     if len(cs_split) > 1:
                                         try:
-                                            message = str(eval(cs_split[1])) # pylint: disable=eval-used
+                                            message = str(eval(cs_split[1][:eval_limit])) # pylint: disable=eval-used
                                         except Exception: # pylint: disable=broad-except
                                             message = str(cs_split[1])
                                     self.sendnotificationMessageSignal.emit(title, message, NotificationType.ARTISAN_USER)
@@ -10508,7 +10505,7 @@ class ApplicationWindow(QMainWindow):
                             # setCanvasColor(<c>) with <c> the color in RGB-hex format like #ae12f7
                             elif cs.startswith('setCanvasColor(') and cs.endswith(')'):
                                 try:
-                                    color = str(eval(cs[len('setCanvasColor('):-1])) # pylint: disable=eval-used
+                                    color = str(eval(cs[len('setCanvasColor('):-1][:eval_limit])) # pylint: disable=eval-used
                                     self.setCanvasColorSignal.emit(color)
                                     self.sendmessage(f'Artisan Command: {cs}')
                                 except Exception: # pylint: disable=broad-except
@@ -10534,7 +10531,7 @@ class ApplicationWindow(QMainWindow):
                                         if 0 < event_type < 5:
                                             updated:bool = False
                                             try:
-                                                state = toBool(eval(args[1])) # pylint: disable=eval-used
+                                                state = toBool(eval(args[1][:eval_limit])) # pylint: disable=eval-used
                                                 if self.qmc.specialeventplaybackramp[event_type - 1] != state:
                                                     self.qmc.specialeventplaybackramp[event_type - 1] = state
                                                     updated = True
@@ -10565,7 +10562,7 @@ class ApplicationWindow(QMainWindow):
                                         event_type = int(args[0])
                                         if 0 < event_type < 5:
                                             try:
-                                                state = toBool(eval(args[1])) # pylint: disable=eval-used
+                                                state = toBool(eval(args[1][:eval_limit])) # pylint: disable=eval-used
                                                 self.qmc.specialeventplayback[event_type - 1] = state
                                             except Exception: # pylint: disable=broad-except
                                                 value_str = args[1].strip()
@@ -10583,7 +10580,7 @@ class ApplicationWindow(QMainWindow):
                                         event_type = int(args[0])
                                         if 0 < event_type < 5:
                                             try:
-                                                state = toBool(eval(args[1])) # pylint: disable=eval-used
+                                                state = toBool(eval(args[1][:eval_limit])) # pylint: disable=eval-used
                                                 self.eventquantifieractive[event_type - 1] = int(state)
                                             except Exception: # pylint: disable=broad-except
                                                 value_str = args[1].strip()
@@ -10617,7 +10614,7 @@ class ApplicationWindow(QMainWindow):
                                         event_type = int(args[0])
                                         if 0 < event_type < 5:
                                             try:
-                                                state = toBool(eval(args[1])) # pylint: disable=eval-used
+                                                state = toBool(eval(args[1][:eval_limit])) # pylint: disable=eval-used
                                                 self.eventslidervisibilities[event_type - 1] = int(state)
                                             except Exception: # pylint: disable=broad-except
                                                 value_str = args[1].strip()
@@ -10628,7 +10625,7 @@ class ApplicationWindow(QMainWindow):
                                             QTimer.singleShot(100, self.updateSlidersProperties) # needs to run in the GUI thread!
                                         elif event_type == 5:
                                             try:
-                                                state = toBool(eval(args[1])) # pylint: disable=eval-used
+                                                state = toBool(eval(args[1][:eval_limit])) # pylint: disable=eval-used
                                                 self.pidcontrol.svSlider = state
                                             except Exception: # pylint: disable=broad-except
                                                 value_str = args[1].strip()
@@ -10642,7 +10639,7 @@ class ApplicationWindow(QMainWindow):
                             # setBatchSize(<float>) : if <float> is negative, the batchsize of the background profile is used if any
                             elif cs.startswith('setBatchSize') and cs.endswith(')'): # in seconds
                                 try:
-                                    cmds = eval(cs[len('setBatchSize'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('setBatchSize'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,(float,int)):
                                         # cmd has format "setBatchSize(xx.yy)"
                                         if cmds < 0:
@@ -10658,7 +10655,7 @@ class ApplicationWindow(QMainWindow):
                             #        (visibility=ON) if value b is yes, true, t, or 1, otherwise to hidden (visibility=OFF)
                             elif cs.startswith('visible'):
                                 try:
-                                    cs_aac = eval(cs[len('visible'):])  # pylint: disable=eval-used
+                                    cs_aac = eval(cs[len('visible'):eval_limit])  # pylint: disable=eval-used
                                 except Exception: # pylint: disable=broad-except
                                     arg = cs[len('visible('):-1]
                                     if ',' in arg and '(' not in arg:
@@ -10680,7 +10677,7 @@ class ApplicationWindow(QMainWindow):
                             elif cs.startswith('button(') and cs.endswith(')'):
                                 try:
                                     try:
-                                        cs_ac = eval(cs[len('button'):])  # pylint: disable=eval-used
+                                        cs_ac = eval(cs[len('button'):eval_limit])  # pylint: disable=eval-used
                                     except Exception: # pylint: disable=broad-except
                                         arg = cs[len('button('):-1]
                                         if ',' in arg and '(' not in arg:
@@ -10809,7 +10806,7 @@ class ApplicationWindow(QMainWindow):
                             # pidSVC(<n>) with <n> a number in C to be used as PID SV (if temperature mode is F, n will be first converted to F
                             elif cs.startswith('pidSVC(') and cs.endswith(')'):
                                 try:
-                                    sv = max(0.0, convertTemp(float(eval(cs[len('pidSVC('):-1])), 'C', self.qmc.mode)) # we don't send SV < 0 # pylint: disable=eval-used
+                                    sv = max(0.0, convertTemp(float(eval(cs[len('pidSVC('):-1][:eval_limit])), 'C', self.qmc.mode)) # we don't send SV < 0 # pylint: disable=eval-used
                                     if self.qmc.device == 0 and sv != self.fujipid.sv:
                                         self.fujipid.setsv(sv,silent=True)
                                     elif sv != self.pidcontrol.sv:
@@ -10819,7 +10816,7 @@ class ApplicationWindow(QMainWindow):
                             # pidSV(<n>) with <n> a number to be used as PID SV
                             elif cs.startswith('pidSV(') and cs.endswith(')'):
                                 try:
-                                    sv = max(0.0, float(eval(cs[len('pidSV('):-1]))) # we don't send SV < 0 # pylint: disable=eval-used
+                                    sv = max(0.0, float(eval(cs[len('pidSV('):-1][:eval_limit]))) # we don't send SV < 0 # pylint: disable=eval-used
                                     if self.qmc.device == 0 and sv != self.fujipid.sv:
                                         self.fujipid.setsv(sv,silent=True)
                                     elif sv != self.pidcontrol.sv:
@@ -10829,7 +10826,7 @@ class ApplicationWindow(QMainWindow):
                             # pidRS(<n>) with <n> a number to be used to select the PID RS pattern (1-based for the internal software PID)
                             elif cs.startswith('pidRS(') and cs.endswith(')'):
                                 try:
-                                    rs = int(eval(cs[len('pidRS('):-1])) # pylint: disable=eval-used
+                                    rs = int(eval(cs[len('pidRS('):-1][:eval_limit])) # pylint: disable=eval-used
                                     if self.qmc.device in {0, 26}:
                                         if self.ser.controlETpid[0] in {0,1,4}: # PXG, PRG, PXF
                                             pass
@@ -10839,7 +10836,7 @@ class ApplicationWindow(QMainWindow):
                                 except Exception: # pylint: disable=broad-except
                                     # might be a label
                                     try:
-                                        label = str(eval(cs[len('pidRS('):-1])) # pylint: disable=eval-used
+                                        label = str(eval(cs[len('pidRS('):-1][:eval_limit])) # pylint: disable=eval-used
                                         rs2 = self.pidcontrol.findRSset(label) # here rs is 0-based!!
                                         if rs2 is not None:
                                             self.pidcontrol.setRSpattern(rs2)
@@ -10867,7 +10864,7 @@ class ApplicationWindow(QMainWindow):
                                 except Exception: # pylint: disable=broad-except
                                     # might be a label
                                     try:
-                                        label = str(eval(cs[len('palette('):-1])) # pylint: disable=eval-used
+                                        label = str(eval(cs[len('palette('):-1][:eval_limit])) # pylint: disable=eval-used
                                         pl = self.findPalette(label)
                                         if pl is not None:
                                             self.setbuttonsfromSignal.emit(pl)
@@ -10879,7 +10876,7 @@ class ApplicationWindow(QMainWindow):
                                 try:
                                     try:
                                         # note we use here c instead of cs as we do not want _ or $ symbols to be substituted here
-                                        fp = str(eval(c[len('loadBackground('):-1])) # pylint: disable=eval-used
+                                        fp = str(eval(c[len('loadBackground('):-1][:eval_limit])) # pylint: disable=eval-used
                                     except Exception: # pylint: disable=broad-except
                                         fp = str(cs[len('loadBackground('):-1])
                                     self.loadBackgroundSignal.emit(fp, True)
@@ -10902,7 +10899,7 @@ class ApplicationWindow(QMainWindow):
                                 except Exception: # pylint: disable=broad-except
                                     # might be a label
                                     try:
-                                        label = str(eval(cs[len('alarmset('):-1])) # pylint: disable=eval-used
+                                        label = str(eval(cs[len('alarmset('):-1][:eval_limit])) # pylint: disable=eval-used
                                         pp:int|None = self.qmc.findAlarmSet(label)
                                         if pp is not None:
                                             self.qmc.alarmsetSignal.emit(pp)
@@ -10912,7 +10909,7 @@ class ApplicationWindow(QMainWindow):
                             # adjustSV(<n>) adds <n> to the current SV. Note that n can be negative
                             elif cs.startswith('adjustSV(') and cs.endswith(')'):
                                 try:
-                                    sv_offset = int(eval(cs[len('adjustSV('):-1])) # pylint: disable=eval-used
+                                    sv_offset = int(eval(cs[len('adjustSV('):-1][:eval_limit])) # pylint: disable=eval-used
                                     if self.qmc.device != 26: # not for DTA
                                         self.adjustSVSignal.emit(sv_offset)
                                         self.sendmessage(f'Artisan Command: {cs}')
@@ -10925,7 +10922,7 @@ class ApplicationWindow(QMainWindow):
                                     if len(args) == 2:
                                         direction = args[0].lower()
                                         if len(direction)>3 and direction[0] in {'"', "'"} and direction[-1] in {'"', "'"}:
-                                            direction = eval(direction) # pylint: disable=eval-used
+                                            direction = eval(direction[:eval_limit]) # pylint: disable=eval-used
                                         step = int(round(float(args[1])))
                                         self.qmc.moveBackgroundSignal.emit(direction,step)
                                         self.sendmessage(f'Artisan Command: {cs}')
@@ -10934,7 +10931,7 @@ class ApplicationWindow(QMainWindow):
                             # pidLookahead(<n>) : PID Lookahead <n> in seconds
                             elif cs.startswith('pidLookahead(') and cs.endswith(')'):
                                 try:
-                                    lookahead = toInt(eval(cs[len('pidLookahead('):-1])) # pylint: disable=eval-used
+                                    lookahead = toInt(eval(cs[len('pidLookahead('):-1][:eval_limit])) # pylint: disable=eval-used
                                     if self.qmc.device == 0 and self.qmc.Controlbuttonflag: # FUJI PID
                                         self.fujipid.lookahead = lookahead
                                         self.sendmessage(QApplication.translate('Message','PID Lookahead: {0}').format(self.fujipid.lookahead))
@@ -10946,7 +10943,7 @@ class ApplicationWindow(QMainWindow):
                             # replayLookahead(<n>) : Replay Lookahead <n> in seconds
                             elif cs.startswith('replayLookahead(') and cs.endswith(')'):
                                 try:
-                                    lookahead = toInt(eval(cs[len('replayLookahead('):-1])) # pylint: disable=eval-used
+                                    lookahead = toInt(eval(cs[len('replayLookahead('):-1][:eval_limit])) # pylint: disable=eval-used
                                     self.qmc.ramp_lookahead = lookahead
                                     self.sendmessage(QApplication.translate('Message','Replay Lookahead: {0}').format(self.qmc.ramp_lookahead))
                                 except Exception as e: # pylint: disable=broad-except
@@ -10978,7 +10975,7 @@ class ApplicationWindow(QMainWindow):
                                     args = cs[len('showCurve('):-1].split(',')
                                     if len(args) == 2:
                                         curve_name = args[0]
-                                        state = toBool(eval(args[1])) # pylint: disable=eval-used
+                                        state = toBool(eval(args[1][:eval_limit])) # pylint: disable=eval-used
                                         self.qmc.showCurveSignal.emit(curve_name, state)
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
@@ -10989,7 +10986,7 @@ class ApplicationWindow(QMainWindow):
                                     if len(args) == 3:
                                         extra_device = int(args[0])
                                         curve = args[1]
-                                        state = toBool(eval(args[2])) # pylint: disable=eval-used
+                                        state = toBool(eval(args[2][:eval_limit])) # pylint: disable=eval-used
                                         self.qmc.showExtraCurveSignal.emit(extra_device, curve, state)
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
@@ -10999,7 +10996,7 @@ class ApplicationWindow(QMainWindow):
                                     args = cs[len('showEvents('):-1].split(',')
                                     if len(args) == 2:
                                         event_type = int(args[0])
-                                        state = toBool(eval(args[1])) # pylint: disable=eval-used
+                                        state = toBool(eval(args[1][:eval_limit])) # pylint: disable=eval-used
                                         self.qmc.showEventsSignal.emit(event_type, state)
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
@@ -11008,7 +11005,7 @@ class ApplicationWindow(QMainWindow):
                                 try:
                                     args = cs[len('showBackgroundEvents('):-1].split(',')
                                     if len(args) == 1:
-                                        state = toBool(eval(args[0])) # pylint: disable=eval-used
+                                        state = toBool(eval(args[0][:eval_limit])) # pylint: disable=eval-used
                                         self.qmc.showBackgroundEventsSignal.emit(state)
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
@@ -11088,7 +11085,7 @@ class ApplicationWindow(QMainWindow):
                                         sn = cs_split[n]
                                     else:
                                         sn = None
-                                    self.ser.phidgetRCset(int(channel_str),toFloat(eval(pos)),sn) # pylint: disable=eval-used
+                                    self.ser.phidgetRCset(int(channel_str),toFloat(eval(pos[:eval_limit])),sn) # pylint: disable=eval-used
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
                             elif cs.startswith('ramp(') and len(cs) > 8:
@@ -11146,7 +11143,7 @@ class ApplicationWindow(QMainWindow):
                                     _log.exception(e)
                             elif cs.startswith('sleep('): # in seconds
                                 try:
-                                    cmds = eval(cs[len('sleep'):]) # pylint: disable=eval-used
+                                    cmds = eval(cs[len('sleep'):eval_limit]) # pylint: disable=eval-used
                                     if isinstance(cmds,(float,int)):
                                         # cmd has format "sleep(xx.yy)"
                                         libtime.sleep(cmds)
@@ -11159,7 +11156,7 @@ class ApplicationWindow(QMainWindow):
                                 try:
                                     cs_split = cs[8:-1].split(',')
                                     cv = int(cs_split[0])
-                                    b = toBool(eval(cs_split[1])) # pylint: disable=eval-used
+                                    b = toBool(eval(cs_split[1][:eval_limit])) # pylint: disable=eval-used
                                     if len(cs_split) > 2:
                                         sn = cs_split[2]
                                         self.ser.yoctoSERVOenabled(cv,b,sn)
@@ -11172,7 +11169,7 @@ class ApplicationWindow(QMainWindow):
                                 try:
                                     cs_split = cs[5:-1].split(',')
                                     cv = int(cs_split[0])
-                                    p = toInt(eval(cs_split[1])) # pylint: disable=eval-used
+                                    p = toInt(eval(cs_split[1][:eval_limit])) # pylint: disable=eval-used
                                     if len(cs_split) > 2:
                                         try:
                                             t = int(cs_split[2])
@@ -11235,13 +11232,13 @@ class ApplicationWindow(QMainWindow):
                         # send(<json>) : send <json> request to connected WebSocket
                         if cs.startswith('send') and cs.endswith(')'):
                             try:
-                                request = eval(cs[len('send('):-1]) # pylint: disable=eval-used
+                                request = eval(cs[len('send('):-1][:eval_limit]) # pylint: disable=eval-used
                                 self.ws.send(request,block=False)
                             except Exception as e: # pylint: disable=broad-except
                                 _log.exception(e)
                         elif cs.startswith('sleep') and cs.endswith(')'): # in seconds
                             try:
-                                cmds = eval(cs[len('sleep'):]) # pylint: disable=eval-used
+                                cmds = eval(cs[len('sleep'):eval_limit]) # pylint: disable=eval-used
                                 if isinstance(cmds,(float,int)):
                                     # cmd has format "sleep(xx.yy)"
                                     libtime.sleep(cmds)
@@ -11249,7 +11246,7 @@ class ApplicationWindow(QMainWindow):
                                 _log.exception(e)
                         elif cs.startswith('read'):
                             try:
-                                request = eval(cs[len('read'):]) # pylint: disable=eval-used
+                                request = eval(cs[len('read'):eval_limit]) # pylint: disable=eval-used
                                 if isinstance(request,dict):
                                     # cmd has format "read(<requestJSON>)"
                                     self.ws.lastReadResult = self.ws.send(request)
@@ -11260,7 +11257,7 @@ class ApplicationWindow(QMainWindow):
                             try:
                                 args = []
                                 try:
-                                    args = eval(cs[len('button'):]) # pylint: disable=eval-used
+                                    args = eval(cs[len('button'):eval_limit]) # pylint: disable=eval-used
                                 except Exception: # pylint: disable=broad-except
                                     arg = cs[len('button('):-1]
                                     if ',' in arg and '(' not in arg:
@@ -11329,7 +11326,7 @@ class ApplicationWindow(QMainWindow):
                                         sn = cs_split[n]
                                     else:
                                         sn = None
-                                    self.ser.phidgetStepperRescale(int(channel_str),toFloat(eval(value_str)),sn) # pylint: disable=eval-used
+                                    self.ser.phidgetStepperRescale(int(channel_str),toFloat(eval(value_str[:eval_limit])),sn) # pylint: disable=eval-used
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
                             # engaged(ch,state[,sn]) # engage channel
@@ -11356,7 +11353,7 @@ class ApplicationWindow(QMainWindow):
                                         sn = cs_split[n]
                                     else:
                                         sn = None
-                                    self.ser.phidgetStepperSet(int(channel_str),toFloat(eval(pos)),sn) # pylint: disable=eval-used
+                                    self.ser.phidgetStepperSet(int(channel_str),toFloat(eval(pos[:eval_limit])),sn) # pylint: disable=eval-used
                                 except Exception as e: # pylint: disable=broad-except
                                     _log.exception(e)
                             else:
@@ -12605,7 +12602,7 @@ class ApplicationWindow(QMainWindow):
                     elif self.qmc.flagon:
                         self.qmc.toggleRecorderSignal.emit()
                 elif k in {Qt.Key.Key_Return,Qt.Key.Key_Enter}: # k in {16777220, 16777221}: #ENTER (turns ON/OFF keyboard moves; COMMAND+ENTER starts record, SHIFT+ENTER turns Artisan OFF)
-                    if self.quickEventShortCut and len(self.quickEventShortCut[1])>0 and no_modifier:
+                    if self.quickEventShortCut and len(self.quickEventShortCut[1])>0 and (no_modifier or keypad_modifier):
                         # event entry active
                         eventNr = self.quickEventShortCut[0]
                         eventValueStr = self.quickEventShortCut[1]
@@ -12848,7 +12845,7 @@ class ApplicationWindow(QMainWindow):
                     if self.qmc.flagstart:
                         self.standardButtonsVisibility()
                 #Extra event buttons palette. Numerical keys [0,1,2,3,4,5,6,7,8,9]
-                elif k in numberkeys and no_modifier: # 47 < k < 58:
+                elif k in numberkeys and (no_modifier or keypad_modifier): # 47 < k < 58:
                     if not self.app.artisanviewerMode:
                         button = [48,49,50,51,52,53,54,55,56,57]
                         if self.quickEventShortCut:
@@ -12973,12 +12970,21 @@ class ApplicationWindow(QMainWindow):
                         # if we found our button, move one more to the right
                         if this_index == self.keyboardmoveindex:
                             self.moveKbutton('right') # now to the next
+                    # if undo is disabled, we also disable the button at this_index
+                    if not self.qmc.main_event_buttons_undo_enabled:
+                        self.keyboardButtonList[this_index].setEnabled(False)
                     # disable all buttons before this_index until the previous registered event
                     for i in range(this_index-1,-1,-1):
                         self.keyboardButtonList[i].setEnabled(False)
                         if self.qmc.timeindex[i]>0:
                             # stop if already marked
                             break
+
+                    visible_and_enabled_buttons = [idx for idx, key in enumerate(self.keyboardButtonList) if key.isEnabled() and (self.qmc.buttonvisibility + [bool(self.eventsbuttonflag)])[idx]]
+                    if len(visible_and_enabled_buttons) == 0:
+                        # if no more button is visible and enabled we reset all button marks
+                        self.resetKeyboardButtonMarks()
+
                 else:
                     # an undo action
                     # enable all buttons before this_index until the previous registered event
@@ -13021,16 +13027,22 @@ class ApplicationWindow(QMainWindow):
                 else: # we ignore this event
                     return
             else:
-                if kcommand == 'left':
-                    nextcmd = self.previousActiveButton(self.keyboardmoveindex)
+                visible_and_enabled_buttons = [idx for idx, key in enumerate(self.keyboardButtonList) if key.isEnabled() and (self.qmc.buttonvisibility + [bool(self.eventsbuttonflag)])[idx]]
+                if len(visible_and_enabled_buttons)>1:
+                    # only if there is more than one visible enabled button we move
+                    if kcommand == 'left':
+                        nextcmd = self.previousActiveButton(self.keyboardmoveindex)
+                    else:
+                        nextcmd = self.nextActiveButton(self.keyboardmoveindex)
+                    # activate the button at index nextcmd
+                    self.keyboardButtonList[nextcmd].setSelected(True)
+                    self.keyboardButtonList[self.keyboardmoveindex].setSelected(False)
+                    # update self.keyboardmoveindex
+                    self.keyboardmoveindex = nextcmd
                 else:
-                    nextcmd = self.nextActiveButton(self.keyboardmoveindex)
-                # activate the button at index nextcmd
-                self.keyboardButtonList[nextcmd].setSelected(True)
-                self.keyboardButtonList[self.keyboardmoveindex].setSelected(False)
-                # update self.keyboardmoveindex
-                self.keyboardmoveindex = nextcmd
-        # we enable keyboard event processing again
+                    # last visible enabled button pressed
+                    self.keyboardmoveindex += 1
+                    self.keyboardButtonList[self.keyboardmoveindex].setSelected(True)
 
     #sound feedback when pressing a push button
     @pyqtSlot()
@@ -15621,10 +15633,10 @@ class ApplicationWindow(QMainWindow):
     def validateProfileDict(self, profile_dict:dict[str,Any], quiet:bool=True, validate_signature:bool = False) -> ProfileData:
         ta:TypeAdapter[ProfileData] = self.getProfileDataTypeAdapter()
         profile:ProfileData = ta.validate_python(profile_dict)
-        if self.official_build and validate_signature and 'version' in profile and QVersionNumber.fromString(profile['version'])[0] >= QVersionNumber(4,1,0):
+        if self.official_build and validate_signature and 'version' in profile and QVersionNumber.fromString(profile['version'])[0] >= QVersionNumber(4,2,0):
 #        # testing:
 #        if self.official_build and validate_signature and 'version' in profile and 'signature' in profile:
-            # official builds validate all profile signatures for files generated by Artisan versions >= v4.1
+            # official builds validate all profile signatures for files generated by Artisan versions >= v4.2
             # we validate the signature
             try:
                 with open(getResourcePath() + 'artisan_public_key.pem', 'rb') as f:
@@ -18004,9 +18016,11 @@ class ApplicationWindow(QMainWindow):
                     self.qmc.adderror(QApplication.translate('Error Message','Exception: {} not a valid settings file').format(str(filename)))
                     return False
 
-                # check signature if official build and settings 'artisan_version' is >= 4.1
+                # check signature if official build and settings 'artisan_version' is >= 4.2
                 if (self.official_build and not debugLogLevelActive() and
-                        settings.contains('artisan_version') and QVersionNumber.fromString(settings.value('artisan_version',__version__))[0] >= QVersionNumber(4,1,0)):
+                        settings.contains('System/artisan_version') and
+                        QVersionNumber.fromString(settings.value('System/artisan_version'))[0] >= QVersionNumber(4,2,0) and
+                        QVersionNumber.fromString(settings.value('artisan_version',__version__))[0] >= QVersionNumber(4,2,0)):
 #                # testing:
 #                if (self.official_build and not debugLogLevelActive() and
 #                        settings.contains('System/artisan_version') and settings.contains('System/artisan_signature')):
@@ -18022,7 +18036,7 @@ class ApplicationWindow(QMainWindow):
                             public_key.verify(signature, message)
                     except Exception: # pylint: disable=broad-except
                         _log.error('settings signature invalid')
-                        self.qmc.adderror(QApplication.translate('Error Message','Exception: {} not a valid settings file').format(str(filename)))
+                        self.qmc.adderror(QApplication.translate('Error Message','Exception: {} not a Genuine Artisan settings file').format(str(filename)))
                         return False
 
 
@@ -18072,7 +18086,28 @@ class ApplicationWindow(QMainWindow):
 
             if self.resetqsettings or (filename is None and QApplication.queryKeyboardModifiers() == (Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.ShiftModifier)):
                 self.resetqsettings = 0
-                settings.clear() # this allows to get rid of old Artisan settings via "Save Settings >> Factory Reset >> Load Settings"
+
+                # settings.clear()
+                # this ensures to get rid of old Artisan settings that have been retired via "Save Settings >> Factory Reset >> Load Settings"
+                # however, settings.clear() has the consequence that recent files/settings, the starts counter and lastdonationpopup
+                # are cleared as well such that the donation popup is shown always after a Factory Reset and recent files/settings menu entries are lost
+                # thus we have to take care to preserve those over this FactoryReset here
+                lastdonationpopup:int|None = None
+                if settings.contains('lastdonationpopup'):
+                    lastdonationpopup = toInt(settings.value('lastdonationpopup'))
+                starts:int|None = None
+                if settings.contains('starts'):
+                    starts = toInt(settings.value('starts'))
+                recentSettings = toStringList(settings.value('recentSettingList'))
+                settings.clear()
+                if lastdonationpopup is not None:
+                    settings.setValue('lastdonationpopup',lastdonationpopup)
+                if starts is not None:
+                    settings.setValue('starts',starts)
+                settings.setValue('recentRoasts',self.recentRoasts)
+                settings.setValue('recentSettingList', recentSettings)
+
+
                 if 'canvas' in self.qmc.palette:
                     self.updateCanvasColors(checkColors=False)
                 # remove window geometry and splitter settings
@@ -18172,7 +18207,7 @@ class ApplicationWindow(QMainWindow):
                 except Exception: # pylint: disable=broad-except
                     pass
             self.qmc.device = toInt(settings.value('id',self.qmc.device))
-            if self.qmc.device < 0 or self.qmc.device-1 < len(self.qmc.devices):
+            if self.qmc.device < 0 or self.qmc.device-1 >= len(self.qmc.devices):
                 self.qmc.device = 18
             # Phidget configurations
             self.qmc.phidget1048_types = [toInt(x) for x in toList(settings.value('phidget1048_types',self.qmc.phidget1048_types))]
@@ -18896,6 +18931,7 @@ class ApplicationWindow(QMainWindow):
             self.qmc.extrabuttonactionstrings = list(map(str,list(toStringList(settings.value('extrabuttonactionstrings',self.qmc.extrabuttonactionstrings)))))
             self.qmc.xextrabuttonactions = [toInt(x) for x in toList(settings.value('xextrabuttonactions', self.qmc.xextrabuttonactions))]
             self.qmc.xextrabuttonactionstrings = list(map(str,list(toStringList(settings.value('xextrabuttonactionstrings',self.qmc.xextrabuttonactionstrings)))))
+            self.qmc.main_event_buttons_undo_enabled = toBool(settings.value('buttons_undo',self.qmc.main_event_buttons_undo_enabled))
             settings.endGroup()
 #--- END GROUP DefaultButtons
 
@@ -20745,6 +20781,7 @@ class ApplicationWindow(QMainWindow):
             self.settingsSetValue(settings, default_settings, 'extrabuttonactionstrings',self.qmc.extrabuttonactionstrings, read_defaults)
             self.settingsSetValue(settings, default_settings, 'xextrabuttonactions',self.qmc.xextrabuttonactions, read_defaults)
             self.settingsSetValue(settings, default_settings, 'xextrabuttonactionstrings',self.qmc.xextrabuttonactionstrings, read_defaults)
+            self.settingsSetValue(settings, default_settings, 'buttons_undo',self.qmc.main_event_buttons_undo_enabled, read_defaults)
             settings.endGroup()
 #--- END GROUP DefaultButtons
 

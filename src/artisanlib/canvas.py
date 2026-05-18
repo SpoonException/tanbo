@@ -1702,15 +1702,16 @@ class tgraphcanvas(QObject):
 
         #variables to configure the 8 default buttons
         # button = 0:CHARGE, 1:DRY_END, 2:FC_START, 3:FC_END, 4:SC_START, 5:SC_END, 6:DROP, 7:COOL_END;
-        self.buttonvisibility = [True,True,True,True,True,False,True,False]
-        self.buttonactions = [0]*8
-        self.buttonactionstrings = ['']*8
+        self.buttonvisibility:list[bool] = [True,True,True,True,True,False,True,False]
+        self.buttonactions:list[int] = [0]*8
+        self.buttonactionstrings:list[str] = ['']*8
         #variables to configure the 0: ON, 1: OFF, 2: SAMPLE, 3:RESET, 4:START
-        self.extrabuttonactions = [0]*3
-        self.extrabuttonactionstrings = ['']*3
+        self.extrabuttonactions:list[int] = [0]*3
+        self.extrabuttonactionstrings:list[str] = ['']*3
         #variables to configure the 0:RESET, 1:START
-        self.xextrabuttonactions = [0]*2
-        self.xextrabuttonactionstrings = ['']*2
+        self.xextrabuttonactions:list[int] = [0]*2
+        self.xextrabuttonactionstrings:list[str] = ['']*2
+        self.main_event_buttons_undo_enabled:bool = True
 
         #flag to activate the automatic marking of the CHARGE and DROP events
         self.chargeTimerFlag: bool = False
@@ -5862,7 +5863,7 @@ class tgraphcanvas(QObject):
                     # if more than max cool (from statistics) past DROP and not yet COOLend turn the time LCD red:
                     if (self.timeindex[0]!=-1 and self.timeindex[6] != 0 and not self.timeindex[7] and
                                 len(self.timex) > self.timeindex[6] and (tx - self.timex[self.timeindex[6]]) > 4*60):
-                        self.aw.setTimerColor('slowcoolingtimer')
+                        self.aw.setTimerColorSignal.emit('slowcoolingtimer')
 
                     if self.chargeTimerFlag and self.timeindex[0] == -1 and self.chargeTimerPeriod != 0:
                         if self.chargeTimerPeriod > ts:
@@ -6690,7 +6691,14 @@ class tgraphcanvas(QObject):
                     #calculate the temperature endpoint at endofx according to the latest rate of change
                     if self.l_BTprojection is not None:
                         # only draw if BT RoR is not exactly 0 (as on start)
-                        if self.unfiltereddelta2_pure[-1] != 0 and self.BTcurve and len(self.unfiltereddelta2_pure) > 0 and len(self.ctemp2) > 0 and self.ctemp2[-1] is not None and self.ctemp2[-1] != -1 and not math.isnan(self.ctemp2[-1]):
+                        if (len(self.unfiltereddelta2_pure) > 0 and
+                                self.unfiltereddelta2_pure[-1] != 0 and
+                                self.BTcurve and
+                                len(self.unfiltereddelta2_pure) > 0 and
+                                len(self.ctemp2) > 0 and
+                                self.ctemp2[-1] is not None and
+                                self.ctemp2[-1] != -1 and
+                                not math.isnan(self.ctemp2[-1])):
                             # projection extended to the plots current endofx
                             left = now
                             right = max(left, xlim_right + charge) # never have the right point be left of left;)
@@ -6704,7 +6712,14 @@ class tgraphcanvas(QObject):
                         self.l_BTprojection.set_data(self.BTprojection_tx, self.BTprojection_temp)
                     if self.l_ETprojection is not None:
                         # only draw if ET RoR is not exactly 0 (as on start)
-                        if self.unfiltereddelta1_pure[-1] != 0 and self.ETcurve and len(self.unfiltereddelta1_pure) > 0 and len(self.ctemp1) > 0 and self.ctemp1[-1] is not None and self.ctemp1[-1] != -1 and not math.isnan(self.ctemp1[-1]):
+                        if (len(self.unfiltereddelta1_pure) > 0 and
+                                self.unfiltereddelta1_pure[-1] != 0 and
+                                self.ETcurve and
+                                len(self.unfiltereddelta1_pure) > 0 and
+                                len(self.ctemp1) > 0 and
+                                self.ctemp1[-1] is not None and
+                                self.ctemp1[-1] != -1 and
+                                not math.isnan(self.ctemp1[-1])):
                             # projection extended to the plots current endofx
                             left = now
                             right = max(left,xlim_right + charge) # never have the right point be left of left;)
@@ -6915,6 +6930,7 @@ class tgraphcanvas(QObject):
     def eval_math_expression(self,mathexpression:str, t:float, equeditnumber:int|None = None,
                 RTsname:str|None = None, RTsval:float|None = None, t_offset:float = 0.) -> float:
         if len(mathexpression):
+            eval_limit:int = 300 # size limit of the input string to handed over to eval()
             mathdictionary:dict[str,None|float|Callable[[Any], float|None]|Callable[[Any, Any], float|None]] = {} # zuban:ignore[assignment,unused-ignore]
             mathdictionary.update(self.mathdictionary_base) # extend by the standard math symbolic formulas
 
@@ -7132,7 +7148,7 @@ class tgraphcanvas(QObject):
                             body = mathexpression[i+3:end_idx]
                             val = -1
                             try:
-                                absolute_index = eval(body,{'__builtins__':None},mathdictionary) # pylint: disable=eval-used
+                                absolute_index = eval(body[:eval_limit],{'__builtins__':None},mathdictionary) # pylint: disable=eval-used
                                 if absolute_index > -1:
                                     if nint == 1: #ET
                                         val = sample_temp1[absolute_index]
@@ -7246,7 +7262,7 @@ class tgraphcanvas(QObject):
                                         body = mathexpression[i+k+3:end_idx]
                                         val = -1
                                         try:
-                                            absolute_index = eval(body,{'__builtins__':None},mathdictionary)  # pylint: disable=eval-used
+                                            absolute_index = eval(body[:eval_limit],{'__builtins__':None},mathdictionary)  # pylint: disable=eval-used
                                             if absolute_index > -1:
                                                 valn:float|None = -1
                                                 if nint == 1: #DeltaET
@@ -7384,7 +7400,7 @@ class tgraphcanvas(QObject):
                                 body = 'b' + body
                             val = -1
                             try:
-                                absolute_index = eval(body,{'__builtins__':None},mathdictionary)  # pylint: disable=eval-used
+                                absolute_index = eval(body[:eval_limit],{'__builtins__':None},mathdictionary)  # pylint: disable=eval-used
                                 if absolute_index > -1:
                                     val = timex[absolute_index]
                             except Exception: # pylint: disable=broad-except
@@ -7484,7 +7500,7 @@ class tgraphcanvas(QObject):
                                     body = mathexpression[i+3:end_idx]
                                     val = -1
                                     try:
-                                        absolute_index = eval(body,{'__builtins__':None},mathdictionary)  # pylint: disable=eval-used
+                                        absolute_index = eval(body[:eval_limit],{'__builtins__':None},mathdictionary)  # pylint: disable=eval-used
                                         if absolute_index > -1:
                                             if nint == 1: #ET
                                                 val = self.temp1B[absolute_index]
@@ -7634,7 +7650,7 @@ class tgraphcanvas(QObject):
                         # if any variable is bound to the error value -1 we return -1 for the full formula
                         reslt = -1
                     else:
-                        reslt = float(eval(me, {'__builtins__':None}, mathdictionary)) # pylint: disable=eval-used
+                        reslt = float(eval(me[:eval_limit], {'__builtins__':None}, mathdictionary)) # pylint: disable=eval-used
                 except TypeError:
                     reslt = -1
                 except ValueError:
@@ -8142,7 +8158,7 @@ class tgraphcanvas(QObject):
             self.aw.keyboardmoveindex = 0 # points to the last activated button in keyboardButtonList; we start with the CHARGE button
             self.aw.resetKeyboardButtonMarks()
 
-            self.aw.setTimerColor('timer')
+            self.aw.setTimerColorSignal.emit('timer')
 
             try:
                 self.aw.ntb.update() # reset the MPL navigation history
@@ -14327,7 +14343,7 @@ class tgraphcanvas(QObject):
                 _log.exception(e)
 
             # reset LCD timer color that might have been reset by the RS PID in monitoring mode:
-            self.aw.setTimerColor('timer')
+            self.aw.setTimerColorSignal.emit('timer')
             if self.delta_ax is not None:
                 y_label = self.delta_ax.set_ylabel('')
                 y_label.set_in_layout(False) # remove y-axis labels from tight_layout calculation
@@ -14409,7 +14425,7 @@ class tgraphcanvas(QObject):
             # set CHARGEtimer
             if self.chargeTimerFlag:
                 if self.chargeTimerPeriod > 0:
-                    self.aw.setTimerColor('slowcoolingtimer')
+                    self.aw.setTimerColorSignal.emit('slowcoolingtimer')
                 QTimer.singleShot(self.chargeTimerPeriod*1000, self.fireChargeTimer)
 
             _log.info('MODE: START RECORDING')
@@ -14609,7 +14625,7 @@ class tgraphcanvas(QObject):
                             if self.aw.pidcontrol.pidOnCHARGE and not self.aw.pidcontrol.pidActive: # Arduino/TC4, Hottop, MODBUS
                                 self.aw.pidcontrol.pidOn()
                         if self.chargeTimerPeriod > 0:
-                            self.aw.setTimerColor('timer')
+                            self.aw.setTimerColorSignal.emit('timer')
                         try:
                             # adjust startofx to the new timeindex[0] as it depends on timeindex[0]
                             if self.locktimex:
@@ -15322,7 +15338,7 @@ class tgraphcanvas(QObject):
                     # we check if this is the first DROP mark on this roast
                     firstDROP = self.timeindex[6] == 0 # on UNDO DROP we do not send the record to plus
                     if self.aw.buttonDROP.isFlat() and self.timeindex[6] > 0:
-                        self.aw.setTimerColor('timer') # reset cooling timer color back to the default
+                        self.aw.setTimerColorSignal.emit('timer')  # reset cooling timer color back to the default
                         self.autoDropIdx = -1 # disable autoDROP to allow manual re-DROP
                         # undo wrongly set FCs
                         # deactivate autoDROP
@@ -15346,7 +15362,7 @@ class tgraphcanvas(QObject):
                             if 6 in self.l_annotations_dict:
                                 del self.l_annotations_dict[6]
                     elif not self.aw.buttonDROP.isFlat():
-                        self.aw.setTimerColor('rstimer') # cooling timer color
+                        self.aw.setTimerColorSignal.emit('rstimer') # cooling timer color
                         self.incBatchCounter()
                         # generate UUID
                         if self.roastUUID is None: # there might be already one assigned by undo and redo the markDROP!

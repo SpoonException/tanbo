@@ -17,6 +17,8 @@ v4.0.4 (Jun XX, 2026)
   - adds Excel and Orbiter formats to the autosave "save also" options
   - adds initial Bulgarian localization ([Issue #2175](../../../issues/2175))
   - adds validation of profiles and settings
+  - adds PID derivative filter size setting
+  - adds option to disable UNDO action on main event buttons
 * CHANGES
   - added a popup explaining the reason the Roast Properties dialog is opened on START if plus is connected and disabled the OK button until beans are specified  ([Issue #2133](../../../issues/2133))
   - adds hack to prevent dtr/rts signaling on connecting serial ports
@@ -38,6 +40,7 @@ v4.0.4 (Jun XX, 2026)
   - improves the endian label in MODBUS dialog ([Issue #2174](../../../issues/2174))
   - adds explicit `clear settings` on Factory Reset to prevent issues on migrating from releases before v4 ([Issue #2173](../../../issues/2173))
   - improving robustness of profile loading w.r.t. unknown devices
+  - enables keypad number keys to update event slider values (thanks Balázs for the hint!)
 * REMOVALS
   - removes RoastTime, RoastPath and Probat Pilot import/exports
 
