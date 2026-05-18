@@ -59,7 +59,7 @@ def updateNotifications(notifications: int, machines:list[str]) -> None:
 @pyqtSlot()
 def retrieveNotifications() -> None:
     gotlock = get_notifications_semaphore.tryAcquire(1,0)
-    # we try to catch a lock if available but we do not wait, if we fail we just skip this sampling round (prevents stacking of waiting calls)
+    # we try to catch a lock if available, but we do not wait, if we fail we just skip this sampling round (prevents stacking of waiting calls)
     if gotlock:
         try:
             _log.info('retrieveNotifications()')
