@@ -36,20 +36,16 @@ class platformDlg(ArtisanDialog):
         super().__init__(parent, aw)
         self.setModal(True)
         self.setWindowTitle(QApplication.translate('Form Caption','Artisan Platform'))
-        platformdic:dict[str,str] = {}
-        platformdic['Architecture'] = str(platform.architecture())
-        platformdic['Machine'] = str(platform.machine())
-        platformdic['Platform name'] =  str(platform.platform())
-        platformdic['Processor'] = str(platform.processor())
-        platformdic['Python Build'] = str(platform.python_build())
-        platformdic['Python Compiler'] = str(platform.python_compiler())
-        platformdic['Python Branch'] = str(platform.python_branch())
-        platformdic['Python Implementation'] = str(platform.python_implementation())
-        platformdic['Python Revision'] = str(platform.python_revision())
-        platformdic['Release'] = str(platform.release())
-        platformdic['System'] = str(platform.system())
-        platformdic['Version'] = str(platform.version())
-        platformdic['Python version'] = str(platform.python_version())
+        platformdic:dict[str,str] = {'Architecture': str(platform.architecture()), 'Machine': str(platform.machine()),
+                                     'Platform name': str(platform.platform()), 'Processor': str(platform.processor()),
+                                     'Python Build': str(platform.python_build()),
+                                     'Python Compiler': str(platform.python_compiler()),
+                                     'Python Branch': str(platform.python_branch()),
+                                     'Python Implementation': str(platform.python_implementation()),
+                                     'Python Revision': str(platform.python_revision()),
+                                     'Release': str(platform.release()), 'System': str(platform.system()),
+                                     'Version': str(platform.version()),
+                                     'Python version': str(platform.python_version())}
         system = str(platform.system())
         if system == 'Windows':
             platformdic['Win32'] = str(platform.win32_ver())
