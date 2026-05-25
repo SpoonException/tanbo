@@ -24538,7 +24538,7 @@ class ApplicationWindow(QMainWindow):
     @pyqtSlot(bool)
     def helpAbout(self, _:bool = False) -> None:
         # pylint: disable=consider-using-f-string
-        coredevelopers:str = '<br>Rafael Cobo, Marko Luther &amp; Dave Baxter'
+        coredevelopers:str = '<br>Rafael Cobo, Marko Luther, Dave Baxter &amp; Chen Ming'
         box = QMessageBox(self)
 
         #create a html QString
