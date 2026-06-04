@@ -1685,6 +1685,9 @@ class ApplicationWindow(QMainWindow):
         self.scale2_id:str|None = None    # the device id, eg. the BT address (like "24:71:89:cc:09:05")
         self.container2_idx:int = -1 # -1: no container set; otherwise index into selected qmc.container_names/qmc.container_weights
 
+        # perdod after which roasted batches are automatically registered in seconds
+        self.automatic_registration_period:int = 0
+
         # active tab
         self.EventsDlg_activeTab:int = 0
         self.graphColorDlg_activeTab:int = 0
@@ -9647,15 +9650,12 @@ class ApplicationWindow(QMainWindow):
                                             try:
                                                 if len(parts) > 0:
                                                     orbiter_cmd:bytes = bytes.fromhex(parts[0])
-                                                    orbiter_data:bytes
-                                                    if len(parts) > 2:
-                                                        orbiter_param = min(255, max(0, int(round(float(parts[2]))))).to_bytes(1, 'little')
-                                                    else:
-                                                        orbiter_param = b'\x00'
+                                                    orbiter_data:bytes = b'\x00\x00'
+                                                    orbiter_param:bytes = b'\x00'
                                                     if len(parts) > 1:
                                                         orbiter_data = min(65535, max(0, int(round(float(parts[1]))))).to_bytes(2, 'little')
-                                                    else:
-                                                        orbiter_data = b'\x00\x00'
+                                                    if len(parts) > 2:
+                                                        orbiter_param = min(255, max(0, int(round(float(parts[2]))))).to_bytes(1, 'little')
                                                     self.orbiterSendMessageSignal.emit(orbiter_cmd, orbiter_data, orbiter_param, self.qmc.current_time())
                                             except Exception as e: # pylint: disable=broad-except
                                                 _log.error(e)
@@ -19463,6 +19463,7 @@ class ApplicationWindow(QMainWindow):
                 except Exception: # pylint: disable=broad-except
                     self.scale2_id = None
             self.container2_idx = toInt(settings.value('container2_idx',int(self.container2_idx)))
+            self.automatic_registration_period = toInt(settings.value('automatic_registration_period',int(self.automatic_registration_period)))
             settings.endGroup()
 
             # configure the two scales according to the settings just loaded
@@ -21129,6 +21130,7 @@ class ApplicationWindow(QMainWindow):
             self.settingsSetValue(settings, default_settings, 'scale2_name',self.scale2_name, read_defaults)
             self.settingsSetValue(settings, default_settings, 'scale2_id',self.scale2_id, read_defaults)
             self.settingsSetValue(settings, default_settings, 'container2_idx',self.container2_idx, read_defaults)
+            self.settingsSetValue(settings, default_settings, 'automatic_registration_period',self.automatic_registration_period, read_defaults)
             settings.endGroup()
 #--- END GROUP Scales
 

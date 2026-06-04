@@ -71,7 +71,7 @@ class Orbiter(AsyncComm):
     __slots__ = [ 'send_timeout', 'connected', 'outer_connected_handler', 'outer_disconnected_handler',
             '_BT', '_ET', '_IT', '_DT', '_air', '_drum', '_damper', '_heater', '_sound', '_RoR', '_master_control',
             '_SERIAL',  '_FW_VERSION', '_PCB_VERSION', '_DASHBOARD_STATUS', '_MODEL', '_MODEL_NUM',
-            'isRoaster_Roasting' ]
+            'isRoaster_Roasting', 'isRoaster_Cooling' ]
 
     def __init__(self, serial:'SerialSettings',
                 connected_handler:Callable[[], None]|None = None,
@@ -112,6 +112,7 @@ class Orbiter(AsyncComm):
         self._MODEL_NUM:int = 0                    # 1 byte
         # machine status
         self.isRoaster_Roasting:bool = False
+        self.isRoaster_Cooling:bool = False
 
     def connected_handler(self) -> None:
         self.connected = True
@@ -206,7 +207,12 @@ class Orbiter(AsyncComm):
                         dashboard_state = data[3:5]
                         dashboard_state_low = dashboard_state[0]
                         #
-#                        self.isRoaster_Cooling = self.test_bit(dashboard_state_low, 3)
+                        self.isRoaster_Cooling = self.test_bit(dashboard_state_low, 3)
+#                        if self.isRoaster_Cooling:
+#                            _log.debug("isRoaster_Cooling")
+#                        else:
+#                            _log.debug("NOT isRoaster_Cooling")
+                        #
                         self.isRoaster_Roasting = self.test_bit(dashboard_state_low, 2)
 #                        if self.isRoaster_Roasting:
 #                            _log.debug("isRoaster_Roasting")
@@ -275,10 +281,10 @@ class Orbiter(AsyncComm):
 
     # data byte order: LSB last (little-endian); eg. data=b'\x07\x00' equals 7
     # returns True if response was received in time, otherwise False
-    def send_msg_await(self, cmd:bytes, data:bytes = b'\x00\x00', param:bytes = b'\x00', time:int = 0) -> bool:
+    def send_msg_await(self, cmd:bytes, data:bytes = b'\x00\x00', param:bytes = b'\x00', time:int = 0, delay:float = 0.1) -> bool:
         # send via socket using a request/response pattern (serialize=True) awaiting a response that sets the acknowledge_received() event
         # ensuring a 100ms delay between those request/response pairs
-        return self.send_await(self.create_msg(cmd, data, param, time), self.send_timeout, serialize=True, delay=0.1)
+        return self.send_await(self.create_msg(cmd, data, param, time), self.send_timeout, serialize=True, delay=delay)
 
     #
 
@@ -295,6 +301,32 @@ class Orbiter(AsyncComm):
 #    @override
 #    def stop(self) -> None:
 #        super().stop()
+
+
+    def disconnect(self, recording:bool, after_drop:bool) -> None:
+        try:
+            if recording:
+                # only on OFF while recording, termination commands are sent
+                if after_drop:
+                    # OFF after DROP just "Stop Cooling" is sent
+                    self.send_msg_await(b'\x06', b'\x00\x00', b'\x00')
+                else:
+                    # if OFF a full reset machine sequence is sent
+                    for (cmd, data, param) in [
+                            # cmd, data, param
+                            (b'\x07', b'\x00\x00', b'\x01'),
+                            (b'\x13', b'\x01\x00', b'\x00'),
+                            (b'\x02', b'\x00\x00', b'\x00'),
+                            (b'\x14', b'\x01\x00', b'\x00'),
+                            (b'\x03', b'\x00\x00', b'\x00'),
+                            (b'\x0F', b'\x00\x00', b'\x00'),
+                            (b'\x06', b'\x00\x00', b'\x00')]:
+                        self.send_msg_await(cmd, data, param)
+                        libtime.sleep(.3)
+        except Exception as e: # pylint: disable=broad-except
+            _log.exception(e)
+        self.stop()
+
 
 
 #######
