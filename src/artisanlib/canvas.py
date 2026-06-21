@@ -303,7 +303,7 @@ class tgraphcanvas(QObject):
         'patheffects', 'graphstyle', 'graphfont', 'buttonvisibility', 'buttonactions', 'buttonactionstrings', 'extrabuttonactions', 'extrabuttonactionstrings',
         'xextrabuttonactions', 'xextrabuttonactionstrings', 'chargeTimerFlag', 'autoChargeFlag', 'autoDropFlag', 'autoChargeMode', 'autoDropMode', 'autoChargeIdx', 'autoDropIdx', 'markTPflag',
         'autoDRYflag', 'autoFCsFlag', 'autoCHARGEenabled', 'autoDRYenabled', 'autoFCsenabled', 'autoDROPenabled', 'projectionconstant',
-        'projectionmode', 'transMappingMode', 'weight', 'roasted_defects_weight', 'volume', 'density', 'roasted_defects_mode', 'density_roasted', 'volumeCalcUnit', 'volumeCalcWeightInStr',
+        'projectionmode', 'transMappingMode', 'weight', 'end_weight_est', 'roasted_defects_weight', 'volume', 'density', 'roasted_defects_mode', 'density_roasted', 'volumeCalcUnit', 'volumeCalcWeightInStr',
         'volumeCalcWeightOutStr', 'container_names', 'container_weights', 'specialevents', 'etypes', 'etypesdefault',
         'alt_etypesdefault', 'default_etypes_set', 'specialeventstype',
         'specialeventsStrings', 'specialeventsvalue', 'eventsGraphflag', 'clampEvents', 'renderEventsDescr', 'eventslabelschars', 'eventsshowflag',
@@ -623,7 +623,7 @@ class tgraphcanvas(QObject):
         #show phases LCDs during roasts
         self.phasesLCDflag:bool = True
         self.phasesLCDmode:int = 1 # one of 0: time, 1: percentage, 2: temp mode
-        self.phasesLCDmode_l:list[int] = [1,1,1] # stores last phases LCD mode per app state (OFF/ON/RECORDING)
+        self.phasesLCDmode_l:list[int] = [1,1,1] # stores last phases LCD mode per roast phase (Drying, Mailard, Finishing)
         self.phasesLCDmode_all:list[bool] = [False,False,True]
 
 
@@ -1746,6 +1746,7 @@ class tgraphcanvas(QObject):
 
         #[0]weight in, [1]weight out, [2]units (string)
         self.weight:tuple[float,float,str] = (0, 0, weight_units[1])
+        self.end_weight_est:int = 0 # 1: weight out in self.weight[1] is an estimate an not measured or manuel set; 0: otherwise
 
         self.roasted_defects_weight:float = 0.0 # weight of defects sorted from roasted weight in unit self.weight[2] (should always be positive and less than self.weight[1])
 
@@ -1762,7 +1763,7 @@ class tgraphcanvas(QObject):
 
 
         if platform.system() == 'Darwin':
-            # try to "guess" the users preferred temperature unit
+            # try to "guess" the users preferred weight unit
             try:
                 if not QSettings().value('AppleMetricUnits'):
                     self.weight = (0, 0, weight_units[2])
@@ -8056,6 +8057,8 @@ class tgraphcanvas(QObject):
             self.aw.recording_revision = str(__revision__)
             self.aw.recording_build = str(__build__)
 
+            self.end_weight_est = 0
+
             # if we are in KeepON mode, the reset triggered by ON should respect the roastpropertiesflag ("Delete Properties on Reset")
             if self.roastpropertiesflag and (self.flagKeepON or not keepProperties):
                 self.title = QApplication.translate('Scope Title', 'Roaster Scope')
@@ -13223,8 +13226,8 @@ class tgraphcanvas(QObject):
                 self.extraNoneTempHint1.append(not bool(self.aw.ws.channel_modes[8]))
                 self.extraNoneTempHint2.append(not bool(self.aw.ws.channel_modes[9]))
             elif d == 150: # +MODBUS 910
-                self.extraNoneTempHint1.append(not bool(self.aw.s7.mode[8]))
-                self.extraNoneTempHint2.append(not bool(self.aw.s7.mode[9]))
+                self.extraNoneTempHint1.append(self.aw.modbus.inputModes[8] == '')
+                self.extraNoneTempHint2.append(self.aw.modbus.inputModes[9] == '')
             elif d == 151: # +S7 1112
                 self.extraNoneTempHint1.append(not bool(self.aw.s7.mode[10]))
                 self.extraNoneTempHint2.append(not bool(self.aw.s7.mode[11]))
