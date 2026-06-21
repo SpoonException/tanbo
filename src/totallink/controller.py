@@ -32,21 +32,21 @@ from typing import Final, TYPE_CHECKING
 import totallink
 
 if TYPE_CHECKING:
-    from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
+    from artisanlib.main import ApplicationWindow  # noqa: F401 # pylint: disable=unused-import
 
 from totallink import config, connection, stock, queue, sync, roast, util
-
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
 connect_semaphore = QSemaphore(1)
 
+
 def is_connected() -> bool:
     return config.connected
 
 
-# artisan.plus is on as soon as an account id has been established
-# Note that artisan.plus might be on, while not being connected due to
+# TotalLINK is on as soon as an account id has been established
+# Note that TotalLINK might be on, while not being connected due to
 # connectivity issues
 def is_on() -> bool:
     aw = config.app_window
@@ -63,20 +63,21 @@ def is_synced() -> bool:
         if aw.qmc.roastUUID is None:
             # not in sync if no roastUUID and saved to file or (OFF and not saved yet but at least 5min in length)
             return not (bool(aw.curFile) or
-                (not aw.qmc.flagon and
-                    (len(aw.qmc.timex)>0 and ((aw.qmc.timex[-1] - (aw.qmc.timex[aw.qmc.timeindex[0]] if aw.qmc.timeindex[0] != -1 else 0)) > 5*60))))
+                        (not aw.qmc.flagon and
+                         (len(aw.qmc.timex) > 0 and ((aw.qmc.timex[-1] - (
+                             aw.qmc.timex[aw.qmc.timeindex[0]] if aw.qmc.timeindex[0] != -1 else 0)) > 5 * 60))))
         return bool(sync.getSync(aw.qmc.roastUUID))
     return False
 
 
-def start(app_window:'ApplicationWindow') -> None:
+def start(app_window: 'ApplicationWindow') -> None:
     config.app_window = app_window
     QTimer.singleShot(2, connect)
 
 
 # toggles between connected and disconnected modes. If connected and
 # not is_synced() send current data to server
-def toggle(app_window:'ApplicationWindow') -> None:
+def toggle(app_window: 'ApplicationWindow') -> None:
     _log.debug('toggle()')
     config.app_window = app_window
 
@@ -85,9 +86,9 @@ def toggle(app_window:'ApplicationWindow') -> None:
     if app_window.plus_account is None:  # @UndefinedVariable
         connect()
         if (
-            is_connected()
-            and is_synced() # current profile under sync
-            and app_window.curFile is not None
+                is_connected()
+                and is_synced()  # current profile under sync
+                and app_window.curFile is not None
         ):  # @UndefinedVariable
             sync.sync()
     elif config.connected:
@@ -108,7 +109,7 @@ def toggle(app_window:'ApplicationWindow') -> None:
         control_pressed = modifiers == Qt.KeyboardModifier.ControlModifier
         if control_pressed or not disconnect_confirmed():
             # if modifier is pressed reconnect
-            connect(clear_on_failure=False, interactive=False) # ensure we are connected (reconnect if needed)
+            connect(clear_on_failure=False, interactive=False)  # ensure we are connected (reconnect if needed)
         elif not control_pressed:
             # disconnect got confirmed while modifier is not pressed, we disconnect without further interactive action
             disconnect(
@@ -129,8 +130,8 @@ def toggle(app_window:'ApplicationWindow') -> None:
 # if clear_on_failure is set, credentials are removed if connect fails
 # NOTE: authentify might be called from outside the GUI thread (interactive must be False in this case!)
 @pyqtSlot()
-def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
-    config_passwd:str|None = None
+def connect(clear_on_failure: bool = False, interactive: bool = True) -> None:
+    config_passwd: str | None = None
     if not is_connected():
         _log.debug(
             'connect(%s,%s)', clear_on_failure, interactive
@@ -138,15 +139,15 @@ def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
         aw = config.app_window
         try:
             connect_semaphore.acquire(1)
-            keychain_success:bool = False # True once credentials could be successfully store in keychain
+            keychain_success: bool = False  # True once credentials could be successfully store in keychain
             if aw is not None:
                 import keyring  # @Reimport # imported last to make py2app work
                 account = aw.plus_account
                 if account is None:
                     account = aw.plus_email
                     if isinstance(
-                        # pylint: disable=protected-access
-                        threading.current_thread(), threading._MainThread # type: ignore[attr-defined]
+                            # pylint: disable=protected-access
+                            threading.current_thread(), threading._MainThread  # type: ignore[attr-defined]
                     ):  # this is dangerous and should only be done while
                         # running in the main GUI thread as a consequence are
                         # GUI actions which might crash in other threads
@@ -160,7 +161,7 @@ def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
                         if config_passwd is None:
                             _log.debug(
                                 '-> keyring.get_password'
-                                 ' returned None'
+                                ' returned None'
                             )
                         else:
                             keychain_success = True
@@ -170,8 +171,8 @@ def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
                     except Exception as e:  # pylint: disable=broad-except
                         _log.exception(e)
                 if interactive and (
-                    aw.plus_account is None
-                    or config_passwd is None
+                        aw.plus_account is None
+                        or config_passwd is None
                 ):  # @UndefinedVariable
                     # ask user for credentials
                     import totallink.login
@@ -193,8 +194,8 @@ def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
                             aw.plus_email = None
                         # store the passwd in the keychain
                         if (login is not None
-                            and passwd is not None
-                            and remember):
+                                and passwd is not None
+                                and remember):
                             # save credentials in keychain
                             try:
                                 # try-catch as the keyring might not work
@@ -207,14 +208,14 @@ def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
                             except Exception as e:
                                 _log.exception(e)
                                 if (
-                                    not platform.system().startswith('Windows')
-                                    and platform.system() != 'Darwin'
+                                        not platform.system().startswith('Windows')
+                                        and platform.system() != 'Darwin'
                                 ):
                                     # on Linux remind to install
                                     # the gnome-keyring
                                     aw.sendmessageSignal.emit(
                                         QApplication.translate(
-                                            'Plus',
+                                            'TotalLINK',
                                             ('Keyring error: Ensure that'
                                              ' gnome-keyring is installed.')
                                         ),
@@ -231,14 +232,13 @@ def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
                             except Exception:  # pylint: disable=broad-except
                                 pass
 
-
                         # remember password in memory for this session
                         config_passwd = passwd
             if aw is not None:
                 if aw.plus_account is None:  # @UndefinedVariable
                     if interactive:
                         aw.sendmessageSignal.emit(
-                            QApplication.translate('Plus', 'Login aborted'),
+                            QApplication.translate('TotalLINK', 'Login aborted'),
                             True,
                             None,
                         )  # @UndefinedVariable
@@ -247,18 +247,22 @@ def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
                     if success:
                         config.connected = success
                         aw.sendmessageSignal.emit(
-                            f"{aw.plus_account} {QApplication.translate('Plus', 'authentified')}",
+                            f"{aw.plus_account} {QApplication.translate('TotalLINK', 'authentified')}",
                             True,
                             None,
                         )  # @UndefinedVariable
                         aw.sendmessageSignal.emit(
                             QApplication.translate(
-                                'Plus', 'Connected to artisan.plus'
-                            ),
+
+                                'TotalLINK',
+
+                                'Connected to TotalLINK as %1'
+
+                            ).replace('%1', aw.plus_account),
                             True,
                             None,
                         )  # @UndefinedVariable
-                        _log.info('artisan.plus connected')
+                        _log.info('TotalLINK connected')
                         try:
                             queue.start()  # start the outbox queue
                         except Exception as e:  # pylint: disable=broad-except
@@ -271,14 +275,14 @@ def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
                         connection.clearCredentials()
                         aw.sendmessageSignal.emit(
                             QApplication.translate(
-                                'Plus', 'artisan.plus turned off'
+                                'TotalLINK', 'TotalLINK turned off'
                             ),
                             True,
                             None,
                         )  # @UndefinedVariable
                     elif interactive:
                         message = QApplication.translate(
-                            'Plus', 'Authentication failed'
+                            'TotalLINK', 'Authentication failed'
                         )
                         message = (
                             f'{aw.plus_account} {message}'
@@ -294,7 +298,7 @@ def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
                 if interactive and aw is not None:
                     aw.sendmessageSignal.emit(
                         QApplication.translate(
-                            'Plus', 'artisan.plus turned off'
+                            'TotalLINK', 'TotalLINK turned off'
                         ),
                         True,
                         None,
@@ -303,7 +307,7 @@ def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
                 if interactive:
                     aw.sendmessageSignal.emit(
                         QApplication.translate(
-                            'Plus', "Couldn't connect to artisan.plus"
+                            'TotalLINK', "Couldn't connect to TotalLINK"
                         ),
                         True,
                         None,
@@ -327,7 +331,7 @@ def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
 
 # show a dialog to have the user confirm the disconnect action
 def disconnect_confirmed() -> bool:
-    string = QApplication.translate('Plus', 'Disconnect artisan.plus?')
+    string = QApplication.translate('TotalLINK', 'Disconnect TotalLINK?')
     mbox = QMessageBox()
     mbox.setText(string)
     util.setPlusIcon(mbox)
@@ -335,13 +339,14 @@ def disconnect_confirmed() -> bool:
     res = mbox.exec()
     return QMessageBox.StandardButton.Yes == res
 
+
 # if keepON is set (the default), the credentials are not removed at all and
 # just the connected flag is toggled to keep plus in ON (dark-grey) state
 def disconnect(
-    remove_credentials: bool = True,
-    stop_queue: bool = True,
-    interactive: bool = False,
-    keepON: bool = True
+        remove_credentials: bool = True,
+        stop_queue: bool = True,
+        interactive: bool = False,
+        keepON: bool = True
 ) -> None:
     _log.debug(
         'disconnect(%s,%s,%s,%s)',
@@ -351,7 +356,7 @@ def disconnect(
         keepON,
     )
     if (is_connected() or is_on()) and (
-        not interactive or disconnect_confirmed()
+            not interactive or disconnect_confirmed()
     ):
         aw = config.app_window
         try:
@@ -365,11 +370,11 @@ def disconnect(
                 )
             if aw is not None:
                 if not keepON:
-                    aw.plus_user_id = None # if this is cleared, the Scheduler cannot filter by user in this ON (dark-grey) state
+                    aw.plus_user_id = None  # if this is cleared, the Scheduler cannot filter by user in this ON (dark-grey) state
                 if remove_credentials:
                     aw.sendmessageSignal.emit(
                         QApplication.translate(
-                            'Plus', 'artisan.plus turned off'
+                            'TotalLINK', 'TotalLINK turned off'
                         ),
                         True,
                         None,
@@ -377,19 +382,19 @@ def disconnect(
                 else:
                     aw.sendmessageSignal.emit(
                         (
-                        QApplication.translate(
-                            'Plus', 'artisan.plus connection lost. Reconnecting automatically...'
-                        )
-                        if keepON else
-                        QApplication.translate(
-                            'Plus', 'artisan.plus disconnected'
-                        )),
+                            QApplication.translate(
+                                'TotalLINK', 'TotalLINK connection lost. Reconnecting automatically...'
+                            )
+                            if keepON else
+                            QApplication.translate(
+                                'TotalLINK', 'TotalLINK disconnected'
+                            )),
                         True,
                         None,
                     )
             if stop_queue:
                 queue.stop()  # stop the outbox queue
-            _log.info('artisan.plus disconnected')
+            _log.info('TotalLINK disconnected')
         finally:
             if connect_semaphore.available() < 1:
                 connect_semaphore.release(1)
@@ -403,7 +408,7 @@ def reconnected() -> None:
         try:
             connect_semaphore.acquire(1)
             config.connected = True
-            _log.info('artisan.plus reconnected')
+            _log.info('TotalLINK reconnected')
         finally:
             if connect_semaphore.available() < 1:
                 connect_semaphore.release(1)
@@ -415,7 +420,7 @@ def reconnected() -> None:
             if aw is not None:
                 aw.sendmessageSignal.emit(
                     QApplication.translate(
-                        'Plus', 'artisan.plus reconnected'),
+                        'TotalLINK', 'TotalLINK reconnected'),
                     True,
                     None)
 
@@ -425,7 +430,7 @@ def reconnected() -> None:
 # otherwise return None
 # this function is called by filesave(), automaticsave(), scheduler:register_roast()
 # it returns the sync_record hash to be added to the saved file
-def updateSyncRecordHashAndSync() -> str|None:
+def updateSyncRecordHashAndSync() -> str | None:
     try:
         _log.debug('updateSyncRecordHashAndSync()')
         if is_on():
@@ -436,20 +441,20 @@ def updateSyncRecordHashAndSync() -> str|None:
                     sync.getApplidedServerUpdatesModifiedAt()
                 )
                 if (
-                    server_updates_modified_at is not None
-                    and 'roast_id' in roast_record
+                        server_updates_modified_at is not None
+                        and 'roast_id' in roast_record
                 ):
                     sync.addSync(
                         roast_record['roast_id'], server_updates_modified_at
                     )
                     sync.setApplidedServerUpdatesModifiedAt(None)
-                # artisan.plus is ON and the profile is under sync
+                # TotalLINK is ON and the profile is under sync
                 if sync.syncRecordUpdated(roast_record):
                     # we push updates on the sync record back to the server
                     # via the queue
                     queue.addRoast(sync_record)
             elif 'roast_id' in roast_record and queue.full_roast_in_queue(
-                roast_record['roast_id']
+                    roast_record['roast_id']
             ):
                 # in case this roast is not yet in sync cache as it has
                 # not been successfully uploaded, but a corresponding full

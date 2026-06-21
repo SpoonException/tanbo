@@ -76,7 +76,15 @@ SOURCES = \
     plus/queue.py \
     plus/schedule.py \
     plus/stock.py \
-    plus/sync.py
+    plus/sync.py \
+    TotalLINK/blend.py \
+    TotalLINK/controller.py \
+    TotalLINK/countries.py \
+    TotalLINK/login.py \
+    TotalLINK/queue.py \
+    TotalLINK/schedule.py \
+    TotalLINK/stock.py \
+    TotalLINK/sync.py
 
 # the list of translation has to be synced with the script pylupdate6pro (for pylupdate6)
 TRANSLATIONS = \

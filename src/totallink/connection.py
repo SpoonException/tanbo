@@ -44,7 +44,6 @@ from totallink import config, account, util
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
-
 JSON = Any
 
 token_semaphore = QSemaphore(
@@ -53,21 +52,27 @@ token_semaphore = QSemaphore(
 
 # request timeout
 
-request_read_timeout_step:Final[int] = 2 # step size to decrease request_read_timeout on success in seconds
-request_read_timeout:int = config.read_timeout # dynamic read_timeout, updated on successful communication and timeouts
+request_read_timeout_step: Final[int] = 2  # step size to decrease request_read_timeout on success in seconds
+request_read_timeout: int = config.read_timeout  # dynamic read_timeout, updated on successful communication and timeouts
+
 
 def getReadTimeout() -> int:
     return request_read_timeout
+
+
 def updateReadTimeoutOnSuccess() -> None:
-    global request_read_timeout # pylint:disable=global-statement
+    global request_read_timeout  # pylint:disable=global-statement
     request_read_timeout = max(config.read_timeout, request_read_timeout - request_read_timeout_step)
+
+
 def updateReadTimeoutOnTimeout() -> None:
-    global request_read_timeout # pylint:disable=global-statement
+    global request_read_timeout  # pylint:disable=global-statement
     request_read_timeout = config.read_timeout_max
+
 
 #
 
-def getToken() -> str|None:
+def getToken() -> str | None:
     try:
         token_semaphore.acquire(1)
         return config.token
@@ -79,7 +84,7 @@ def getToken() -> str|None:
             token_semaphore.release(1)
 
 
-def getNickname() -> str|None:
+def getNickname() -> str | None:
     try:
         token_semaphore.acquire(1)
         return config.nickname
@@ -91,16 +96,16 @@ def getNickname() -> str|None:
             token_semaphore.release(1)
 
 
-def setToken(token: str, nickname: str|None = None) -> None:
+def setToken(token: str, nickname: str | None = None) -> None:
     try:
         token_semaphore.acquire(1)
         config.token = token
         config.nickname = nickname
         aw = config.app_window
         if (aw is not None
-            and aw.qmc.operator == ''
-            and nickname is not None
-            and nickname != ''
+                and aw.qmc.operator == ''
+                and nickname is not None
+                and nickname != ''
         ):  # @UndefinedVariable
             aw.qmc.operator = nickname
     finally:
@@ -114,9 +119,9 @@ def clearCredentials(remove_from_keychain: bool = True) -> None:
     aw = config.app_window
     try:
         if (
-            aw is not None
-            and aw.plus_account is not None
-            and remove_from_keychain
+                aw is not None
+                and aw.plus_account is not None
+                and remove_from_keychain
         ):  # @UndefinedVariable
             try:
                 import keyring
@@ -125,7 +130,7 @@ def clearCredentials(remove_from_keychain: bool = True) -> None:
                 )  # @UndefinedVariable
             except Exception as e:  # pylint: disable=broad-except
                 _log.error(e)
-    except Exception: # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         # config.app_window might be still unbound
         pass
     try:
@@ -141,6 +146,7 @@ def clearCredentials(remove_from_keychain: bool = True) -> None:
         if token_semaphore.available() < 1:
             token_semaphore.release(1)
 
+
 # returns True on successful authentication
 # if passwd is given we can assume that it was already stored in the keychain if possible thus we don't try to store it
 #  however that does not guarantee that those credentials are valid
@@ -148,14 +154,26 @@ def clearCredentials(remove_from_keychain: bool = True) -> None:
 # NOTE: authentify might be called from outside the GUI thread
 
 class Authentifier(Protocol):
-    def __call__(self, passwd:str|None = ..., keychain_success: bool = ..., clear_password_cache: bool = ...) -> bool:
+    def __call__(self, passwd: str | None = ..., keychain_success: bool = ...,
+                 clear_password_cache: bool = ...) -> bool:
         ...
+
+
+from datetime import datetime
+
+
+def get_token():
+    i = int(datetime.now().strftime("%S%M%H%y%m%d"))
+
+    return str((i - 12251) * 12253 - 31321)
+
 
 def make_authentify() -> Authentifier:
     # in-memory password stored in closure only if keychain is not available
-    passwd_encrypted:bytes|None = None
+    passwd_encrypted: bytes | None = None
 
-    def authentify_method(passwd:str|None = None, keychain_success:bool = False, clear_password_cache:bool = False) -> bool:
+    def authentify_method(passwd: str | None = None, keychain_success: bool = False,
+                          clear_password_cache: bool = False) -> bool:
         nonlocal passwd_encrypted
         _log.debug('authentify(_,%s)', keychain_success)
 
@@ -170,10 +188,10 @@ def make_authentify() -> Authentifier:
         try:
             aw = config.app_window
             if (
-                aw is not None
-                and aw.plus_account is not None
+                    aw is not None
+                    and aw.plus_account is not None
             ):  # @UndefinedVariable
-                passwd_encrypted_decrypted:bool = False
+                passwd_encrypted_decrypted: bool = False
                 if passwd is None and passwd_encrypted is not None:
                     # if passwd is not given we use the cached one
                     fernet = Fernet(base64.urlsafe_b64encode(str(hash(seed)).encode().ljust(32)[:32]))
@@ -204,10 +222,11 @@ def make_authentify() -> Authentifier:
                     aw.plus_account,
                 )  # @UndefinedVariable
                 data = {
-                    'email': aw.plus_account,
-                    'password': passwd,
+                    'loginUser': aw.plus_account,
+                    'loginPassword': passwd,
+                    'linkToken': get_token(),
                 }  # @UndefinedVariable
-                r = sendData(config.auth_url, data, 'POST', False)
+                r = sendData(config.auth_url, data, 'POST', False, form=True)
                 del data
                 del passwd
                 _log.debug(
@@ -218,111 +237,42 @@ def make_authentify() -> Authentifier:
                 if r.status_code != 204 and r.headers['content-type'].strip().startswith('application/json'):
                     res = r.json()
                     if (
-                        'success' in res
-                        and res['success']
-                        and 'result' in res
-                        and 'user' in res['result']
-                        and 'token' in res['result']['user']
+                            'isSuccess' in res
+                            and str(res['isSuccess']).lower() == 'true'
+
                     ):
+                        token = res['data']
                         _log.debug(
                             '-> authentified, token received'
                         )
                         # extract in user/account data
-                        nickname = util.extractInfo(
-                            res['result']['user'], 'nickname', None
-                        )
-                        aw.plus_language = util.extractInfo(
-                            res['result']['user'], 'language', 'en'
-                        )
-                        aw.plus_user_id = util.extractInfo(
-                            res['result']['user'], 'user_id', None
-                        )
+                        nickname = aw.plus_account
+
+                        aw.plus_language = 'zh'
+
+                        aw.plus_user_id = aw.plus_account
                         aw.plus_paidUntil = None
                         aw.plus_subscription = None
                         aw.plus_rlimit = 0
                         aw.plus_used = 0
-                        if 'account' in res['result']['user']:
-                            res_account = res['result']['user']['account']
-                            if '_id' in res_account:
-                                aw.plus_account_id = res_account['_id']
-                            subscription = util.extractInfo(
-                                res_account, 'subscription', ''
-                            )
-                            aw.updateSubscriptionSignal.emit(subscription)
-                            paidUntil = util.extractInfo(
-                                res_account, 'paidUntil', ''
-                            )
-                            rlimit = -1
-                            rused = -1
-                            notifications = 0 # unqualified notifications
-                            machines = [] # list of machine names with matching notifications
-                            try:
-                                if 'limit' in res['result']['user']['account']:
-                                    ol = res_account['limit']
-                                    if 'rlimit' in ol:
-                                        rlimit = ol['rlimit']
-                                    if 'rused' in ol:
-                                        rused = ol['rused']
-                            except Exception as e:  # pylint: disable=broad-except
-                                _log.exception(e)
 
-                            if 'notifications' in res:
-                                notificationDict = res['notifications']
-                                if notificationDict:
-                                    notifications = util.extractInfo(notificationDict, 'unqualified', 0)
-                                    machines = util.extractInfo(notificationDict, 'machines', [])
-                                try:
-                                    aw.updateLimitsSignal.emit(rlimit,rused,paidUntil,notifications,machines)
-                                except Exception as e:  # pylint: disable=broad-except
-                                    _log.exception(e)
-
-
-                            # note, here we have to convert the dateUtil string locally , instead of accessing aw.plus_paidUntil which might not yet have been set via the signal processing above
-                            try:
-                                if paidUntil != '' and (
-                                    dateutil.parser.parse(paidUntil).date()
-        #                            - datetime.datetime.now().date()  # DTZ005 The use of `datetime.datetime.now()` without `tz` argument is not allowed
-                                    - datetime.datetime.now(datetime.UTC).date()
-                                ).days < (-config.expired_subscription_max_days):
-                                    _log.debug(
-                                            '-> authentication failed due to'
-                                            ' long expired subscription'
-                                    )
-                                    if 'error' in res:
-                                        aw.sendmessage(
-                                            res['error']
-                                        )  # @UndefinedVariable
-                                    clearCredentials()
-                                    return False
-                            except Exception as e:  # pylint: disable=broad-except
-                                _log.exception(e)
-
-                        if 'readonly' in res['result']['user'] and isinstance(
-                            res['result']['user']['readonly'], bool
-                        ):
-                            aw.plus_readonly = res['result']['user'][
-                                'readonly'
-                            ]
-                        else:
-                            aw.plus_readonly = False
-                        #
-                        setToken(res['result']['user']['token'], nickname)
-                        if (
-                            'account' in res['result']['user']
-                            and '_id' in res['result']['user']['account']
-                        ):
-                            account_nr = account.setAccount(
-                                res['result']['user']['account']['_id']
-                            )
-                            config.account_nr = account_nr
-                            _log.debug(
-                                '-> account: %s', account_nr
-                            )
+                        setToken(token, nickname)
+                        # if (
+                        #         'account' in res['result']['user']
+                        #         and '_id' in res['result']['user']['account']
+                        # ):
+                        #     account_nr = account.setAccount(
+                        #         res['result']['user']['account']['_id']
+                        #     )
+                        #     config.account_nr = account_nr
+                        #     _log.debug(
+                        #         '-> account: %s', account_nr
+                        #     )
                         return True
                     _log.debug('-> authentication failed')
-                    if 'error' in res:
+                    if 'message' in res:
                         aw.sendmessage(
-                            res['error']
+                            res['message']
                         )  # @UndefinedVariable
                     clearCredentials()
                     return False
@@ -351,11 +301,15 @@ def make_authentify() -> Authentifier:
             _log.exception(e)
             clearCredentials()
             raise e
+
     return authentify_method
+
+
 authentify = make_authentify()
 
+
 def getHeaders(
-    authorized: bool = True, decompress: bool = True) -> dict[str, str]:
+        authorized: bool = True, decompress: bool = True) -> dict[str, str]:
     aw = config.app_window
     if aw is not None:
         os, os_version, os_arch = aw.get_os()  # @UndefinedVariable
@@ -382,7 +336,8 @@ def getHeaders(
         return headers
     return {}
 
-def getHeadersAndData(authorized: bool, compress: bool, jsondata: JSON, verb: str) -> tuple[dict[str, str],bytes]:
+
+def getHeadersAndData(authorized: bool, compress: bool, jsondata: JSON, verb: str) -> tuple[dict[str, str], bytes]:
     headers = getHeaders(authorized, decompress=compress)
     headers['Content-Type'] = 'application/json; charset=utf-8'
     if verb == 'POST':
@@ -397,19 +352,43 @@ def getHeadersAndData(authorized: bool, compress: bool, jsondata: JSON, verb: st
 
 
 def sendData(
-    url: str,
-    data: dict[Any, Any],
-    verb: str, # POST or PUT
-    authorized: bool = True,
-    compress: bool = config.compress_posts,
+        url: str,
+        data: dict[Any, Any],
+        verb: str,  # POST or PUT
+        authorized: bool = True,
+        compress: bool = config.compress_posts,
+        form: bool = False,
 ) -> requests.models.Response:
     # don't log POST data as it might contain credentials!
     _log.debug('sendData(%s,_data_,%s,%s)', url, verb, authorized)
-    jsondata = json.dumps(data, indent=None, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-    _log.debug('-> size %s', len(jsondata))
-#    _log.debug("PRINT jsondata: %s",jsondata)
-    headers, postdata = getHeadersAndData(authorized, compress, jsondata, verb)
-#    _log.debug("PRINT headers: %s",headers)
+    if form:
+        # 表单提交
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        # 如果还需要认证头
+        if authorized and config.session_token:
+            headers['Authorization'] = f'Bearer {config.session_token}'
+        postdata = data
+    else:
+        # 原有 JSON 逻辑
+        jsondata = json.dumps(
+            data,
+            indent=None,
+            separators=(',', ':'),
+            ensure_ascii=False
+
+        ).encode('utf8')
+
+        _log.debug('-> size %s', len(jsondata))
+
+        headers, postdata = getHeadersAndData(
+            authorized,
+            compress,
+            jsondata,
+            verb
+        )
+    #    _log.debug("PRINT jsondata: %s",jsondata)
+    #    headers, postdata = getHeadersAndData(authorized, compress, jsondata, verb)
+    #    _log.debug("PRINT headers: %s",headers)
 
     try:
         if verb == 'POST':
@@ -434,7 +413,7 @@ def sendData(
             _log.debug('-> session token outdated (401)')
             # we re-authentify by renewing the session token and try again
             if authentify():
-                time.sleep(0.3) # a little delay not to stress out the server too much
+                time.sleep(0.3)  # a little delay not to stress out the server too much
                 headers, postdata = getHeadersAndData(
                     authorized, compress, jsondata, verb
                 )  # recreate header with new token
@@ -463,7 +442,7 @@ def sendData(
         raise e
 
 
-def getData(url: str, authorized: bool = True, params:dict[str,str]|None = None) -> requests.models.Response|None:
+def getData(url: str, authorized: bool = True, params: dict[str, str] | None = None) -> requests.models.Response | None:
     _log.debug('getData(%s,%s,%s)', url, authorized, params)
     headers = getHeaders(authorized)
     if authorized and 'Authorization' not in headers:
@@ -474,7 +453,7 @@ def getData(url: str, authorized: bool = True, params:dict[str,str]|None = None)
     params = params or {}
     #    _log.debug("-> request headers %s",headers)
     try:
-        r:requests.models.Response = requests.get(
+        r: requests.models.Response = requests.get(
             url,
             headers=headers,
             verify=config.verify_ssl,
@@ -491,7 +470,7 @@ def getData(url: str, authorized: bool = True, params:dict[str,str]|None = None)
             )
             # we re-authentify by renewing the session token and try again
             if authentify():
-                time.sleep(0.3) # a little delay not to stress out the server too much
+                time.sleep(0.3)  # a little delay not to stress out the server too much
                 headers = getHeaders(authorized)  # recreate header with new token
                 r = requests.get(
                     url,
@@ -508,7 +487,7 @@ def getData(url: str, authorized: bool = True, params:dict[str,str]|None = None)
                 )
         try:
             _log.debug('-> size %s', len(r.content))
-    #        _log.debug("-> data %s",r.json())
+        #        _log.debug("-> data %s",r.json())
         except Exception:  # pylint: disable=broad-except
             pass
         return r

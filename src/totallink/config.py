@@ -41,14 +41,16 @@ schedule_date_tag: Final[str] = 'scheduleDate' # send as 's_item_date' as part o
 #web_base_url         = 'https://localhost:8088'
 
 # # CLOUD SETUP
-api_base_url: Final[str] = 'https://artisan.plus/api/v1'
+api_base_url: Final[str] = 'http://124.71.144.80:8081/api'
+# api_base_url: Final[str] = 'https://artisan.plus/api/v1'
 web_base_url: Final[str] = 'https://artisan.plus'
 
 shop_base_url: Final[str] = 'https://buy.artisan.plus/'
 
 register_url: Final[str] = web_base_url + '/register'
 reset_passwd_url: Final[str] = web_base_url + '/resetPassword'
-auth_url: Final[str] = api_base_url + '/accounts/users/authenticate'
+# auth_url: Final[str] = api_base_url + '/accounts/users/authenticate'
+auth_url: Final[str] = api_base_url + '/LINK/linkUserLoginAPI'
 stock_url: Final[str] = api_base_url + '/acoffees'
 roast_url: Final[str] = api_base_url + '/aroast'
 lock_schedule_url: Final[str] = api_base_url + '/aschedule/lock'
@@ -57,7 +59,7 @@ notifications_url: Final[str] = api_base_url + '/notifications'
 # Connection configurations
 
 #verify_ssl: Final[bool] = False
-verify_ssl: Final[bool] = True
+verify_ssl: Final[bool] = False
 connect_timeout: Final[int] = 6  # in seconds
 read_timeout: Final[int] = 12  # in seconds
 read_timeout_max: Final[int] = 30  # in seconds
