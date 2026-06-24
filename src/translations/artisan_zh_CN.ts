@@ -8237,7 +8237,7 @@ Pressing the "Apply" button applies the current computed mapping to the loaded p
     </message>
     <message>
         <location filename="../help/transposer_help.py" line="25" />
-        <source>You might want to re-roast a profile, but extended/restricted to a total length of 10:00. 
+        <source>You might want to re-roast a profile, but extended/restricted to a total length of 10:00.
 
 Load the profile and start the Transposer under Tools. Enter our target roast time of "10:00" minutes into the target DROP field under Time and select "linear" as mapping. Check the resulting times of the main events in the time tables last row, press "Apply" to view the transposed profile in the graph. If you are happy with the result, press "OK" and save the newly generated transposed profile such that you can use it as a template for future roasts.</source>
         <translation type="unfinished" />
@@ -9829,7 +9829,7 @@ Function 4 (Read Input Registers): registers 0 to 65535 corresponding to numbers
     </message>
     <message>
         <location filename="../help/eventbuttons_help.py" line="123" />
-        <source>Insert Data address : value, ex. 4701:1000 and sv is 100. 
+        <source>Insert Data address : value, ex. 4701:1000 and sv is 100.
 Always multiply with 10 if value Unit: 0.1 / ex. 4719:0 stops heating</source>
         <translation type="unfinished" />
     </message>
@@ -9992,53 +9992,53 @@ Inputs with the area set to the empty input are turned off.</source>
     </message>
     <message>
         <location filename="../help/eventannotations_help.py" line="24" />
-        <source>Number of seconds before or after CHARGE 
-Before CHARGE shows negative 
+        <source>Number of seconds before or after CHARGE
+Before CHARGE shows negative
 Displays &amp;#39;*&amp;#39; when no CHARGE event exists</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../help/eventannotations_help.py" line="25" />
-        <source>Time before or after CHARGE in min:sec 
-Before CHARGE shows negative 
+        <source>Time before or after CHARGE in min:sec
+Before CHARGE shows negative
 Displays &amp;#39;*&amp;#39; when no CHARGE event exists</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../help/eventannotations_help.py" line="26" />
-        <source>Number of seconds before or after FCs 
-Best used inside double quotes (see notes below) 
-Negative value before FCs 
+        <source>Number of seconds before or after FCs
+Best used inside double quotes (see notes below)
+Negative value before FCs
 Displays &amp;#39;*&amp;#39; when no FCs event exists</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../help/eventannotations_help.py" line="27" />
-        <source>Time after FCs in min:sec 
-Best used inside double quotes (see notes below) 
-Negative value before FCs 
+        <source>Time after FCs in min:sec
+Best used inside double quotes (see notes below)
+Negative value before FCs
 Displays &amp;#39;*&amp;#39; when no FCs event exists</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../help/eventannotations_help.py" line="28" />
-        <source>Number of seconds before FCs 
-Best used inside single quotes or back ticks (see notes below) 
-Positive value only 
+        <source>Number of seconds before FCs
+Best used inside single quotes or back ticks (see notes below)
+Positive value only
 Displays &amp;#39;*&amp;#39; after FCs or when no FCs event exists</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../help/eventannotations_help.py" line="29" />
-        <source>Time before FCs  in min:sec 
-Best used inside single quotes or back ticks (see notes below) 
-Positive value only 
+        <source>Time before FCs  in min:sec
+Best used inside single quotes or back ticks (see notes below)
+Positive value only
 Displays &amp;#39;*&amp;#39; after FCs or when no FCs event exists</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../help/eventannotations_help.py" line="30" />
-        <source>Development time ratio (percent). Note: DTR=0 before FCs 
+        <source>Development time ratio (percent). Note: DTR=0 before FCs
 100*(t{Event}-t{FCs})/(t{FCs}-t{CHARGE})</source>
         <translation type="unfinished" />
     </message>
@@ -10110,7 +10110,7 @@ Field is hidden when the RoR value is not available.</source>
     </message>
     <message>
         <location filename="../help/eventannotations_help.py" line="47" />
-        <source>Assumptions:  The event value is 50.  In the case of Gas the value 50 corresponds to either 5.0kPh or 50%.  
+        <source>Assumptions:  The event value is 50.  In the case of Gas the value 50 corresponds to either 5.0kPh or 50%.
 For a sensory milestone (see notes above) the value 50 corresponds to the "Hay" aroma.</source>
         <translation type="unfinished" />
     </message>
@@ -10193,7 +10193,7 @@ FC之后：
 Gas 50% @340 °F
 
 Less than 90 seconds before FCs:
-Gas 50% @340 °F, 50 sec before FCs 
+Gas 50% @340 °F, 50 sec before FCs
 
 After FCs:
 Gas 50% @12% DTR</source>
@@ -10246,17 +10246,17 @@ Gas 50% @12% DTR</source>
     </message>
     <message>
         <location filename="../help/eventannotations_help.py" line="70" />
-        <source>Simple scaling of the event value is possible. Use a single math operator (&amp;#39;*&amp;#39;, &amp;#39;/&amp;#39;, &amp;#39;+&amp;#39; or &amp;#39;-&amp;#39;) immediately following the field name "E". For example: 
-&amp;#39;~E/10&amp;#39; will divide the E value by 10. 
+        <source>Simple scaling of the event value is possible. Use a single math operator (&amp;#39;*&amp;#39;, &amp;#39;/&amp;#39;, &amp;#39;+&amp;#39; or &amp;#39;-&amp;#39;) immediately following the field name "E". For example:
+&amp;#39;~E/10&amp;#39; will divide the E value by 10.
 &amp;#39;~E+5&amp;#39; adds 5 to the the value of E.</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../help/eventannotations_help.py" line="71" />
-        <source>Another style of annotations allows to replace an event&amp;#39;s numeric value with a text string, known as a nominal value. One example where this can be useful is when an event is used to record sensory milestones. The value 20 might be used for &amp;#39;Fresh Cut Grass&amp;#39; aroma, 50 for &amp;#39;Hay&amp;#39;, 80 for &amp;#39;Baking Bread&amp;#39;, and 100 to represent the &amp;#39;A Point&amp;#39;.  
+        <source>Another style of annotations allows to replace an event&amp;#39;s numeric value with a text string, known as a nominal value. One example where this can be useful is when an event is used to record sensory milestones. The value 20 might be used for &amp;#39;Fresh Cut Grass&amp;#39; aroma, 50 for &amp;#39;Hay&amp;#39;, 80 for &amp;#39;Baking Bread&amp;#39;, and 100 to represent the &amp;#39;A Point&amp;#39;.
 
-This form of annotation must be enclosed in curly brackets &amp;#39;{}&amp;#39;. Entries are numeric values immediately followed by their nominal representation text.  Entries are separated by the vertical bar &amp;#39;|&amp;#39;. The following Annotation string implements this example.   
-{~E|20Fresh Cut Grass|50Hay|80Baking Bread|100A Point} 
+This form of annotation must be enclosed in curly brackets &amp;#39;{}&amp;#39;. Entries are numeric values immediately followed by their nominal representation text.  Entries are separated by the vertical bar &amp;#39;|&amp;#39;. The following Annotation string implements this example.
+{~E|20Fresh Cut Grass|50Hay|80Baking Bread|100A Point}
 
 Note that if the event value  does not match any value in the Annotation definition a blank string will be returned.  In the example above an event value of 30 will return a blank string.  The easiest way to ensure these values match is to use Custom Buttons to for the Event.</source>
         <translation type="unfinished" />
@@ -10391,7 +10391,7 @@ Follow the steps below to set the energy inputs for the roast machine and afterb
     </message>
     <message>
         <location filename="../help/energy_help.py" line="48" />
-        <source>Special Events are often used to record load settings, such as a burner setting, in the roast profile.  Select the Event that corresponds to the load setting here.  
+        <source>Special Events are often used to record load settings, such as a burner setting, in the roast profile.  Select the Event that corresponds to the load setting here.
 
 When blank the load is assumed to be at a constant setting, which is the percent &amp;#39;Value 100%&amp;#39; multiplied by the rating.  A 10 kW load at &amp;#39;100% Value&amp;#39;= 60 would thus be 10 kW * 60% = 6 kW. Continuous loads are typically motors and blowers and the afterburner.</source>
         <translation type="unfinished" />
@@ -13163,7 +13163,7 @@ Keyboard Shortcuts must be disabled (ENTER)</source>
         <location filename="../artisanlib/ports.py" line="499" />
         <location filename="../artisanlib/ports.py" line="78" />
         <source>Register</source>
-        <translation>注册</translation>
+        <translation>寄存器</translation>
     </message>
     <message>
         <location filename="../artisanlib/ports.py" line="1054" />
