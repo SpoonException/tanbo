@@ -94,7 +94,7 @@ try: # activate support for hiDPI screens on Windows
 except Exception: # pylint: disable=broad-except
     pass
 
-# write logtrace to Console on OS X:
+# write logtrace to Console on macOS:
 #try:
 #..
 #except Exception as e: # pylint: disable=broad-except
@@ -1477,7 +1477,7 @@ class ApplicationWindow(QMainWindow):
         'taskWebDisplayGreenActive', 'taskWebDisplayGreenPort', 'taskWebDisplayRoastedActive', 'taskWebDisplayRoastedPort',
         'taskWebDisplayRoastedIndexPath', 'taskWebDisplayRoastedWebSocketPath', 'taskWebDisplayGreen_server', 'taskWebDisplayRoasted_server',
         'custom_scale_ids', 'custom_scale_names',
-        'scale_manager', 'scale1_model', 'scale1_name', 'scale1_id', 'container1_idx', 'two_bucket_mode', 'green_task_precision', 'scale2_model', 'scale2_name', 'scale2_id', 'container2_idx',
+        'scale_manager', 'scale1_model', 'scale1_name', 'scale1_id', 'container1_idx', 'two_bucket_mode', 'green_task_precision', 'scale2_model', 'scale2_name', 'scale2_id', 'container2_idx', 'scale1_dedicated_for_green_only', 'scale2_dedicated_for_roasted_only',
         'WebLCDsAlerts', 'EventsDlg_activeTab', 'graphColorDlg_activeTab', 'PID_DlgControl_activeTab', 'CurveDlg_activeTab', 'editGraphDlg_activeTab',
         'backgroundDlg_activeTab', 'DeviceAssignmentDlg_activeTab', 'AlarmDlg_activeTab', 'schedule_activeTab', 'StatisticsDlg_activeTab', 'resetqsettings', 'settingspath', 'wheelpath', 'profilepath',
         'userprofilepath', 'printer', 'main_widget', 'defaultdpi', 'dpi', 'qmc', 'HottopControlActive', 'AsyncSamplingTimer', 'wheeldialog',
@@ -1688,6 +1688,8 @@ class ApplicationWindow(QMainWindow):
         self.scale1_id:str|None = None    # the id, eg. the BT address (like "24:71:89:cc:09:05")
         self.container1_idx:int = -1 # -1: no container set; otherwise index into selected qmc.container_names/qmc.container_weights
         self.two_bucket_mode:bool = False # if True, the TaskManager allows to split green task weight into two buckets
+        self.scale1_dedicated_for_green_only:bool = False
+        self.scale2_dedicated_for_roasted_only:bool = False
         self.green_task_precision:float = 10 # precision in percent (range [0.1 - 10%]; if set to 0 all "non-overlapping" weights are accepted)
         # scale2: just for green
         self.scale2_model:int|None = None
@@ -7652,7 +7654,7 @@ class ApplicationWindow(QMainWindow):
                 try:
                     # we masked the -1 error values
                     np_etb_masked = numpy.ma.masked_equal(np_etb, -1)
-                    np_timeB_etb_masked = numpy.ma.masked_array(np_timeB, np_etb_masked.mask) # type:ignore[operator,unused-ignore] # pylint:disable=no-member
+                    np_timeB_etb_masked = numpy.ma.masked_array(np_timeB, np_etb_masked.mask) # type:ignore[operator,unused-ignore] # ty:ignore[call-non-callable] # pylint:disable=no-member
                     # ignore the masked error values on computing the interpolation and fill (especially on the left) with -1 values
                     interp_np_etb = numpy.interp(np_timex,np_timeB_etb_masked.compressed(),np_etb_masked.compressed(),left=-1,right=-1) # pyright:ignore[reportUnknownArgumentType]  # pylint:disable=no-member
 
@@ -7677,7 +7679,7 @@ class ApplicationWindow(QMainWindow):
                 try:
                     # we masked the -1 error values
                     np_btb_masked = numpy.ma.masked_equal(np_btb, -1)
-                    np_timeB_btb_masked = numpy.ma.masked_array(np_timeB, np_btb_masked.mask) # type:ignore[operator,unused-ignore] # pylint:disable=no-member
+                    np_timeB_btb_masked = numpy.ma.masked_array(np_timeB, np_btb_masked.mask) # type:ignore[operator,unused-ignore] # ty:ignore[call-non-callable] # pylint:disable=no-member
                     # ignore the masked error values on computing the interpolation and fill (especially on the left) with -1 values
                     interp_np_btb = numpy.interp(np_timex,np_timeB_btb_masked.compressed(),np_btb_masked.compressed(),left=-1,right=-1) # pyright:ignore[reportUnknownArgumentType]  # pylint:disable=no-member
 
@@ -19471,6 +19473,8 @@ class ApplicationWindow(QMainWindow):
                     self.scale1_id = None
             self.container1_idx = toInt(settings.value('container1_idx',int(self.container1_idx)))
             self.two_bucket_mode = toBool(settings.value('two_bucket_mode',int(self.two_bucket_mode)))
+            self.scale1_dedicated_for_green_only = toBool(settings.value('scale1_dedicated_for_green_only',int(self.scale1_dedicated_for_green_only)))
+            self.scale2_dedicated_for_roasted_only = toBool(settings.value('scale2_dedicated_for_roasted_only',int(self.scale2_dedicated_for_roasted_only)))
             self.green_task_precision = toFloat(settings.value('green_task_precision', self.green_task_precision))
             if settings.contains('scale2_model'):
                 try:
@@ -21150,6 +21154,8 @@ class ApplicationWindow(QMainWindow):
             self.settingsSetValue(settings, default_settings, 'scale1_id',self.scale1_id, read_defaults)
             self.settingsSetValue(settings, default_settings, 'container1_idx',self.container1_idx, read_defaults)
             self.settingsSetValue(settings, default_settings, 'two_bucket_mode',self.two_bucket_mode, read_defaults)
+            self.settingsSetValue(settings, default_settings, 'scale1_dedicated_for_green_only',self.scale1_dedicated_for_green_only, read_defaults)
+            self.settingsSetValue(settings, default_settings, 'scale2_dedicated_for_roasted_only',self.scale2_dedicated_for_roasted_only, read_defaults)
             self.settingsSetValue(settings, default_settings, 'green_task_precision',self.green_task_precision, read_defaults)
             self.settingsSetValue(settings, default_settings, 'scale2_model',self.scale2_model, read_defaults)
             self.settingsSetValue(settings, default_settings, 'scale2_name',self.scale2_name, read_defaults)
