@@ -63,6 +63,35 @@ from uic import MeasureDialog  # pyright: ignore[attr-defined] # pylint: disable
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
+# ── 表头字段映射 ──────────────────────────────────────────────
+HEADER_FIELDS = [
+    ("APSNUM", "APS 编号"),
+    ("APSLIN", "锅序"),
+    ("MFGNUM", "任务单号"),
+    ("DOCDAT", "计划生产日期"),
+    ("ITMNAM", "产品名称"),
+    ("ITMNO", "品号"),
+    ("HQTYSTU", "投料总数"),
+    ("LQTYSTU", "损耗量"),
+    ("STU", "单位"),
+    ("DEVSEQ", "烘焙设备"),
+    ("OPESPL", "总锅数"),
+    ("REMARK", "备注"),
+]
+
+# ── 表身表格列定义 ────────────────────────────────────────────
+BODY_COLUMNS = [
+    ("CPNITMNO", "物料编号"),
+    ("ITMNAM", "物料名称"),
+    ("MATRAT", "配比 (%)"),
+    ("CPNQTYSTU", "计划数量"),
+    ("REMARK", "物料备注"),
+    ("CPNSTU", "单位"),
+    ("LOC", "库存"),
+    ("MWEIQTY", "物料称重"),
+    ("OKFLG", "确认标识"),
+]
+
 
 @functools.cache
 def getResourcePath() -> str:
@@ -971,30 +1000,6 @@ class editGraphDlg(ArtisanResizeablDialog):
         self.batchLayout.addWidget(self.batchScanEdit)
 
         # ── APS 扫描结果 ────────────────────────────────────────
-        # ── 表头字段映射 ──────────────────────────────────────────────
-        HEADER_FIELDS = [
-            ("APSNUM", "APS 编号"),
-            ("MFGNUM", "制造批号"),
-            ("DOCDAT", "单据日期"),
-            ("ITMNAM", "品名"),
-            ("ITMNO", "品号"),
-            ("HQTYSTU", "计划数量"),
-            ("LQTYSTU", "损耗量"),
-            ("STU", "单位"),
-            ("DEVSEQ", "设备编号"),
-            ("OPESPL", "操作员"),
-            ("REMARK", "备注"),
-        ]
-
-        # ── 表身表格列定义 ────────────────────────────────────────────
-        BODY_COLUMNS = [
-            ("CPNITMNO", "物料编号"),
-            ("ITMNAM", "物料名称"),
-            ("MATRAT", "配比 (%)"),
-            ("CPNQTYSTU", "数量"),
-            ("CPNSTU", "单位"),
-        ]
-
         self.apsResultWidget = QWidget()
 
         aps_root = QVBoxLayout(self.apsResultWidget)
@@ -6278,19 +6283,10 @@ class editGraphDlg(ArtisanResizeablDialog):
         for key, edit in self._aps_header_widgets.items():
             val = first.get(key, "")
             if key == "DOCDAT":
-                val = str(val)[:10] if val else ""
+                val = str(val).replace("T", " ")
             elif key in ("HQTYSTU", "LQTYSTU"):
                 val = f"{float(val):.3f}" if val else ""
             edit.setText(str(val) if val else "")
-
-        # ── 表身表格列定义 ────────────────────────────────────────────
-        BODY_COLUMNS = [
-            ("CPNITMNO", "物料编号"),
-            ("ITMNAM", "物料名称"),
-            ("MATRAT", "配比 (%)"),
-            ("CPNQTYSTU", "数量"),
-            ("CPNSTU", "单位"),
-        ]
 
         # ── 表身 ──
         body_rows = body_data.get("Table") or []
@@ -6299,17 +6295,15 @@ class editGraphDlg(ArtisanResizeablDialog):
             for col_idx, (key, _) in enumerate(BODY_COLUMNS):
                 try:
                     val = row.get(key, "")
-                    if key in ("HQTYSTU", "LQTYSTU") and val not in (None, ""):
-                        val = f"{float(val):.3f}"
+                    if key in ("HQTYSTU", "LQTYSTU", "CPNQTYSTU") and val not in (None, ""):
+                        val = f"{float(val):.2f}"
                     item = QTableWidgetItem("" if val is None else str(val))
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     self._body_table.setItem(row_idx, col_idx, item)
                 except Exception as e:
                     print(
                         f"row={row_idx}, col={col_idx}, key={key}, "
-
                         f"value={row.get(key, None)}, error={e}"
-
                     )
 
         # 同步填充到 beans / batch / weight
@@ -6317,7 +6311,7 @@ class editGraphDlg(ArtisanResizeablDialog):
             self.titleedit.setCurrentText(first["ITMNAM"])
         if first.get("MFGNUM"):
             if hasattr(self, "batchedit"):
-                self.batchedit.setText(first["MFGNUM"])
+                self.batchedit.setText(first["APSNUM"])
         if first.get("HQTYSTU") is not None:
             self.weightinedit.setText(f"{float(first['HQTYSTU']):g}")
 
@@ -6344,7 +6338,7 @@ class editGraphDlg(ArtisanResizeablDialog):
                 data={
                     "loginID": config.loginID,
                     "par": {
-                        "dmCode": "TMESEXC15",
+                        "dmCode": config.chargeModel,
                         "dmNum": 10,
                         "para": [aps_num]
                     },
@@ -6354,15 +6348,19 @@ class editGraphDlg(ArtisanResizeablDialog):
                 authorized=False
             )
 
+            head = r1.json() if r1.status_code == 200 else None
+
+            apslin = head["data"]["Table"][0]["APSLIN"]
+
             # 2) 查表身 —— 配方成分（假设 dmCode 是 TMESEXC16，按实际调整）
             r2 = sendData(
                 url=f"{config.api_base_url}/DataModel/linkDMDatasetResult",
                 data={
                     "loginID": config.loginID,
                     "par": {
-                        "dmCode": "TMESEXC1510X",  # ← 替换为实际配方数据集编码
+                        "dmCode": config.chargeAttachModel,  # ← 替换为实际配方数据集编码
                         "dmNum": 700,
-                        "para": [aps_num]
+                        "para": [aps_num, apslin]
                     },
                     "rowData": None
                 },
@@ -6371,7 +6369,6 @@ class editGraphDlg(ArtisanResizeablDialog):
             )
 
             # 解析结果
-            head = r1.json() if r1.status_code == 200 else None
             body = r2.json() if r2.status_code == 200 else None
 
             if (isinstance(head, dict) and isinstance(body, dict)

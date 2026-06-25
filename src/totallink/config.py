@@ -58,6 +58,9 @@ lock_schedule_url: Final[str] = api_base_url + '/aschedule/lock'
 notifications_url: Final[str] = api_base_url + '/notifications'
 loginID: str = ""  # 可修改的字符串
 
+chargeModel = "TMESEXC15"
+chargeAttachModel = "TMESEXC1510X"
+
 # Connection configurations
 
 # verify_ssl: Final[bool] = False
