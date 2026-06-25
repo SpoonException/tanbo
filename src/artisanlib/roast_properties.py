@@ -939,6 +939,18 @@ class editGraphDlg(ArtisanResizeablDialog):
         )
         scanAction.setToolTip(QApplication.translate('Tooltip', 'Scan APS Number'))
 
+        INPUT_BG = "#f5f5f5"  # 和表头文本框一样的底色
+
+        self.batchScanEdit.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: {INPUT_BG};
+            }}
+            QLineEdit QToolButton {{
+                background-color: {INPUT_BG};
+                border: none;
+            }}
+        """)
+
         # 图标点击触发
         scanAction.triggered.connect(self.onScanTriggered)
         # 回车也触发同一个逻辑
