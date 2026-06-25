@@ -227,6 +227,15 @@ def make_authentify() -> Authentifier:
                     'linkToken': get_token(),
                 }  # @UndefinedVariable
                 r = sendData(config.auth_url, data, 'POST', False, form=True)
+
+                if r.status_code == 200:
+                    try:
+                        res = r.json()
+                        if str(res.get('isSuccess', '')).lower() == 'true':
+                            config.loginID = res['data']
+                    except Exception:
+                        pass
+
                 del data
                 del passwd
                 _log.debug(

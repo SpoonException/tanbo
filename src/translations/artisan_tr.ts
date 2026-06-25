@@ -181,12 +181,16 @@ Kusurlu Çekirdek Ağırlığı</translation>
     <name>Button</name>
     <message>
         <location filename="../artisanlib/colors.py" line="567" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4218" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3026" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3024" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2992" />
         <location filename="../artisanlib/designer.py" line="244" />
         <location filename="../artisanlib/phases.py" line="119" />
-        <location filename="../artisanlib/roast_properties.py" line="4218" />
-        <location filename="../artisanlib/roast_properties.py" line="3026" />
-        <location filename="../artisanlib/roast_properties.py" line="3024" />
-        <location filename="../artisanlib/roast_properties.py" line="2992" />
+        <location filename="../artisanlib/roast_properties.py" line="4431" />
+        <location filename="../artisanlib/roast_properties.py" line="3178" />
+        <location filename="../artisanlib/roast_properties.py" line="3175" />
+        <location filename="../artisanlib/roast_properties.py" line="3137" />
         <location filename="../artisanlib/wheels.py" line="49" />
         <location filename="../artisanlib/axis.py" line="316" />
         <source>Restore Defaults</source>
@@ -211,11 +215,12 @@ Kusurlu Çekirdek Ağırlığı</translation>
     </message>
     <message>
         <location filename="../artisanlib/cup_profile.py" line="95" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="804" />
         <location filename="../artisanlib/devices.py" line="271" />
         <location filename="../artisanlib/alarms.py" line="79" />
         <location filename="../artisanlib/dialogs.py" line="614" />
         <location filename="../artisanlib/statistics.py" line="284" />
-        <location filename="../artisanlib/roast_properties.py" line="804" />
+        <location filename="../artisanlib/roast_properties.py" line="856" />
         <location filename="../artisanlib/events.py" line="667" />
         <location filename="../artisanlib/comparator.py" line="986" />
         <location filename="../artisanlib/wheels.py" line="102" />
@@ -238,12 +243,13 @@ Kusurlu Çekirdek Ağırlığı</translation>
         <translation>Aç</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="809" />
         <location filename="../artisanlib/devices.py" line="293" />
         <location filename="../artisanlib/alarms.py" line="90" />
         <location filename="../artisanlib/dialogs.py" line="616" />
         <location filename="../artisanlib/statistics.py" line="289" />
         <location filename="../artisanlib/curves.py" line="1374" />
-        <location filename="../artisanlib/roast_properties.py" line="809" />
+        <location filename="../artisanlib/roast_properties.py" line="861" />
         <location filename="../artisanlib/background.py" line="85" />
         <location filename="../artisanlib/events.py" line="672" />
         <location filename="../artisanlib/comparator.py" line="989" />
@@ -301,8 +307,8 @@ Kusurlu Çekirdek Ağırlığı</translation>
         <translation>Kaydet</translation>
     </message>
     <message>
-        <location filename="../plus/login.py" line="73" />
         <location filename="../TotalLINK/login.py" line="73" />
+        <location filename="../plus/login.py" line="73" />
         <location filename="../artisanlib/dialogs.py" line="623" />
         <location filename="../artisanlib/dialogs.py" line="87" />
         <location filename="../artisanlib/comm.py" line="200" />
@@ -525,8 +531,8 @@ Kusurlu Çekirdek Ağırlığı</translation>
         <translation>PID'leri yaz</translation>
     </message>
     <message>
-        <location filename="../plus/login.py" line="78" />
         <location filename="../TotalLINK/login.py" line="78" />
+        <location filename="../plus/login.py" line="78" />
         <location filename="../artisanlib/dialogs.py" line="624" />
         <location filename="../artisanlib/dialogs.py" line="88" />
         <location filename="../artisanlib/comm.py" line="201" />
@@ -546,13 +552,14 @@ Kusurlu Çekirdek Ağırlığı</translation>
     </message>
     <message>
         <location filename="../artisanlib/transposer.py" line="137" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2949" />
         <location filename="../artisanlib/devices.py" line="289" />
         <location filename="../artisanlib/devices.py" line="258" />
         <location filename="../artisanlib/devices.py" line="159" />
         <location filename="../artisanlib/devices.py" line="157" />
         <location filename="../artisanlib/alarms.py" line="116" />
         <location filename="../artisanlib/curves.py" line="857" />
-        <location filename="../artisanlib/roast_properties.py" line="2949" />
+        <location filename="../artisanlib/roast_properties.py" line="3092" />
         <location filename="../artisanlib/ports.py" line="797" />
         <location filename="../artisanlib/events.py" line="987" />
         <location filename="../artisanlib/events.py" line="687" />
@@ -568,14 +575,17 @@ Kusurlu Çekirdek Ağırlığı</translation>
         <translation>Yol</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="2957" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="824" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="814" />
         <location filename="../artisanlib/devices.py" line="267" />
         <location filename="../artisanlib/alarms.py" line="95" />
         <location filename="../artisanlib/statistics.py" line="300" />
         <location filename="../artisanlib/statistics.py" line="280" />
         <location filename="../artisanlib/curves.py" line="73" />
-        <location filename="../artisanlib/roast_properties.py" line="2957" />
-        <location filename="../artisanlib/roast_properties.py" line="824" />
-        <location filename="../artisanlib/roast_properties.py" line="814" />
+        <location filename="../artisanlib/roast_properties.py" line="3100" />
+        <location filename="../artisanlib/roast_properties.py" line="877" />
+        <location filename="../artisanlib/roast_properties.py" line="866" />
         <location filename="../artisanlib/background.py" line="189" />
         <location filename="../artisanlib/background.py" line="179" />
         <location filename="../artisanlib/events.py" line="663" />
@@ -647,71 +657,89 @@ Kusurlu Çekirdek Ağırlığı</translation>
         <translation>Sağa</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="124" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="124" />
+        <location filename="../artisanlib/roast_properties.py" line="169" />
         <source>unit</source>
         <translation>Birim</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1238" />
-        <location filename="../artisanlib/roast_properties.py" line="178" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1238" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="178" />
+        <location filename="../artisanlib/roast_properties.py" line="1339" />
+        <location filename="../artisanlib/roast_properties.py" line="223" />
         <source>in</source>
         <translation>giriş</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1249" />
-        <location filename="../artisanlib/roast_properties.py" line="251" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1249" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="251" />
+        <location filename="../artisanlib/roast_properties.py" line="1350" />
+        <location filename="../artisanlib/roast_properties.py" line="296" />
         <source>out</source>
         <translation>Çıkış</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="784" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="784" />
+        <location filename="../artisanlib/roast_properties.py" line="836" />
         <source>Cluster</source>
         <translation>Küme</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="789" />
         <location filename="../artisanlib/alarms.py" line="121" />
-        <location filename="../artisanlib/roast_properties.py" line="789" />
+        <location filename="../artisanlib/roast_properties.py" line="841" />
         <source>Clear</source>
         <translation>Temizle</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="794" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="794" />
+        <location filename="../artisanlib/roast_properties.py" line="846" />
         <source>Create Alarms</source>
         <translation>Alarm Oluştur</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="799" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="799" />
+        <location filename="../artisanlib/roast_properties.py" line="851" />
         <source>Sort</source>
         <translation>Düzenlemek</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1234" />
         <location filename="../artisanlib/devices.py" line="1685" />
         <location filename="../artisanlib/devices.py" line="1608" />
-        <location filename="../artisanlib/roast_properties.py" line="1234" />
+        <location filename="../artisanlib/roast_properties.py" line="1335" />
         <source>Tare</source>
         <translation>Dara</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1755" />
-        <location filename="../artisanlib/roast_properties.py" line="1263" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1755" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1263" />
+        <location filename="../artisanlib/roast_properties.py" line="1875" />
+        <location filename="../artisanlib/roast_properties.py" line="1366" />
         <source>defects</source>
         <translation>kusurlar</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1755" />
-        <location filename="../artisanlib/roast_properties.py" line="1263" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1755" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1263" />
+        <location filename="../artisanlib/roast_properties.py" line="1875" />
+        <location filename="../artisanlib/roast_properties.py" line="1366" />
         <source>yield</source>
         <translation>verim</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1275" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1275" />
+        <location filename="../artisanlib/roast_properties.py" line="1379" />
         <source>update</source>
         <translation>Güncelle</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4211" />
-        <location filename="../artisanlib/roast_properties.py" line="3023" />
-        <location filename="../artisanlib/roast_properties.py" line="2984" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4211" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3023" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2984" />
+        <location filename="../artisanlib/roast_properties.py" line="4423" />
+        <location filename="../artisanlib/roast_properties.py" line="3174" />
+        <location filename="../artisanlib/roast_properties.py" line="3128" />
         <source>Save Defaults</source>
         <translation>Varsayılanları Kaydet</translation>
     </message>
@@ -1324,8 +1352,8 @@ END</source>
         <translation>Bitişte Kapat</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="1591" />
         <location filename="../TotalLINK/schedule.py" line="1584" />
+        <location filename="../plus/schedule.py" line="1591" />
         <location filename="../artisanlib/curves.py" line="1038" />
         <location filename="../artisanlib/curves.py" line="949" />
         <location filename="../artisanlib/curves.py" line="943" />
@@ -1378,90 +1406,105 @@ END</source>
         <translation>Yükleme sırasında arka planı her zaman gizle</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="769" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="769" />
+        <location filename="../artisanlib/roast_properties.py" line="819" />
         <source>Delete roast properties on RESET</source>
         <translation>Kavurma tercihlerini sıfırla</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="772" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="772" />
+        <location filename="../artisanlib/roast_properties.py" line="822" />
         <source>Open on CHARGE</source>
         <translation>Girişte aç</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="776" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="776" />
+        <location filename="../artisanlib/roast_properties.py" line="827" />
         <source>Open on DROP</source>
         <translation>Bitişte Aç</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="863" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="863" />
+        <location filename="../artisanlib/roast_properties.py" line="917" />
         <source>Show Always</source>
         <translation>Her Zaman Göster</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1194" />
         <location filename="../artisanlib/main.py" line="24047" />
-        <location filename="../artisanlib/roast_properties.py" line="1194" />
+        <location filename="../artisanlib/roast_properties.py" line="1295" />
         <source>Heavy FC</source>
         <translation>Yoğun İlk Çatlama</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1197" />
         <location filename="../artisanlib/main.py" line="24049" />
-        <location filename="../artisanlib/roast_properties.py" line="1197" />
+        <location filename="../artisanlib/roast_properties.py" line="1298" />
         <source>Low FC</source>
         <translation>Zayıf İlk Çatlama</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1200" />
         <location filename="../artisanlib/main.py" line="24051" />
-        <location filename="../artisanlib/roast_properties.py" line="1200" />
+        <location filename="../artisanlib/roast_properties.py" line="1301" />
         <source>Light Cut</source>
         <translatorcomment>Kavrulma rengi açık, yetersiz gelişmiş</translatorcomment>
         <translation>Açık Kesim</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1203" />
         <location filename="../artisanlib/main.py" line="24053" />
-        <location filename="../artisanlib/roast_properties.py" line="1203" />
+        <location filename="../artisanlib/roast_properties.py" line="1304" />
         <source>Dark Cut</source>
         <translatorcomment>Kavrulma aşırı ilerlemiş, yanmaya yakın</translatorcomment>
         <translation>Koyu Kesim</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1206" />
         <location filename="../artisanlib/main.py" line="24055" />
-        <location filename="../artisanlib/roast_properties.py" line="1206" />
+        <location filename="../artisanlib/roast_properties.py" line="1307" />
         <source>Drops</source>
         <translatorcomment>Kavurma veya taşıma sırasında parçalanmış çekirdekler</translatorcomment>
         <translation>Kırık Çekirdekler</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1209" />
         <location filename="../artisanlib/main.py" line="24057" />
-        <location filename="../artisanlib/roast_properties.py" line="1209" />
+        <location filename="../artisanlib/roast_properties.py" line="1310" />
         <source>Oily</source>
         <translation>Yağlı</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1212" />
         <location filename="../artisanlib/main.py" line="24059" />
-        <location filename="../artisanlib/roast_properties.py" line="1212" />
+        <location filename="../artisanlib/roast_properties.py" line="1313" />
         <source>Uneven</source>
         <translation>Homojen Olmayan Renk</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1214" />
         <location filename="../artisanlib/main.py" line="24061" />
-        <location filename="../artisanlib/roast_properties.py" line="1214" />
+        <location filename="../artisanlib/roast_properties.py" line="1315" />
         <source>Tipping</source>
         <translation>Uç Kararması</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1216" />
         <location filename="../artisanlib/main.py" line="24063" />
-        <location filename="../artisanlib/roast_properties.py" line="1216" />
+        <location filename="../artisanlib/roast_properties.py" line="1317" />
         <source>Scorching</source>
         <translation>Yüzey Yanığı</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1218" />
         <location filename="../artisanlib/main.py" line="24065" />
-        <location filename="../artisanlib/roast_properties.py" line="1218" />
+        <location filename="../artisanlib/roast_properties.py" line="1319" />
         <source>Divots</source>
         <translation>İçe Çökme/Göçük</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1426" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1426" />
+        <location filename="../artisanlib/roast_properties.py" line="1537" />
         <source>Standard bean labels</source>
         <translation>Standart Çekirdek Etiketleri</translation>
     </message>
@@ -1882,11 +1925,13 @@ END</source>
     </message>
     <message>
         <location filename="../artisanlib/canvas.py" line="18828" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4528" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="755" />
         <location filename="../artisanlib/alarms.py" line="913" />
         <location filename="../artisanlib/alarms.py" line="857" />
         <location filename="../artisanlib/curves.py" line="2132" />
-        <location filename="../artisanlib/roast_properties.py" line="4528" />
-        <location filename="../artisanlib/roast_properties.py" line="755" />
+        <location filename="../artisanlib/roast_properties.py" line="4758" />
+        <location filename="../artisanlib/roast_properties.py" line="805" />
         <location filename="../artisanlib/background.py" line="1081" />
         <location filename="../artisanlib/events.py" line="1381" />
         <location filename="../artisanlib/pid_dialogs.py" line="848" />
@@ -2485,1624 +2530,1624 @@ END</source>
         <translation>Düzenle</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="1565" />
         <location filename="../TotalLINK/schedule.py" line="1558" />
+        <location filename="../plus/schedule.py" line="1565" />
         <source>All batches prepared</source>
         <translation>Tüm Partiler Hazırlandı</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="1568" />
         <location filename="../TotalLINK/schedule.py" line="1561" />
+        <location filename="../plus/schedule.py" line="1568" />
         <source>One more batch prepared</source>
         <translation>Bir parti daha hazırlandı</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="1572" />
         <location filename="../TotalLINK/schedule.py" line="1565" />
+        <location filename="../plus/schedule.py" line="1572" />
         <source>One less batch prepared</source>
         <translation>Bir parti daha azaltıldı</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="1575" />
         <location filename="../TotalLINK/schedule.py" line="1568" />
+        <location filename="../plus/schedule.py" line="1575" />
         <source>No batch prepared</source>
         <translation>Hazır Parti Yok</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="1587" />
         <location filename="../TotalLINK/schedule.py" line="1580" />
+        <location filename="../plus/schedule.py" line="1587" />
         <source>Register roast</source>
         <translation>Kavurmayı Kaydet</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="1595" />
         <location filename="../TotalLINK/schedule.py" line="1588" />
+        <location filename="../plus/schedule.py" line="1595" />
         <source>Hide</source>
         <translation>Gizle</translation>
     </message>
 </context><context>
     <name>Countries</name>
     <message>
-        <location filename="../plus/countries.py" line="26" />
         <location filename="../TotalLINK/countries.py" line="26" />
+        <location filename="../plus/countries.py" line="26" />
         <source>Afghanistan</source>
         <translation>Afganistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="27" />
         <location filename="../TotalLINK/countries.py" line="27" />
+        <location filename="../plus/countries.py" line="27" />
         <source>Aland Islands</source>
         <translation>Aland adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="28" />
         <location filename="../TotalLINK/countries.py" line="28" />
+        <location filename="../plus/countries.py" line="28" />
         <source>Albania</source>
         <translation>Arnavutluk</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="29" />
         <location filename="../TotalLINK/countries.py" line="29" />
+        <location filename="../plus/countries.py" line="29" />
         <source>Algeria</source>
         <translation>Cezayir</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="30" />
         <location filename="../TotalLINK/countries.py" line="30" />
+        <location filename="../plus/countries.py" line="30" />
         <source>American Samoa</source>
         <translation>Amerikan Samoası</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="31" />
         <location filename="../TotalLINK/countries.py" line="31" />
+        <location filename="../plus/countries.py" line="31" />
         <source>Andorra</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="32" />
         <location filename="../TotalLINK/countries.py" line="32" />
+        <location filename="../plus/countries.py" line="32" />
         <source>Angola</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="33" />
         <location filename="../TotalLINK/countries.py" line="33" />
+        <location filename="../plus/countries.py" line="33" />
         <source>Anguilla</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="34" />
         <location filename="../TotalLINK/countries.py" line="34" />
+        <location filename="../plus/countries.py" line="34" />
         <source>ANI</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="35" />
         <location filename="../TotalLINK/countries.py" line="35" />
+        <location filename="../plus/countries.py" line="35" />
         <source>Antarctica</source>
         <translation>Antarktika</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="36" />
         <location filename="../TotalLINK/countries.py" line="36" />
+        <location filename="../plus/countries.py" line="36" />
         <source>Antigua and Barbuda</source>
         <translation>Antigua ve Barbuda</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="37" />
         <location filename="../TotalLINK/countries.py" line="37" />
+        <location filename="../plus/countries.py" line="37" />
         <source>Argentina</source>
         <translation>Arjantin</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="38" />
         <location filename="../TotalLINK/countries.py" line="38" />
+        <location filename="../plus/countries.py" line="38" />
         <source>Armenia</source>
         <translation>Ermenistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="39" />
         <location filename="../TotalLINK/countries.py" line="39" />
+        <location filename="../plus/countries.py" line="39" />
         <source>Aruba</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="40" />
         <location filename="../TotalLINK/countries.py" line="40" />
+        <location filename="../plus/countries.py" line="40" />
         <source>Australia</source>
         <translation>Avustralya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="41" />
         <location filename="../TotalLINK/countries.py" line="41" />
+        <location filename="../plus/countries.py" line="41" />
         <source>Austria</source>
         <translation>Avusturya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="42" />
         <location filename="../TotalLINK/countries.py" line="42" />
+        <location filename="../plus/countries.py" line="42" />
         <source>Azerbaijan</source>
         <translation>Azerbaycan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="43" />
         <location filename="../TotalLINK/countries.py" line="43" />
+        <location filename="../plus/countries.py" line="43" />
         <source>Bahamas</source>
         <translation>Bahamalar</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="44" />
         <location filename="../TotalLINK/countries.py" line="44" />
+        <location filename="../plus/countries.py" line="44" />
         <source>Bahrain</source>
         <translation>Bahreyn</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="45" />
         <location filename="../TotalLINK/countries.py" line="45" />
+        <location filename="../plus/countries.py" line="45" />
         <source>Bali</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="46" />
         <location filename="../TotalLINK/countries.py" line="46" />
+        <location filename="../plus/countries.py" line="46" />
         <source>Bangladesh</source>
         <translation>Bangladeş</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="47" />
         <location filename="../TotalLINK/countries.py" line="47" />
+        <location filename="../plus/countries.py" line="47" />
         <source>Barbados</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="48" />
         <location filename="../TotalLINK/countries.py" line="48" />
+        <location filename="../plus/countries.py" line="48" />
         <source>Belarus</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="49" />
         <location filename="../TotalLINK/countries.py" line="49" />
+        <location filename="../plus/countries.py" line="49" />
         <source>Belgium</source>
         <translation>Belçika</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="50" />
         <location filename="../TotalLINK/countries.py" line="50" />
+        <location filename="../plus/countries.py" line="50" />
         <source>Belize</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="51" />
         <location filename="../TotalLINK/countries.py" line="51" />
+        <location filename="../plus/countries.py" line="51" />
         <source>Benin</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="52" />
         <location filename="../TotalLINK/countries.py" line="52" />
+        <location filename="../plus/countries.py" line="52" />
         <source>Bermuda</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="53" />
         <location filename="../TotalLINK/countries.py" line="53" />
+        <location filename="../plus/countries.py" line="53" />
         <source>Bhutan</source>
         <translation>Butan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="54" />
         <location filename="../TotalLINK/countries.py" line="54" />
+        <location filename="../plus/countries.py" line="54" />
         <source>Bolivia</source>
         <translation>Bolivya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="55" />
         <location filename="../TotalLINK/countries.py" line="55" />
+        <location filename="../plus/countries.py" line="55" />
         <source>Bonaire, Sint Eustatius and Saba</source>
         <translation>Bonaire, Sint Eustatius ve Saba</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="56" />
         <location filename="../TotalLINK/countries.py" line="56" />
+        <location filename="../plus/countries.py" line="56" />
         <source>Borneo</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="57" />
         <location filename="../TotalLINK/countries.py" line="57" />
+        <location filename="../plus/countries.py" line="57" />
         <source>Bosnia and Herzegovina</source>
         <translation>Bosna Hersek</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="58" />
         <location filename="../TotalLINK/countries.py" line="58" />
+        <location filename="../plus/countries.py" line="58" />
         <source>Botswana</source>
         <translation>Botsvana</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="59" />
         <location filename="../TotalLINK/countries.py" line="59" />
+        <location filename="../plus/countries.py" line="59" />
         <source>Bouvet Island</source>
         <translation>Bouvet Adası</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="60" />
         <location filename="../TotalLINK/countries.py" line="60" />
+        <location filename="../plus/countries.py" line="60" />
         <source>Brazil</source>
         <translation>Brezilya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="61" />
         <location filename="../TotalLINK/countries.py" line="61" />
+        <location filename="../plus/countries.py" line="61" />
         <source>British Indian Ocean Territory</source>
         <translation>İngiliz Hint Okyanusu Bölgesi</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="62" />
         <location filename="../TotalLINK/countries.py" line="62" />
+        <location filename="../plus/countries.py" line="62" />
         <source>Brunei Darussalam</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="63" />
         <location filename="../TotalLINK/countries.py" line="63" />
+        <location filename="../plus/countries.py" line="63" />
         <source>Bulgaria</source>
         <translation>Bulgaristan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="64" />
         <location filename="../TotalLINK/countries.py" line="64" />
+        <location filename="../plus/countries.py" line="64" />
         <source>Burkina Faso</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="65" />
         <location filename="../TotalLINK/countries.py" line="65" />
+        <location filename="../plus/countries.py" line="65" />
         <source>Burundi</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="66" />
         <location filename="../TotalLINK/countries.py" line="66" />
+        <location filename="../plus/countries.py" line="66" />
         <source>Cape Verde</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="67" />
         <location filename="../TotalLINK/countries.py" line="67" />
+        <location filename="../plus/countries.py" line="67" />
         <source>Cambodia</source>
         <translation>Kamboçya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="68" />
         <location filename="../TotalLINK/countries.py" line="68" />
+        <location filename="../plus/countries.py" line="68" />
         <source>Cameroon</source>
         <translation>Kamerun</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="69" />
         <location filename="../TotalLINK/countries.py" line="69" />
+        <location filename="../plus/countries.py" line="69" />
         <source>Canada</source>
         <translation>Kanada</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="70" />
         <location filename="../TotalLINK/countries.py" line="70" />
+        <location filename="../plus/countries.py" line="70" />
         <source>Canary Islands</source>
         <translation>Kanarya Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="71" />
         <location filename="../TotalLINK/countries.py" line="71" />
+        <location filename="../plus/countries.py" line="71" />
         <source>Cayman Islands</source>
         <translation>Cayman Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="72" />
         <location filename="../TotalLINK/countries.py" line="72" />
+        <location filename="../plus/countries.py" line="72" />
         <source>Central African Republic</source>
         <translation>Orta Afrika Cumhuriyeti</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="73" />
         <location filename="../TotalLINK/countries.py" line="73" />
+        <location filename="../plus/countries.py" line="73" />
         <source>Chad</source>
         <translation>Çad</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="74" />
         <location filename="../TotalLINK/countries.py" line="74" />
+        <location filename="../plus/countries.py" line="74" />
         <source>Chile</source>
         <translation>Şili</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="75" />
         <location filename="../TotalLINK/countries.py" line="75" />
+        <location filename="../plus/countries.py" line="75" />
         <source>China</source>
         <translation>Çin</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="76" />
         <location filename="../TotalLINK/countries.py" line="76" />
+        <location filename="../plus/countries.py" line="76" />
         <source>Christmas Island</source>
         <translation>Noel Adası</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="77" />
         <location filename="../TotalLINK/countries.py" line="77" />
+        <location filename="../plus/countries.py" line="77" />
         <source>Cocos (Keeling) Islands</source>
         <translation>Cocos (Keeling) Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="78" />
         <location filename="../TotalLINK/countries.py" line="78" />
+        <location filename="../plus/countries.py" line="78" />
         <source>Colombia</source>
         <translation>Kolombiya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="79" />
         <location filename="../TotalLINK/countries.py" line="79" />
+        <location filename="../plus/countries.py" line="79" />
         <source>Comoros</source>
         <translation>Komorlar</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="80" />
         <location filename="../TotalLINK/countries.py" line="80" />
+        <location filename="../plus/countries.py" line="80" />
         <source>Congo, DR</source>
         <translation>Kongo, DR</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="81" />
         <location filename="../TotalLINK/countries.py" line="81" />
+        <location filename="../plus/countries.py" line="81" />
         <source>Congo, Republic</source>
         <translation>Kongo Cumhuriyeti</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="82" />
         <location filename="../TotalLINK/countries.py" line="82" />
+        <location filename="../plus/countries.py" line="82" />
         <source>Cook Islands</source>
         <translation>Cook Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="83" />
         <location filename="../TotalLINK/countries.py" line="83" />
+        <location filename="../plus/countries.py" line="83" />
         <source>Costa Rica</source>
         <translation>Kosta Rika</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="84" />
         <location filename="../TotalLINK/countries.py" line="84" />
+        <location filename="../plus/countries.py" line="84" />
         <source>Croatia</source>
         <translation>Hırvatistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="85" />
         <location filename="../TotalLINK/countries.py" line="85" />
+        <location filename="../plus/countries.py" line="85" />
         <source>Cuba</source>
         <translation>Küba</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="86" />
         <location filename="../TotalLINK/countries.py" line="86" />
+        <location filename="../plus/countries.py" line="86" />
         <source>Cyprus</source>
         <translation>Kıbrıs</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="87" />
         <location filename="../TotalLINK/countries.py" line="87" />
+        <location filename="../plus/countries.py" line="87" />
         <source>Czechia</source>
         <translation>Çekya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="88" />
         <location filename="../TotalLINK/countries.py" line="88" />
+        <location filename="../plus/countries.py" line="88" />
         <source>Denmark</source>
         <translation>Danimarka</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="89" />
         <location filename="../TotalLINK/countries.py" line="89" />
+        <location filename="../plus/countries.py" line="89" />
         <source>Djibouti</source>
         <translation>Cibuti</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="90" />
         <location filename="../TotalLINK/countries.py" line="90" />
+        <location filename="../plus/countries.py" line="90" />
         <source>Dominica</source>
         <translation>Dominika</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="91" />
         <location filename="../TotalLINK/countries.py" line="91" />
+        <location filename="../plus/countries.py" line="91" />
         <source>Dominican Republic</source>
         <translation>Dominik Cumhuriyeti</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="92" />
         <location filename="../TotalLINK/countries.py" line="92" />
+        <location filename="../plus/countries.py" line="92" />
         <source>Ecuador</source>
         <translation>Ekvador</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="93" />
         <location filename="../TotalLINK/countries.py" line="93" />
+        <location filename="../plus/countries.py" line="93" />
         <source>Egypt</source>
         <translation>Mısır</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="94" />
         <location filename="../TotalLINK/countries.py" line="94" />
+        <location filename="../plus/countries.py" line="94" />
         <source>El Salvador</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="95" />
         <location filename="../TotalLINK/countries.py" line="95" />
+        <location filename="../plus/countries.py" line="95" />
         <source>Equatorial Guinea</source>
         <translation>Ekvator Ginesi</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="96" />
         <location filename="../TotalLINK/countries.py" line="96" />
+        <location filename="../plus/countries.py" line="96" />
         <source>Eritrea</source>
         <translation>Eritre</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="97" />
         <location filename="../TotalLINK/countries.py" line="97" />
+        <location filename="../plus/countries.py" line="97" />
         <source>Estonia</source>
         <translation>Estonya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="98" />
         <location filename="../TotalLINK/countries.py" line="98" />
+        <location filename="../plus/countries.py" line="98" />
         <source>Eswatini</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="99" />
         <location filename="../TotalLINK/countries.py" line="99" />
+        <location filename="../plus/countries.py" line="99" />
         <source>Ethiopia</source>
         <translation>Etiyopya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="100" />
         <location filename="../TotalLINK/countries.py" line="100" />
+        <location filename="../plus/countries.py" line="100" />
         <source>Falkland Islands [Malvinas]</source>
         <translation>Falkland Adaları [Malvinas]</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="101" />
         <location filename="../TotalLINK/countries.py" line="101" />
+        <location filename="../plus/countries.py" line="101" />
         <source>Faroe Islands</source>
         <translation>Faroe Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="102" />
         <location filename="../TotalLINK/countries.py" line="102" />
+        <location filename="../plus/countries.py" line="102" />
         <source>Fiji</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="103" />
         <location filename="../TotalLINK/countries.py" line="103" />
+        <location filename="../plus/countries.py" line="103" />
         <source>Flores</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="104" />
         <location filename="../TotalLINK/countries.py" line="104" />
+        <location filename="../plus/countries.py" line="104" />
         <source>Finland</source>
         <translation>Finlandiya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="105" />
         <location filename="../TotalLINK/countries.py" line="105" />
+        <location filename="../plus/countries.py" line="105" />
         <source>France</source>
         <translation>Fransa</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="106" />
         <location filename="../TotalLINK/countries.py" line="106" />
+        <location filename="../plus/countries.py" line="106" />
         <source>French Guiana</source>
         <translation>Fransız Guyanası</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="107" />
         <location filename="../TotalLINK/countries.py" line="107" />
+        <location filename="../plus/countries.py" line="107" />
         <source>French Polynesia</source>
         <translation>Fransız Polinezyası</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="108" />
         <location filename="../TotalLINK/countries.py" line="108" />
+        <location filename="../plus/countries.py" line="108" />
         <source>French Southern Territories</source>
         <translation>Fransız Güney Toprakları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="109" />
         <location filename="../TotalLINK/countries.py" line="109" />
+        <location filename="../plus/countries.py" line="109" />
         <source>Gabon</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="110" />
         <location filename="../TotalLINK/countries.py" line="110" />
+        <location filename="../plus/countries.py" line="110" />
         <source>Gambia</source>
         <translation>Gambiya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="111" />
         <location filename="../TotalLINK/countries.py" line="111" />
+        <location filename="../plus/countries.py" line="111" />
         <source>Georgia</source>
         <translation>Gürcistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="112" />
         <location filename="../TotalLINK/countries.py" line="112" />
+        <location filename="../plus/countries.py" line="112" />
         <source>Germany</source>
         <translation>Almanya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="113" />
         <location filename="../TotalLINK/countries.py" line="113" />
+        <location filename="../plus/countries.py" line="113" />
         <source>Ghana</source>
         <translation>Gana</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="114" />
         <location filename="../TotalLINK/countries.py" line="114" />
+        <location filename="../plus/countries.py" line="114" />
         <source>Gibraltar</source>
         <translation>Cebelitarık</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="115" />
         <location filename="../TotalLINK/countries.py" line="115" />
+        <location filename="../plus/countries.py" line="115" />
         <source>Greece</source>
         <translation>Yunanistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="116" />
         <location filename="../TotalLINK/countries.py" line="116" />
+        <location filename="../plus/countries.py" line="116" />
         <source>Greenland</source>
         <translation>Grönland</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="117" />
         <location filename="../TotalLINK/countries.py" line="117" />
+        <location filename="../plus/countries.py" line="117" />
         <source>Grenada</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="118" />
         <location filename="../TotalLINK/countries.py" line="118" />
+        <location filename="../plus/countries.py" line="118" />
         <source>Guadeloupe</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="119" />
         <location filename="../TotalLINK/countries.py" line="119" />
+        <location filename="../plus/countries.py" line="119" />
         <source>Guam</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="120" />
         <location filename="../TotalLINK/countries.py" line="120" />
+        <location filename="../plus/countries.py" line="120" />
         <source>Guatemala</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="121" />
         <location filename="../TotalLINK/countries.py" line="121" />
+        <location filename="../plus/countries.py" line="121" />
         <source>Guernsey</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="122" />
         <location filename="../TotalLINK/countries.py" line="122" />
+        <location filename="../plus/countries.py" line="122" />
         <source>Guinea</source>
         <translation>Gine</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="123" />
         <location filename="../TotalLINK/countries.py" line="123" />
+        <location filename="../plus/countries.py" line="123" />
         <source>Guinea-Bissau</source>
         <translation>Gine-Bissau</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="124" />
         <location filename="../TotalLINK/countries.py" line="124" />
+        <location filename="../plus/countries.py" line="124" />
         <source>Guyana</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="125" />
         <location filename="../TotalLINK/countries.py" line="125" />
+        <location filename="../plus/countries.py" line="125" />
         <source>Haiti</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="126" />
         <location filename="../TotalLINK/countries.py" line="126" />
+        <location filename="../plus/countries.py" line="126" />
         <source>Hawaii</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="127" />
         <location filename="../TotalLINK/countries.py" line="127" />
+        <location filename="../plus/countries.py" line="127" />
         <source>Heard Island and McDonald Islands</source>
         <translation>Heard Adası ve McDonald Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="128" />
         <location filename="../TotalLINK/countries.py" line="128" />
+        <location filename="../plus/countries.py" line="128" />
         <source>Honduras</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="129" />
         <location filename="../TotalLINK/countries.py" line="129" />
+        <location filename="../plus/countries.py" line="129" />
         <source>Hong Kong</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="130" />
         <location filename="../TotalLINK/countries.py" line="130" />
+        <location filename="../plus/countries.py" line="130" />
         <source>Hungary</source>
         <translation>Macaristan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="131" />
         <location filename="../TotalLINK/countries.py" line="131" />
+        <location filename="../plus/countries.py" line="131" />
         <source>Iceland</source>
         <translation>İzlanda</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="132" />
         <location filename="../TotalLINK/countries.py" line="132" />
+        <location filename="../plus/countries.py" line="132" />
         <source>India</source>
         <translation>Hindistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="133" />
         <location filename="../TotalLINK/countries.py" line="133" />
+        <location filename="../plus/countries.py" line="133" />
         <source>Indonesia</source>
         <translation>Endonezya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="134" />
         <location filename="../TotalLINK/countries.py" line="134" />
+        <location filename="../plus/countries.py" line="134" />
         <source>Iran</source>
         <translation>İran</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="135" />
         <location filename="../TotalLINK/countries.py" line="135" />
+        <location filename="../plus/countries.py" line="135" />
         <source>Iraq</source>
         <translation>Irak</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="136" />
         <location filename="../TotalLINK/countries.py" line="136" />
+        <location filename="../plus/countries.py" line="136" />
         <source>Ireland</source>
         <translation>İrlanda</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="137" />
         <location filename="../TotalLINK/countries.py" line="137" />
+        <location filename="../plus/countries.py" line="137" />
         <source>Isle of Man</source>
         <translation>Man Adası</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="138" />
         <location filename="../TotalLINK/countries.py" line="138" />
+        <location filename="../plus/countries.py" line="138" />
         <source>Israel</source>
         <translation>İsrail</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="139" />
         <location filename="../TotalLINK/countries.py" line="139" />
+        <location filename="../plus/countries.py" line="139" />
         <source>Italy</source>
         <translation>İtalya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="140" />
         <location filename="../TotalLINK/countries.py" line="140" />
+        <location filename="../plus/countries.py" line="140" />
         <source>Ivory Coast</source>
         <translation>Fildişi Sahili</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="141" />
         <location filename="../TotalLINK/countries.py" line="141" />
+        <location filename="../plus/countries.py" line="141" />
         <source>Jamaica</source>
         <translation>Jamaika</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="142" />
         <location filename="../TotalLINK/countries.py" line="142" />
+        <location filename="../plus/countries.py" line="142" />
         <source>Japan</source>
         <translation>Japonya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="143" />
         <location filename="../TotalLINK/countries.py" line="143" />
+        <location filename="../plus/countries.py" line="143" />
         <source>Java</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="144" />
         <location filename="../TotalLINK/countries.py" line="144" />
+        <location filename="../plus/countries.py" line="144" />
         <source>Jersey</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="145" />
         <location filename="../TotalLINK/countries.py" line="145" />
+        <location filename="../plus/countries.py" line="145" />
         <source>Jordan</source>
         <translation>Ürdün</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="146" />
         <location filename="../TotalLINK/countries.py" line="146" />
+        <location filename="../plus/countries.py" line="146" />
         <source>Kazakhstan</source>
         <translation>Kazakistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="147" />
         <location filename="../TotalLINK/countries.py" line="147" />
+        <location filename="../plus/countries.py" line="147" />
         <source>Kenya</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="148" />
         <location filename="../TotalLINK/countries.py" line="148" />
+        <location filename="../plus/countries.py" line="148" />
         <source>Kiribati</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="149" />
         <location filename="../TotalLINK/countries.py" line="149" />
+        <location filename="../plus/countries.py" line="149" />
         <source>North Korea</source>
         <translation>Kuzey Kore</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="150" />
         <location filename="../TotalLINK/countries.py" line="150" />
+        <location filename="../plus/countries.py" line="150" />
         <source>South Korea</source>
         <translation>Güney Kore</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="151" />
         <location filename="../TotalLINK/countries.py" line="151" />
+        <location filename="../plus/countries.py" line="151" />
         <source>Kuwait</source>
         <translation>Kuveyt</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="152" />
         <location filename="../TotalLINK/countries.py" line="152" />
+        <location filename="../plus/countries.py" line="152" />
         <source>Kyrgyzstan</source>
         <translation>Kırgızistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="153" />
         <location filename="../TotalLINK/countries.py" line="153" />
+        <location filename="../plus/countries.py" line="153" />
         <source>Laos</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="154" />
         <location filename="../TotalLINK/countries.py" line="154" />
+        <location filename="../plus/countries.py" line="154" />
         <source>Latvia</source>
         <translation>Letonya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="155" />
         <location filename="../TotalLINK/countries.py" line="155" />
+        <location filename="../plus/countries.py" line="155" />
         <source>Lebanon</source>
         <translation>Lübnan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="156" />
         <location filename="../TotalLINK/countries.py" line="156" />
+        <location filename="../plus/countries.py" line="156" />
         <source>Lesotho</source>
         <translation>Lesoto</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="157" />
         <location filename="../TotalLINK/countries.py" line="157" />
+        <location filename="../plus/countries.py" line="157" />
         <source>Liberia</source>
         <translation>Liberya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="158" />
         <location filename="../TotalLINK/countries.py" line="158" />
+        <location filename="../plus/countries.py" line="158" />
         <source>Libya</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="159" />
         <location filename="../TotalLINK/countries.py" line="159" />
+        <location filename="../plus/countries.py" line="159" />
         <source>Liechtenstein</source>
         <translation>Lihtenştayn</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="160" />
         <location filename="../TotalLINK/countries.py" line="160" />
+        <location filename="../plus/countries.py" line="160" />
         <source>Lithuania</source>
         <translation>Litvanya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="161" />
         <location filename="../TotalLINK/countries.py" line="161" />
+        <location filename="../plus/countries.py" line="161" />
         <source>Luxembourg</source>
         <translation>Lüksemburg</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="162" />
         <location filename="../TotalLINK/countries.py" line="162" />
+        <location filename="../plus/countries.py" line="162" />
         <source>Macao</source>
         <translation>Makao</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="163" />
         <location filename="../TotalLINK/countries.py" line="163" />
+        <location filename="../plus/countries.py" line="163" />
         <source>Macedonia, the former Yugoslav Republic of</source>
         <translation>Makedonya, eski Yugoslav Cumhuriyeti</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="166" />
         <location filename="../TotalLINK/countries.py" line="166" />
+        <location filename="../plus/countries.py" line="166" />
         <source>Madagascar</source>
         <translation>Madagaskar</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="167" />
         <location filename="../TotalLINK/countries.py" line="167" />
+        <location filename="../plus/countries.py" line="167" />
         <source>Malawi</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="168" />
         <location filename="../TotalLINK/countries.py" line="168" />
+        <location filename="../plus/countries.py" line="168" />
         <source>Malaysia</source>
         <translation>Malezya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="169" />
         <location filename="../TotalLINK/countries.py" line="169" />
+        <location filename="../plus/countries.py" line="169" />
         <source>Maldives</source>
         <translation>Maldivler</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="170" />
         <location filename="../TotalLINK/countries.py" line="170" />
+        <location filename="../plus/countries.py" line="170" />
         <source>Mali</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="171" />
         <location filename="../TotalLINK/countries.py" line="171" />
+        <location filename="../plus/countries.py" line="171" />
         <source>Malta</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="172" />
         <location filename="../TotalLINK/countries.py" line="172" />
+        <location filename="../plus/countries.py" line="172" />
         <source>Marshall Islands</source>
         <translation>Marşal Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="173" />
         <location filename="../TotalLINK/countries.py" line="173" />
+        <location filename="../plus/countries.py" line="173" />
         <source>Martinique</source>
         <translation>Martinik</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="174" />
         <location filename="../TotalLINK/countries.py" line="174" />
+        <location filename="../plus/countries.py" line="174" />
         <source>Mauritania</source>
         <translation>Moritanya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="175" />
         <location filename="../TotalLINK/countries.py" line="175" />
+        <location filename="../plus/countries.py" line="175" />
         <source>Mauritius</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="176" />
         <location filename="../TotalLINK/countries.py" line="176" />
+        <location filename="../plus/countries.py" line="176" />
         <source>Mayotte</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="177" />
         <location filename="../TotalLINK/countries.py" line="177" />
+        <location filename="../plus/countries.py" line="177" />
         <source>Mexico</source>
         <translation>Meksika</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="178" />
         <location filename="../TotalLINK/countries.py" line="178" />
+        <location filename="../plus/countries.py" line="178" />
         <source>Micronesia</source>
         <translation>Mikronezya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="179" />
         <location filename="../TotalLINK/countries.py" line="179" />
+        <location filename="../plus/countries.py" line="179" />
         <source>Micronesia, Federated States of</source>
         <translation>Mikronezya Federal Devletleri</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="180" />
         <location filename="../TotalLINK/countries.py" line="180" />
+        <location filename="../plus/countries.py" line="180" />
         <source>Moldova</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="181" />
         <location filename="../TotalLINK/countries.py" line="181" />
+        <location filename="../plus/countries.py" line="181" />
         <source>Moldova, the Republic of</source>
         <translation>Moldova Cumhuriyeti</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="182" />
         <location filename="../TotalLINK/countries.py" line="182" />
+        <location filename="../plus/countries.py" line="182" />
         <source>Monaco</source>
         <translation>Monako</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="183" />
         <location filename="../TotalLINK/countries.py" line="183" />
+        <location filename="../plus/countries.py" line="183" />
         <source>Mongolia</source>
         <translation>Moğolistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="184" />
         <location filename="../TotalLINK/countries.py" line="184" />
+        <location filename="../plus/countries.py" line="184" />
         <source>Montenegro</source>
         <translation>Karadağ</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="185" />
         <location filename="../TotalLINK/countries.py" line="185" />
+        <location filename="../plus/countries.py" line="185" />
         <source>Montserrat</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="186" />
         <location filename="../TotalLINK/countries.py" line="186" />
+        <location filename="../plus/countries.py" line="186" />
         <source>North Macedonia</source>
         <translation>Kuzey Makedonya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="187" />
         <location filename="../TotalLINK/countries.py" line="187" />
+        <location filename="../plus/countries.py" line="187" />
         <source>Morocco</source>
         <translation>Fas</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="188" />
         <location filename="../TotalLINK/countries.py" line="188" />
+        <location filename="../plus/countries.py" line="188" />
         <source>Mozambique</source>
         <translation>Mozambik</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="189" />
         <location filename="../TotalLINK/countries.py" line="189" />
+        <location filename="../plus/countries.py" line="189" />
         <source>Myanmar</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="190" />
         <location filename="../TotalLINK/countries.py" line="190" />
+        <location filename="../plus/countries.py" line="190" />
         <source>Namibia</source>
         <translation>Namibya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="191" />
         <location filename="../TotalLINK/countries.py" line="191" />
+        <location filename="../plus/countries.py" line="191" />
         <source>Nauru</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="192" />
         <location filename="../TotalLINK/countries.py" line="192" />
+        <location filename="../plus/countries.py" line="192" />
         <source>Nepal</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="193" />
         <location filename="../TotalLINK/countries.py" line="193" />
+        <location filename="../plus/countries.py" line="193" />
         <source>Netherlands</source>
         <translation>Hollanda</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="194" />
         <location filename="../TotalLINK/countries.py" line="194" />
+        <location filename="../plus/countries.py" line="194" />
         <source>New Caledonia</source>
         <translation>Yeni Kaledonya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="195" />
         <location filename="../TotalLINK/countries.py" line="195" />
+        <location filename="../plus/countries.py" line="195" />
         <source>New Zealand</source>
         <translation>Yeni Zelanda</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="196" />
         <location filename="../TotalLINK/countries.py" line="196" />
+        <location filename="../plus/countries.py" line="196" />
         <source>Nicaragua</source>
         <translation>Nikaragua</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="197" />
         <location filename="../TotalLINK/countries.py" line="197" />
+        <location filename="../plus/countries.py" line="197" />
         <source>Niger</source>
         <translation>Nijer</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="198" />
         <location filename="../TotalLINK/countries.py" line="198" />
+        <location filename="../plus/countries.py" line="198" />
         <source>Nigeria</source>
         <translation>Nijerya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="199" />
         <location filename="../TotalLINK/countries.py" line="199" />
+        <location filename="../plus/countries.py" line="199" />
         <source>Niue</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="200" />
         <location filename="../TotalLINK/countries.py" line="200" />
+        <location filename="../plus/countries.py" line="200" />
         <source>Norfolk Island</source>
         <translation>Norfolk Adası</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="201" />
         <location filename="../TotalLINK/countries.py" line="201" />
+        <location filename="../plus/countries.py" line="201" />
         <source>Northern Mariana Islands</source>
         <translation>Kuzey Mariana Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="202" />
         <location filename="../TotalLINK/countries.py" line="202" />
+        <location filename="../plus/countries.py" line="202" />
         <source>Norway</source>
         <translation>Norveç</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="203" />
         <location filename="../TotalLINK/countries.py" line="203" />
+        <location filename="../plus/countries.py" line="203" />
         <source>Oman</source>
         <translation>Umman</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="204" />
         <location filename="../TotalLINK/countries.py" line="204" />
+        <location filename="../plus/countries.py" line="204" />
         <source>Pakistan</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="205" />
         <location filename="../TotalLINK/countries.py" line="205" />
+        <location filename="../plus/countries.py" line="205" />
         <source>Palau</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="206" />
         <location filename="../TotalLINK/countries.py" line="206" />
+        <location filename="../plus/countries.py" line="206" />
         <source>Palestine</source>
         <translation>Filistin</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="207" />
         <location filename="../TotalLINK/countries.py" line="207" />
+        <location filename="../plus/countries.py" line="207" />
         <source>Palestine, State of</source>
         <translation>Filistin Devleti</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="208" />
         <location filename="../TotalLINK/countries.py" line="208" />
+        <location filename="../plus/countries.py" line="208" />
         <source>Panama</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="209" />
         <location filename="../TotalLINK/countries.py" line="209" />
+        <location filename="../plus/countries.py" line="209" />
         <source>Papua</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="210" />
         <location filename="../TotalLINK/countries.py" line="210" />
+        <location filename="../plus/countries.py" line="210" />
         <source>PNG</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="211" />
         <location filename="../TotalLINK/countries.py" line="211" />
+        <location filename="../plus/countries.py" line="211" />
         <source>Paraguay</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="212" />
         <location filename="../TotalLINK/countries.py" line="212" />
+        <location filename="../plus/countries.py" line="212" />
         <source>Peru</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="213" />
         <location filename="../TotalLINK/countries.py" line="213" />
+        <location filename="../plus/countries.py" line="213" />
         <source>Philippines</source>
         <translation>Filipinler</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="214" />
         <location filename="../TotalLINK/countries.py" line="214" />
+        <location filename="../plus/countries.py" line="214" />
         <source>Pitcairn</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="215" />
         <location filename="../TotalLINK/countries.py" line="215" />
+        <location filename="../plus/countries.py" line="215" />
         <source>Poland</source>
         <translation>Polonya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="216" />
         <location filename="../TotalLINK/countries.py" line="216" />
+        <location filename="../plus/countries.py" line="216" />
         <source>Portugal</source>
         <translation>Portekiz</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="217" />
         <location filename="../TotalLINK/countries.py" line="217" />
+        <location filename="../plus/countries.py" line="217" />
         <source>Puerto Rico</source>
         <translation>Porto Riko</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="218" />
         <location filename="../TotalLINK/countries.py" line="218" />
+        <location filename="../plus/countries.py" line="218" />
         <source>Qatar</source>
         <translation>Katar</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="219" />
         <location filename="../TotalLINK/countries.py" line="219" />
+        <location filename="../plus/countries.py" line="219" />
         <source>Romania</source>
         <translation>Romanya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="220" />
         <location filename="../TotalLINK/countries.py" line="220" />
+        <location filename="../plus/countries.py" line="220" />
         <source>Russian Federation</source>
         <translation>Rusya Federasyonu</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="221" />
         <location filename="../TotalLINK/countries.py" line="221" />
+        <location filename="../plus/countries.py" line="221" />
         <source>Rwanda</source>
         <translation>Ruanda</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="222" />
         <location filename="../TotalLINK/countries.py" line="222" />
+        <location filename="../plus/countries.py" line="222" />
         <source>St. Helena</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="223" />
         <location filename="../TotalLINK/countries.py" line="223" />
+        <location filename="../plus/countries.py" line="223" />
         <source>Saint Kitts and Nevis</source>
         <translation>Saint Kitts ve Nevis</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="224" />
         <location filename="../TotalLINK/countries.py" line="224" />
+        <location filename="../plus/countries.py" line="224" />
         <source>St. Lucia</source>
         <translation>Aziz Lucia</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="225" />
         <location filename="../TotalLINK/countries.py" line="225" />
+        <location filename="../plus/countries.py" line="225" />
         <source>Saint Lucia</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="226" />
         <location filename="../TotalLINK/countries.py" line="226" />
+        <location filename="../plus/countries.py" line="226" />
         <source>Saint Martin (French part)</source>
         <translation>Saint Martin (Fransız kısmı)</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="227" />
         <location filename="../TotalLINK/countries.py" line="227" />
+        <location filename="../plus/countries.py" line="227" />
         <source>Saint Pierre and Miquelon</source>
         <translation>Saint Pierre ve Miquelon</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="228" />
         <location filename="../TotalLINK/countries.py" line="228" />
+        <location filename="../plus/countries.py" line="228" />
         <source>St. Vincent</source>
         <translation>Vincent Sokağı</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="229" />
         <location filename="../TotalLINK/countries.py" line="229" />
+        <location filename="../plus/countries.py" line="229" />
         <source>Samoa</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="230" />
         <location filename="../TotalLINK/countries.py" line="230" />
+        <location filename="../plus/countries.py" line="230" />
         <source>San Marino</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="231" />
         <location filename="../TotalLINK/countries.py" line="231" />
+        <location filename="../plus/countries.py" line="231" />
         <source>Saudi Arabia</source>
         <translation>Suudi Arabistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="232" />
         <location filename="../TotalLINK/countries.py" line="232" />
+        <location filename="../plus/countries.py" line="232" />
         <source>Senegal</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="233" />
         <location filename="../TotalLINK/countries.py" line="233" />
+        <location filename="../plus/countries.py" line="233" />
         <source>Serbia</source>
         <translation>Sırbistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="234" />
         <location filename="../TotalLINK/countries.py" line="234" />
+        <location filename="../plus/countries.py" line="234" />
         <source>Seychelles</source>
         <translation>Seyşeller</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="235" />
         <location filename="../TotalLINK/countries.py" line="235" />
+        <location filename="../plus/countries.py" line="235" />
         <source>Sierra Leone</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="236" />
         <location filename="../TotalLINK/countries.py" line="236" />
+        <location filename="../plus/countries.py" line="236" />
         <source>Singapore</source>
         <translation>Singapur</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="237" />
         <location filename="../TotalLINK/countries.py" line="237" />
+        <location filename="../plus/countries.py" line="237" />
         <source>Sint Maarten (Dutch part)</source>
         <translation>Sint Maarten (Hollanda kısmı)</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="238" />
         <location filename="../TotalLINK/countries.py" line="238" />
+        <location filename="../plus/countries.py" line="238" />
         <source>Slovakia</source>
         <translation>Slovakya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="239" />
         <location filename="../TotalLINK/countries.py" line="239" />
+        <location filename="../plus/countries.py" line="239" />
         <source>Slovenia</source>
         <translation>Slovenya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="240" />
         <location filename="../TotalLINK/countries.py" line="240" />
+        <location filename="../plus/countries.py" line="240" />
         <source>Solomon Islands</source>
         <translation>Solomon Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="241" />
         <location filename="../TotalLINK/countries.py" line="241" />
+        <location filename="../plus/countries.py" line="241" />
         <source>Somalia</source>
         <translation>Somali</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="242" />
         <location filename="../TotalLINK/countries.py" line="242" />
+        <location filename="../plus/countries.py" line="242" />
         <source>South Africa</source>
         <translation>Güney Afrika</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="243" />
         <location filename="../TotalLINK/countries.py" line="243" />
+        <location filename="../plus/countries.py" line="243" />
         <source>South Georgia and the South Sandwich Islands</source>
         <translation>Güney Georgia ve Güney Sandwich Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="246" />
         <location filename="../TotalLINK/countries.py" line="246" />
+        <location filename="../plus/countries.py" line="246" />
         <source>South Sudan</source>
         <translation>Güney Sudan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="247" />
         <location filename="../TotalLINK/countries.py" line="247" />
+        <location filename="../plus/countries.py" line="247" />
         <source>Spain</source>
         <translation>ispanya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="248" />
         <location filename="../TotalLINK/countries.py" line="248" />
+        <location filename="../plus/countries.py" line="248" />
         <source>Sri Lanka</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="249" />
         <location filename="../TotalLINK/countries.py" line="249" />
+        <location filename="../plus/countries.py" line="249" />
         <source>Sudan</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="250" />
         <location filename="../TotalLINK/countries.py" line="250" />
+        <location filename="../plus/countries.py" line="250" />
         <source>Sulawesi</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="251" />
         <location filename="../TotalLINK/countries.py" line="251" />
+        <location filename="../plus/countries.py" line="251" />
         <source>Sumatra</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="252" />
         <location filename="../TotalLINK/countries.py" line="252" />
+        <location filename="../plus/countries.py" line="252" />
         <source>Sumbawa</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="253" />
         <location filename="../TotalLINK/countries.py" line="253" />
+        <location filename="../plus/countries.py" line="253" />
         <source>Suriname</source>
         <translation>Surinam</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="254" />
         <location filename="../TotalLINK/countries.py" line="254" />
+        <location filename="../plus/countries.py" line="254" />
         <source>Svalbard and Jan Mayen</source>
         <translation>Svalbard ve Jan Mayen</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="255" />
         <location filename="../TotalLINK/countries.py" line="255" />
+        <location filename="../plus/countries.py" line="255" />
         <source>Sweden</source>
         <translation>İsveç</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="256" />
         <location filename="../TotalLINK/countries.py" line="256" />
+        <location filename="../plus/countries.py" line="256" />
         <source>Switzerland</source>
         <translation>İsviçre</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="257" />
         <location filename="../TotalLINK/countries.py" line="257" />
+        <location filename="../plus/countries.py" line="257" />
         <source>Syrian Arab Republic</source>
         <translation>Suriye Arap Cumhuriyeti</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="258" />
         <location filename="../TotalLINK/countries.py" line="258" />
+        <location filename="../plus/countries.py" line="258" />
         <source>Taiwan</source>
         <translation>Tayvan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="259" />
         <location filename="../TotalLINK/countries.py" line="259" />
+        <location filename="../plus/countries.py" line="259" />
         <source>Taiwan (Province of China)</source>
         <translation>Tayvan, Çin'in bölgesi)</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="260" />
         <location filename="../TotalLINK/countries.py" line="260" />
+        <location filename="../plus/countries.py" line="260" />
         <source>Tajikistan</source>
         <translation>Tacikistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="261" />
         <location filename="../TotalLINK/countries.py" line="261" />
+        <location filename="../plus/countries.py" line="261" />
         <source>Tanzania</source>
         <translation>Tanzanya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="262" />
         <location filename="../TotalLINK/countries.py" line="262" />
+        <location filename="../plus/countries.py" line="262" />
         <source>Thailand</source>
         <translation>Tayland</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="263" />
         <location filename="../TotalLINK/countries.py" line="263" />
+        <location filename="../plus/countries.py" line="263" />
         <source>Timor, East</source>
         <translation>Timor, Doğu</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="264" />
         <location filename="../TotalLINK/countries.py" line="264" />
+        <location filename="../plus/countries.py" line="264" />
         <source>Togo</source>
         <translation>Gitmek</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="265" />
         <location filename="../TotalLINK/countries.py" line="265" />
+        <location filename="../plus/countries.py" line="265" />
         <source>Tokelau</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="266" />
         <location filename="../TotalLINK/countries.py" line="266" />
+        <location filename="../plus/countries.py" line="266" />
         <source>Tonga</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="267" />
         <location filename="../TotalLINK/countries.py" line="267" />
+        <location filename="../plus/countries.py" line="267" />
         <source>Trinidad and Tobago</source>
         <translation>Trinidad ve Tobago</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="268" />
         <location filename="../TotalLINK/countries.py" line="268" />
+        <location filename="../plus/countries.py" line="268" />
         <source>Trinidad &amp; Tobago</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="269" />
         <location filename="../TotalLINK/countries.py" line="269" />
+        <location filename="../plus/countries.py" line="269" />
         <source>Tunisia</source>
         <translation>Tunus</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="270" />
         <location filename="../TotalLINK/countries.py" line="270" />
+        <location filename="../plus/countries.py" line="270" />
         <source>Turkey</source>
         <translation>Türkiye</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="271" />
         <location filename="../TotalLINK/countries.py" line="271" />
+        <location filename="../plus/countries.py" line="271" />
         <source>Turkmenistan</source>
         <translation>Türkmenistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="272" />
         <location filename="../TotalLINK/countries.py" line="272" />
+        <location filename="../plus/countries.py" line="272" />
         <source>Turks and Caicos Islands</source>
         <translation>Turks ve Caicos Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="273" />
         <location filename="../TotalLINK/countries.py" line="273" />
+        <location filename="../plus/countries.py" line="273" />
         <source>Tuvalu</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="274" />
         <location filename="../TotalLINK/countries.py" line="274" />
+        <location filename="../plus/countries.py" line="274" />
         <source>Uganda</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="275" />
         <location filename="../TotalLINK/countries.py" line="275" />
+        <location filename="../plus/countries.py" line="275" />
         <source>Ukraine</source>
         <translation>Ukrayna</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="276" />
         <location filename="../TotalLINK/countries.py" line="276" />
+        <location filename="../plus/countries.py" line="276" />
         <source>United Arab Emirates</source>
         <translation>Birleşik Arap Emirlikleri</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="277" />
         <location filename="../TotalLINK/countries.py" line="277" />
+        <location filename="../plus/countries.py" line="277" />
         <source>UK</source>
         <translation>Birleşik Krallık</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="278" />
         <location filename="../TotalLINK/countries.py" line="278" />
+        <location filename="../plus/countries.py" line="278" />
         <source>United Kingdom of Great Britain and Northern Ireland</source>
         <translation>Büyük Britanya ve Kuzey İrlanda Birleşik Krallığı</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="281" />
         <location filename="../TotalLINK/countries.py" line="281" />
+        <location filename="../plus/countries.py" line="281" />
         <source>United States Minor Outlying Islands</source>
         <translation>Amerika Birleşik Devletleri Küçük Dış Adaları</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="284" />
         <location filename="../TotalLINK/countries.py" line="284" />
+        <location filename="../plus/countries.py" line="284" />
         <source>USA</source>
         <translation>Amerika Birleşik Devletleri</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="285" />
         <location filename="../TotalLINK/countries.py" line="285" />
+        <location filename="../plus/countries.py" line="285" />
         <source>United States of America</source>
         <translation>Amerika Birleşik Devletleri</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="286" />
         <location filename="../TotalLINK/countries.py" line="286" />
+        <location filename="../plus/countries.py" line="286" />
         <source>Uruguay</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="287" />
         <location filename="../TotalLINK/countries.py" line="287" />
+        <location filename="../plus/countries.py" line="287" />
         <source>Uzbekistan</source>
         <translation>Özbekistan</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="288" />
         <location filename="../TotalLINK/countries.py" line="288" />
+        <location filename="../plus/countries.py" line="288" />
         <source>Vanuatu</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="289" />
         <location filename="../TotalLINK/countries.py" line="289" />
+        <location filename="../plus/countries.py" line="289" />
         <source>Venezuela</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="290" />
         <location filename="../TotalLINK/countries.py" line="290" />
+        <location filename="../plus/countries.py" line="290" />
         <source>Vietnam</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="291" />
         <location filename="../TotalLINK/countries.py" line="291" />
+        <location filename="../plus/countries.py" line="291" />
         <source>Virgin Islands (British)</source>
         <translation>Virgin Adaları (İngiliz)</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="292" />
         <location filename="../TotalLINK/countries.py" line="292" />
+        <location filename="../plus/countries.py" line="292" />
         <source>Virgin Islands (U.S.)</source>
         <translation>Virgin Adaları (ABD)</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="293" />
         <location filename="../TotalLINK/countries.py" line="293" />
+        <location filename="../plus/countries.py" line="293" />
         <source>Wallis and Futuna</source>
         <translation>Wallis ve Futuna</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="294" />
         <location filename="../TotalLINK/countries.py" line="294" />
+        <location filename="../plus/countries.py" line="294" />
         <source>Western Sahara</source>
         <translation>Batı Sahra</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="295" />
         <location filename="../TotalLINK/countries.py" line="295" />
+        <location filename="../plus/countries.py" line="295" />
         <source>Yemen</source>
         <translation />
     </message>
     <message>
-        <location filename="../plus/countries.py" line="296" />
         <location filename="../TotalLINK/countries.py" line="296" />
+        <location filename="../plus/countries.py" line="296" />
         <source>Zambia</source>
         <translation>Zambiya</translation>
     </message>
     <message>
-        <location filename="../plus/countries.py" line="297" />
         <location filename="../TotalLINK/countries.py" line="297" />
+        <location filename="../plus/countries.py" line="297" />
         <source>Zimbabwe</source>
         <translation>Zimbabve</translation>
     </message>
@@ -4211,6 +4256,8 @@ END</source>
         <location filename="../artisanlib/canvas.py" line="4228" />
         <location filename="../artisanlib/canvas.py" line="3798" />
         <location filename="../artisanlib/canvas.py" line="3351" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3685" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2660" />
         <location filename="../artisanlib/devices.py" line="4988" />
         <location filename="../artisanlib/devices.py" line="3447" />
         <location filename="../artisanlib/devices.py" line="3347" />
@@ -4320,8 +4367,8 @@ END</source>
         <location filename="../artisanlib/pid_control.py" line="802" />
         <location filename="../artisanlib/pid_control.py" line="778" />
         <location filename="../artisanlib/pid_control.py" line="710" />
-        <location filename="../artisanlib/roast_properties.py" line="3685" />
-        <location filename="../artisanlib/roast_properties.py" line="2660" />
+        <location filename="../artisanlib/roast_properties.py" line="3876" />
+        <location filename="../artisanlib/roast_properties.py" line="2805" />
         <location filename="../artisanlib/ports.py" line="1938" />
         <location filename="../artisanlib/ports.py" line="1892" />
         <location filename="../artisanlib/events.py" line="3789" />
@@ -4565,7 +4612,8 @@ END</source>
         <translation>MQTT abonelik hatası: {0}</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="5413" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="5413" />
+        <location filename="../artisanlib/roast_properties.py" line="5673" />
         <source>Unable to move CHARGE to a value that does not exist</source>
         <translation>numarasız şarj olmaz</translation>
     </message>
@@ -4944,29 +4992,34 @@ END</source>
         <translation>Profil Arka Planı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="79" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="79" />
+        <location filename="../artisanlib/roast_properties.py" line="124" />
         <source>Volume Calculator</source>
         <translation>Hacim Hesaplayıcı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="561" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="561" />
+        <location filename="../artisanlib/roast_properties.py" line="610" />
         <source>Roast Properties</source>
         <translation>Kavurma Özellikleri</translation>
     </message>
     <message>
-        <location filename="../plus/blend.py" line="130" />
         <location filename="../TotalLINK/blend.py" line="130" />
-        <location filename="../artisanlib/roast_properties.py" line="1798" />
+        <location filename="../plus/blend.py" line="130" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1798" />
+        <location filename="../artisanlib/roast_properties.py" line="1917" />
         <source>Custom Blend</source>
         <translation>Özel Harman</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4252" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4252" />
+        <location filename="../artisanlib/roast_properties.py" line="4465" />
         <source>Energy Help</source>
         <translation>Enerji Yardımı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="5957" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="5957" />
+        <location filename="../artisanlib/roast_properties.py" line="6295" />
         <source>Set Measure from Profile</source>
         <translation>Ölçümü Profilden Ayarla</translation>
     </message>
@@ -5259,14 +5312,16 @@ END</source>
     <message>
         <location filename="../artisanlib/canvas.py" line="16357" />
         <location filename="../artisanlib/canvas.py" line="16295" />
-        <location filename="../artisanlib/roast_properties.py" line="2954" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2954" />
+        <location filename="../artisanlib/roast_properties.py" line="3097" />
         <source>Energy</source>
         <translation>Enerji</translation>
     </message>
     <message>
         <location filename="../artisanlib/canvas.py" line="16358" />
         <location filename="../artisanlib/canvas.py" line="16296" />
-        <location filename="../artisanlib/roast_properties.py" line="2955" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2955" />
+        <location filename="../artisanlib/roast_properties.py" line="3098" />
         <source>CO2</source>
         <translation />
     </message>
@@ -12113,6 +12168,8 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <location filename="../artisanlib/canvas.py" line="4181" />
         <location filename="../artisanlib/canvas.py" line="1329" />
         <location filename="../artisanlib/transposer.py" line="1197" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4507" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="658" />
         <location filename="../artisanlib/devices.py" line="1171" />
         <location filename="../artisanlib/alarms.py" line="915" />
         <location filename="../artisanlib/alarms.py" line="849" />
@@ -12121,8 +12178,8 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <location filename="../artisanlib/designer.py" line="628" />
         <location filename="../artisanlib/designer.py" line="341" />
         <location filename="../artisanlib/designer.py" line="44" />
-        <location filename="../artisanlib/roast_properties.py" line="4507" />
-        <location filename="../artisanlib/roast_properties.py" line="658" />
+        <location filename="../artisanlib/roast_properties.py" line="4737" />
+        <location filename="../artisanlib/roast_properties.py" line="707" />
         <location filename="../artisanlib/background.py" line="1060" />
         <location filename="../artisanlib/background.py" line="96" />
         <location filename="../artisanlib/ports.py" line="1368" />
@@ -12217,6 +12274,8 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <location filename="../artisanlib/canvas.py" line="1335" />
         <location filename="../artisanlib/transposer.py" line="1201" />
         <location filename="../artisanlib/transposer.py" line="1130" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4525" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="741" />
         <location filename="../artisanlib/devices.py" line="1177" />
         <location filename="../artisanlib/alarms.py" line="912" />
         <location filename="../artisanlib/alarms.py" line="856" />
@@ -12224,8 +12283,8 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <location filename="../artisanlib/designer.py" line="634" />
         <location filename="../artisanlib/designer.py" line="347" />
         <location filename="../artisanlib/designer.py" line="57" />
-        <location filename="../artisanlib/roast_properties.py" line="4525" />
-        <location filename="../artisanlib/roast_properties.py" line="741" />
+        <location filename="../artisanlib/roast_properties.py" line="4755" />
+        <location filename="../artisanlib/roast_properties.py" line="790" />
         <location filename="../artisanlib/background.py" line="1078" />
         <location filename="../artisanlib/background.py" line="102" />
         <location filename="../artisanlib/ports.py" line="1370" />
@@ -12256,11 +12315,12 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <translation>Aç</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="831" />
         <location filename="../artisanlib/main.py" line="23324" />
         <location filename="../artisanlib/main.py" line="21980" />
         <location filename="../artisanlib/main.py" line="6285" />
         <location filename="../artisanlib/statistics.py" line="196" />
-        <location filename="../artisanlib/roast_properties.py" line="831" />
+        <location filename="../artisanlib/roast_properties.py" line="885" />
         <location filename="../artisanlib/comparator.py" line="1564" />
         <source>Title</source>
         <translation>Başlık</translation>
@@ -12463,11 +12523,14 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <translation />
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="3015" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3014" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2993" />
         <location filename="../artisanlib/main.py" line="890" />
         <location filename="../artisanlib/alarms.py" line="139" />
-        <location filename="../artisanlib/roast_properties.py" line="3015" />
-        <location filename="../artisanlib/roast_properties.py" line="3014" />
-        <location filename="../artisanlib/roast_properties.py" line="2993" />
+        <location filename="../artisanlib/roast_properties.py" line="3166" />
+        <location filename="../artisanlib/roast_properties.py" line="3165" />
+        <location filename="../artisanlib/roast_properties.py" line="3138" />
         <location filename="../artisanlib/pid_dialogs.py" line="993" />
         <location filename="../artisanlib/pid_dialogs.py" line="804" />
         <source>Label</source>
@@ -12478,6 +12541,8 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <location filename="../artisanlib/canvas.py" line="4182" />
         <location filename="../artisanlib/transposer.py" line="1198" />
         <location filename="../artisanlib/transposer.py" line="1127" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4510" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="669" />
         <location filename="../artisanlib/alarms.py" line="907" />
         <location filename="../artisanlib/alarms.py" line="851" />
         <location filename="../artisanlib/statistics.py" line="99" />
@@ -12487,8 +12552,8 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <location filename="../artisanlib/designer.py" line="629" />
         <location filename="../artisanlib/designer.py" line="342" />
         <location filename="../artisanlib/designer.py" line="47" />
-        <location filename="../artisanlib/roast_properties.py" line="4510" />
-        <location filename="../artisanlib/roast_properties.py" line="669" />
+        <location filename="../artisanlib/roast_properties.py" line="4740" />
+        <location filename="../artisanlib/roast_properties.py" line="718" />
         <location filename="../artisanlib/background.py" line="1063" />
         <location filename="../artisanlib/events.py" line="1303" />
         <location filename="../artisanlib/pid_dialogs.py" line="842" />
@@ -12500,6 +12565,8 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <location filename="../artisanlib/canvas.py" line="4183" />
         <location filename="../artisanlib/transposer.py" line="1199" />
         <location filename="../artisanlib/transposer.py" line="1128" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4513" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="683" />
         <location filename="../artisanlib/alarms.py" line="908" />
         <location filename="../artisanlib/alarms.py" line="852" />
         <location filename="../artisanlib/statistics.py" line="100" />
@@ -12507,8 +12574,8 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <location filename="../artisanlib/designer.py" line="630" />
         <location filename="../artisanlib/designer.py" line="343" />
         <location filename="../artisanlib/designer.py" line="49" />
-        <location filename="../artisanlib/roast_properties.py" line="4513" />
-        <location filename="../artisanlib/roast_properties.py" line="683" />
+        <location filename="../artisanlib/roast_properties.py" line="4743" />
+        <location filename="../artisanlib/roast_properties.py" line="732" />
         <location filename="../artisanlib/background.py" line="1066" />
         <location filename="../artisanlib/events.py" line="1316" />
         <location filename="../artisanlib/pid_dialogs.py" line="843" />
@@ -12518,14 +12585,16 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
     <message>
         <location filename="../artisanlib/canvas.py" line="18816" />
         <location filename="../artisanlib/canvas.py" line="4184" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4516" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="698" />
         <location filename="../artisanlib/alarms.py" line="909" />
         <location filename="../artisanlib/alarms.py" line="853" />
         <location filename="../artisanlib/curves.py" line="2128" />
         <location filename="../artisanlib/designer.py" line="631" />
         <location filename="../artisanlib/designer.py" line="344" />
         <location filename="../artisanlib/designer.py" line="51" />
-        <location filename="../artisanlib/roast_properties.py" line="4516" />
-        <location filename="../artisanlib/roast_properties.py" line="698" />
+        <location filename="../artisanlib/roast_properties.py" line="4746" />
+        <location filename="../artisanlib/roast_properties.py" line="747" />
         <location filename="../artisanlib/background.py" line="1069" />
         <location filename="../artisanlib/events.py" line="1329" />
         <location filename="../artisanlib/pid_dialogs.py" line="844" />
@@ -12537,14 +12606,16 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <location filename="../artisanlib/canvas.py" line="4185" />
         <location filename="../artisanlib/transposer.py" line="1200" />
         <location filename="../artisanlib/transposer.py" line="1129" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4519" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="712" />
         <location filename="../artisanlib/alarms.py" line="910" />
         <location filename="../artisanlib/alarms.py" line="854" />
         <location filename="../artisanlib/curves.py" line="2129" />
         <location filename="../artisanlib/designer.py" line="632" />
         <location filename="../artisanlib/designer.py" line="345" />
         <location filename="../artisanlib/designer.py" line="53" />
-        <location filename="../artisanlib/roast_properties.py" line="4519" />
-        <location filename="../artisanlib/roast_properties.py" line="712" />
+        <location filename="../artisanlib/roast_properties.py" line="4749" />
+        <location filename="../artisanlib/roast_properties.py" line="761" />
         <location filename="../artisanlib/background.py" line="1072" />
         <location filename="../artisanlib/events.py" line="1342" />
         <location filename="../artisanlib/pid_dialogs.py" line="845" />
@@ -12554,14 +12625,16 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
     <message>
         <location filename="../artisanlib/canvas.py" line="18822" />
         <location filename="../artisanlib/canvas.py" line="4186" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4522" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="726" />
         <location filename="../artisanlib/alarms.py" line="911" />
         <location filename="../artisanlib/alarms.py" line="855" />
         <location filename="../artisanlib/curves.py" line="2130" />
         <location filename="../artisanlib/designer.py" line="633" />
         <location filename="../artisanlib/designer.py" line="346" />
         <location filename="../artisanlib/designer.py" line="55" />
-        <location filename="../artisanlib/roast_properties.py" line="4522" />
-        <location filename="../artisanlib/roast_properties.py" line="726" />
+        <location filename="../artisanlib/roast_properties.py" line="4752" />
+        <location filename="../artisanlib/roast_properties.py" line="775" />
         <location filename="../artisanlib/background.py" line="1075" />
         <location filename="../artisanlib/events.py" line="1355" />
         <location filename="../artisanlib/pid_dialogs.py" line="846" />
@@ -12764,9 +12837,10 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <translation>İşaretleyiciler</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2113" />
         <location filename="../TotalLINK/schedule.py" line="2105" />
-        <location filename="../artisanlib/roast_properties.py" line="1074" />
+        <location filename="../plus/schedule.py" line="2113" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1074" />
+        <location filename="../artisanlib/roast_properties.py" line="1168" />
         <location filename="../artisanlib/events.py" line="449" />
         <source>Color</source>
         <translation>Renk</translation>
@@ -12838,10 +12912,11 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <translation>akım:</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="3001" />
         <location filename="../artisanlib/main.py" line="6361" />
         <location filename="../artisanlib/main.py" line="6355" />
         <location filename="../artisanlib/main.py" line="6352" />
-        <location filename="../artisanlib/roast_properties.py" line="3001" />
+        <location filename="../artisanlib/roast_properties.py" line="3148" />
         <location filename="../artisanlib/ports.py" line="1428" />
         <location filename="../artisanlib/events.py" line="1016" />
         <location filename="../artisanlib/events.py" line="732" />
@@ -12884,17 +12959,23 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <translation>Sıcaklık</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3017" />
-        <location filename="../artisanlib/roast_properties.py" line="3016" />
-        <location filename="../artisanlib/roast_properties.py" line="2997" />
-        <location filename="../artisanlib/roast_properties.py" line="114" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3017" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3016" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2997" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="114" />
+        <location filename="../artisanlib/roast_properties.py" line="3168" />
+        <location filename="../artisanlib/roast_properties.py" line="3167" />
+        <location filename="../artisanlib/roast_properties.py" line="3143" />
+        <location filename="../artisanlib/roast_properties.py" line="159" />
         <location filename="../artisanlib/events.py" line="758" />
         <source>Unit</source>
         <translation>Birim</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3021" />
-        <location filename="../artisanlib/roast_properties.py" line="3020" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3021" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3020" />
+        <location filename="../artisanlib/roast_properties.py" line="3172" />
+        <location filename="../artisanlib/roast_properties.py" line="3171" />
         <location filename="../artisanlib/events.py" line="1018" />
         <source>Source</source>
         <translation>Kaynak</translation>
@@ -13044,13 +13125,16 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <translation>küçük-uçtan</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="3019" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3018" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2999" />
         <location filename="../artisanlib/devices.py" line="715" />
         <location filename="../artisanlib/devices.py" line="709" />
         <location filename="../artisanlib/devices.py" line="383" />
         <location filename="../artisanlib/devices.py" line="179" />
-        <location filename="../artisanlib/roast_properties.py" line="3019" />
-        <location filename="../artisanlib/roast_properties.py" line="3018" />
-        <location filename="../artisanlib/roast_properties.py" line="2999" />
+        <location filename="../artisanlib/roast_properties.py" line="3170" />
+        <location filename="../artisanlib/roast_properties.py" line="3169" />
+        <location filename="../artisanlib/roast_properties.py" line="3146" />
         <location filename="../artisanlib/ports.py" line="1073" />
         <location filename="../artisanlib/ports.py" line="978" />
         <location filename="../artisanlib/ports.py" line="574" />
@@ -13271,344 +13355,435 @@ Klavye Kısayolları devre dışı bırakılmalıdır (ENTER)</translation>
         <translation>Rampa</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="121" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="121" />
+        <location filename="../artisanlib/roast_properties.py" line="166" />
         <source>ml</source>
         <translation>ml</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="214" />
-        <location filename="../artisanlib/roast_properties.py" line="141" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="214" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="141" />
+        <location filename="../artisanlib/roast_properties.py" line="259" />
+        <location filename="../artisanlib/roast_properties.py" line="186" />
         <source>Unit Weight</source>
         <translation>Birim Ağırlığı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="219" />
-        <location filename="../artisanlib/roast_properties.py" line="146" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="219" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="146" />
+        <location filename="../artisanlib/roast_properties.py" line="264" />
+        <location filename="../artisanlib/roast_properties.py" line="191" />
         <source>g</source>
         <translation>g</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2060" />
-        <location filename="../plus/blend.py" line="157" />
         <location filename="../TotalLINK/schedule.py" line="2053" />
         <location filename="../TotalLINK/blend.py" line="157" />
+        <location filename="../plus/schedule.py" line="2060" />
+        <location filename="../plus/blend.py" line="157" />
         <location filename="../artisanlib/canvas.py" line="12107" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="907" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="221" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="148" />
         <location filename="../artisanlib/large_lcds.py" line="851" />
-        <location filename="../artisanlib/roast_properties.py" line="907" />
-        <location filename="../artisanlib/roast_properties.py" line="221" />
-        <location filename="../artisanlib/roast_properties.py" line="148" />
+        <location filename="../artisanlib/roast_properties.py" line="988" />
+        <location filename="../artisanlib/roast_properties.py" line="266" />
+        <location filename="../artisanlib/roast_properties.py" line="193" />
         <source>Weight</source>
         <translation>Ağırlık</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="972" />
-        <location filename="../artisanlib/roast_properties.py" line="236" />
-        <location filename="../artisanlib/roast_properties.py" line="163" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="972" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="236" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="163" />
+        <location filename="../artisanlib/roast_properties.py" line="1058" />
+        <location filename="../artisanlib/roast_properties.py" line="281" />
+        <location filename="../artisanlib/roast_properties.py" line="208" />
         <source>Volume</source>
         <translation>Hacim</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="4093" />
         <location filename="../TotalLINK/schedule.py" line="4071" />
+        <location filename="../plus/schedule.py" line="4093" />
         <location filename="../artisanlib/canvas.py" line="12107" />
         <location filename="../artisanlib/canvas.py" line="12056" />
         <location filename="../artisanlib/canvas.py" line="12051" />
-        <location filename="../artisanlib/roast_properties.py" line="905" />
-        <location filename="../artisanlib/roast_properties.py" line="206" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="905" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="206" />
+        <location filename="../artisanlib/roast_properties.py" line="986" />
+        <location filename="../artisanlib/roast_properties.py" line="251" />
         <source>Green</source>
         <translation>Yeşil</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="4095" />
-        <location filename="../plus/schedule.py" line="2234" />
         <location filename="../TotalLINK/schedule.py" line="4073" />
         <location filename="../TotalLINK/schedule.py" line="2226" />
-        <location filename="../artisanlib/roast_properties.py" line="906" />
-        <location filename="../artisanlib/roast_properties.py" line="279" />
+        <location filename="../plus/schedule.py" line="4095" />
+        <location filename="../plus/schedule.py" line="2234" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="906" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="279" />
+        <location filename="../artisanlib/roast_properties.py" line="987" />
+        <location filename="../artisanlib/roast_properties.py" line="324" />
         <source>Roasted</source>
         <translation>Kavrulmuş</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="867" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="867" />
+        <location filename="../artisanlib/roast_properties.py" line="921" />
         <source>Date</source>
         <translation>Tarih</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3214" />
-        <location filename="../artisanlib/roast_properties.py" line="872" />
+        <location filename="../artisanlib/roast_properties.py" line="928" />
+        <source>Scan ApsNum</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="3214" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="872" />
+        <location filename="../artisanlib/roast_properties.py" line="3370" />
+        <location filename="../artisanlib/roast_properties.py" line="952" />
         <source>Batch</source>
         <translation>Parti</translation>
     </message>
     <message>
-        <location filename="../plus/blend.py" line="343" />
         <location filename="../TotalLINK/blend.py" line="343" />
+        <location filename="../plus/blend.py" line="343" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1099" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="898" />
         <location filename="../artisanlib/statistics.py" line="202" />
-        <location filename="../artisanlib/roast_properties.py" line="1099" />
-        <location filename="../artisanlib/roast_properties.py" line="898" />
+        <location filename="../artisanlib/roast_properties.py" line="1194" />
+        <location filename="../artisanlib/roast_properties.py" line="979" />
         <source>Beans</source>
         <translation>Çekirdekler</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2103" />
         <location filename="../TotalLINK/schedule.py" line="2095" />
+        <location filename="../plus/schedule.py" line="2103" />
         <location filename="../artisanlib/canvas.py" line="12051" />
-        <location filename="../artisanlib/roast_properties.py" line="1003" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1003" />
+        <location filename="../artisanlib/roast_properties.py" line="1091" />
         <source>Density</source>
         <translation>Yoğunluk</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1056" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1056" />
+        <location filename="../artisanlib/roast_properties.py" line="1150" />
         <source>Screen</source>
         <translation>Ekran</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1075" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1075" />
+        <location filename="../artisanlib/roast_properties.py" line="1169" />
         <source>Whole</source>
         <translation>Bütün</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1082" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1082" />
+        <location filename="../artisanlib/roast_properties.py" line="1176" />
         <source>Ground</source>
         <translation>Öğütülmüş</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2123" />
         <location filename="../TotalLINK/schedule.py" line="2115" />
+        <location filename="../plus/schedule.py" line="2123" />
         <location filename="../artisanlib/canvas.py" line="12056" />
-        <location filename="../artisanlib/roast_properties.py" line="1111" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1111" />
+        <location filename="../artisanlib/roast_properties.py" line="1207" />
         <source>Moisture</source>
         <translation>Nem</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1139" />
-        <location filename="../artisanlib/roast_properties.py" line="1112" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1139" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1112" />
+        <location filename="../artisanlib/roast_properties.py" line="1237" />
+        <location filename="../artisanlib/roast_properties.py" line="1208" />
         <source>%</source>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1137" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1137" />
+        <location filename="../artisanlib/roast_properties.py" line="1235" />
         <source>Ambient Conditions</source>
         <translation>Çevre Koşulları</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2134" />
-        <location filename="../plus/schedule.py" line="2133" />
         <location filename="../TotalLINK/schedule.py" line="2126" />
         <location filename="../TotalLINK/schedule.py" line="2125" />
+        <location filename="../plus/schedule.py" line="2134" />
+        <location filename="../plus/schedule.py" line="2133" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1185" />
         <location filename="../artisanlib/statistics.py" line="213" />
-        <location filename="../artisanlib/roast_properties.py" line="1185" />
+        <location filename="../artisanlib/roast_properties.py" line="1286" />
         <source>Roasting Notes</source>
         <translation>Kavurma Notları</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2146" />
-        <location filename="../plus/schedule.py" line="2145" />
         <location filename="../TotalLINK/schedule.py" line="2138" />
         <location filename="../TotalLINK/schedule.py" line="2137" />
+        <location filename="../plus/schedule.py" line="2146" />
+        <location filename="../plus/schedule.py" line="2145" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1189" />
         <location filename="../artisanlib/statistics.py" line="215" />
-        <location filename="../artisanlib/roast_properties.py" line="1189" />
+        <location filename="../artisanlib/roast_properties.py" line="1290" />
         <source>Cupping Notes</source>
         <translation>Tadım Notları</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1370" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1370" />
+        <location filename="../artisanlib/roast_properties.py" line="1480" />
         <source>Stock</source>
         <translation>Stok</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1372" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1372" />
+        <location filename="../artisanlib/roast_properties.py" line="1482" />
         <source>Store</source>
         <translation>Mağaza</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1374" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1374" />
+        <location filename="../artisanlib/roast_properties.py" line="1484" />
         <source>Blend</source>
         <translation>Harman</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2093" />
         <location filename="../TotalLINK/schedule.py" line="2085" />
+        <location filename="../plus/schedule.py" line="2093" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1753" />
         <location filename="../artisanlib/main.py" line="23933" />
-        <location filename="../artisanlib/roast_properties.py" line="1753" />
+        <location filename="../artisanlib/roast_properties.py" line="1872" />
         <source>Defects</source>
         <translation>Kusurlular</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2083" />
         <location filename="../TotalLINK/schedule.py" line="2075" />
+        <location filename="../plus/schedule.py" line="2083" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1754" />
         <location filename="../artisanlib/statistics.py" line="231" />
-        <location filename="../artisanlib/roast_properties.py" line="1754" />
+        <location filename="../artisanlib/roast_properties.py" line="1873" />
         <source>Yield</source>
         <translation>Verim</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1964" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1964" />
+        <location filename="../artisanlib/roast_properties.py" line="2089" />
         <source>Template</source>
         <translation>Şablon</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1992" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1992" />
+        <location filename="../artisanlib/roast_properties.py" line="2120" />
         <source>Choose beans</source>
         <translation>Fasulye seçin</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="2799" />
         <location filename="../artisanlib/devices.py" line="2442" />
         <location filename="../artisanlib/devices.py" line="2383" />
-        <location filename="../artisanlib/roast_properties.py" line="2799" />
+        <location filename="../artisanlib/roast_properties.py" line="2943" />
         <source>edit</source>
         <translation>düzenlemek</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2953" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2953" />
+        <location filename="../artisanlib/roast_properties.py" line="3096" />
         <source>Results in</source>
         <translation>Sonuçlar</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2995" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2995" />
+        <location filename="../artisanlib/roast_properties.py" line="3141" />
         <source>Rating</source>
         <translation>Değerlendirme</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3003" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3003" />
+        <location filename="../artisanlib/roast_properties.py" line="3151" />
         <source>Pressure %</source>
         <translation>Basınç %</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3005" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3005" />
+        <location filename="../artisanlib/roast_properties.py" line="3154" />
         <source>Electric Energy Mix:</source>
         <translation>Elektrik Enerjisi Karışımı:</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3011" />
-        <location filename="../artisanlib/roast_properties.py" line="3007" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3011" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3007" />
+        <location filename="../artisanlib/roast_properties.py" line="3162" />
+        <location filename="../artisanlib/roast_properties.py" line="3157" />
         <source>Gas Energy Mix:</source>
         <translation>Gaz Enerji Karışımı:</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3010" />
-        <location filename="../artisanlib/roast_properties.py" line="3009" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3010" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3009" />
+        <location filename="../artisanlib/roast_properties.py" line="3161" />
+        <location filename="../artisanlib/roast_properties.py" line="3160" />
         <source>Renewable</source>
         <translation>Yenilenebilir</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3012" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3012" />
+        <location filename="../artisanlib/roast_properties.py" line="3163" />
         <source>Meter 1</source>
         <translation>Metre 1</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3013" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3013" />
+        <location filename="../artisanlib/roast_properties.py" line="3164" />
         <source>Meter 2</source>
         <translation>Metre 2</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="5833" />
-        <location filename="../artisanlib/roast_properties.py" line="3027" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="5833" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3027" />
+        <location filename="../artisanlib/roast_properties.py" line="6098" />
+        <location filename="../artisanlib/roast_properties.py" line="3179" />
         <source>Pre-Heating</source>
         <translation>Ön Isıtma</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="5843" />
-        <location filename="../artisanlib/roast_properties.py" line="3028" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="5843" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3028" />
+        <location filename="../artisanlib/roast_properties.py" line="6109" />
+        <location filename="../artisanlib/roast_properties.py" line="3180" />
         <source>Between Batches</source>
         <translation>Partiler Arası</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="5853" />
-        <location filename="../artisanlib/roast_properties.py" line="3029" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="5853" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3029" />
+        <location filename="../artisanlib/roast_properties.py" line="6120" />
+        <location filename="../artisanlib/roast_properties.py" line="3181" />
         <source>Cooling</source>
         <translation>Soğutma</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3030" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3030" />
+        <location filename="../artisanlib/roast_properties.py" line="3183" />
         <source>Between Batches after Pre-Heating</source>
         <translation>Ön Isıtma Sonrası Partiler Arası</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3035" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3035" />
+        <location filename="../artisanlib/roast_properties.py" line="3188" />
         <source>(mm:ss)</source>
         <translation>(mm: ss)</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="3040" />
         <location filename="../artisanlib/main.py" line="7550" />
-        <location filename="../artisanlib/roast_properties.py" line="3040" />
+        <location filename="../artisanlib/roast_properties.py" line="3193" />
         <source>Duration</source>
         <translation>Süresi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3041" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3041" />
+        <location filename="../artisanlib/roast_properties.py" line="3194" />
         <source>Measured Energy or Output %</source>
         <translation>Ölçülen Enerji veya Çıktı%</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3642" />
-        <location filename="../artisanlib/roast_properties.py" line="3613" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3642" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3613" />
+        <location filename="../artisanlib/roast_properties.py" line="3828" />
+        <location filename="../artisanlib/roast_properties.py" line="3789" />
         <source>Preheat</source>
         <translation>Ön ısıtma</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3644" />
-        <location filename="../artisanlib/roast_properties.py" line="3615" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3644" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3615" />
+        <location filename="../artisanlib/roast_properties.py" line="3831" />
+        <location filename="../artisanlib/roast_properties.py" line="3794" />
         <source>BBP</source>
         <translation>BBP</translation>
     </message>
     <message>
         <location filename="../artisanlib/canvas.py" line="16363" />
-        <location filename="../artisanlib/roast_properties.py" line="3651" />
-        <location filename="../artisanlib/roast_properties.py" line="3646" />
-        <location filename="../artisanlib/roast_properties.py" line="3622" />
-        <location filename="../artisanlib/roast_properties.py" line="3617" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3651" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3646" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3622" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3617" />
+        <location filename="../artisanlib/roast_properties.py" line="3840" />
+        <location filename="../artisanlib/roast_properties.py" line="3835" />
+        <location filename="../artisanlib/roast_properties.py" line="3804" />
+        <location filename="../artisanlib/roast_properties.py" line="3799" />
         <source>Roast</source>
         <translation>Kavur</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3660" />
-        <location filename="../artisanlib/roast_properties.py" line="3631" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3660" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3631" />
+        <location filename="../artisanlib/roast_properties.py" line="3850" />
+        <location filename="../artisanlib/roast_properties.py" line="3814" />
         <source>per kg green coffee</source>
         <translation>kg başına yeşil kahve</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3691" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3691" />
+        <location filename="../artisanlib/roast_properties.py" line="3883" />
         <source>Load</source>
         <translation>yüklemek</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4201" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4201" />
+        <location filename="../artisanlib/roast_properties.py" line="4413" />
         <source>Organization</source>
         <translation>Kurum/Şirket</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4202" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4202" />
+        <location filename="../artisanlib/roast_properties.py" line="4414" />
         <source>Operator</source>
         <translation>Operatör</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4203" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4203" />
+        <location filename="../artisanlib/roast_properties.py" line="4415" />
         <source>Machine</source>
         <translation>Makine</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="4204" />
         <location filename="../artisanlib/devices.py" line="1662" />
         <location filename="../artisanlib/devices.py" line="1585" />
-        <location filename="../artisanlib/roast_properties.py" line="4204" />
+        <location filename="../artisanlib/roast_properties.py" line="4416" />
         <source>Model</source>
         <translation>Modeli</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="4205" />
         <location filename="../artisanlib/main.py" line="6117" />
-        <location filename="../artisanlib/roast_properties.py" line="4205" />
+        <location filename="../artisanlib/roast_properties.py" line="4417" />
         <source>Heating</source>
         <translation>Isıtma</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="4206" />
         <location filename="../artisanlib/statistics.py" line="201" />
-        <location filename="../artisanlib/roast_properties.py" line="4206" />
+        <location filename="../artisanlib/roast_properties.py" line="4418" />
         <source>Drum Speed</source>
         <translation>Tambur Hızı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="5242" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="5242" />
+        <location filename="../artisanlib/roast_properties.py" line="5488" />
         <source>organic material</source>
         <translation>organik materyal</translation>
+    </message>
+    <message>
+        <location filename="../artisanlib/roast_properties.py" line="6165" />
+        <source>Not Logged In</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../artisanlib/roast_properties.py" line="6166" />
+        <source>Please log in first to use the scan feature.</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../artisanlib/transposer.py" line="1027" />
@@ -13932,8 +14107,8 @@ LCD'ler Tümü</translation>
         <translation>Kavurma Makinesi</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2139" />
         <location filename="../TotalLINK/schedule.py" line="2131" />
+        <location filename="../plus/schedule.py" line="2139" />
         <location filename="../artisanlib/statistics.py" line="214" />
         <source>Cupping Score</source>
         <translation>Tadım Puanı</translation>
@@ -14962,8 +15137,8 @@ Daha az düğüm: daha basit eğri ancak ayrıntı kaybı olabilir</translation>
         <translation>En/Boy Oranı</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2138" />
         <location filename="../TotalLINK/schedule.py" line="2130" />
+        <location filename="../plus/schedule.py" line="2138" />
         <source>Score</source>
         <translation>Gol</translation>
     </message>
@@ -15576,8 +15751,8 @@ Daha az düğüm: daha basit eğri ancak ayrıntı kaybı olabilir</translation>
         <translation>Kaydırıcı Düğmeleri</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2439" />
         <location filename="../TotalLINK/schedule.py" line="2431" />
+        <location filename="../plus/schedule.py" line="2439" />
         <location filename="../artisanlib/main.py" line="2742" />
         <source>Schedule</source>
         <translation>Plan</translation>
@@ -16308,10 +16483,13 @@ DİKKAT: Kaydedilen veriler onay alınmadan silinecektir.</translation>
         <translation>Serial koneksiyon ayarlar: {0}, {1}, {2}, {3}, {4}, {5}</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="4701" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3800" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2767" />
         <location filename="../artisanlib/curves.py" line="282" />
-        <location filename="../artisanlib/roast_properties.py" line="4701" />
-        <location filename="../artisanlib/roast_properties.py" line="3800" />
-        <location filename="../artisanlib/roast_properties.py" line="2767" />
+        <location filename="../artisanlib/roast_properties.py" line="4933" />
+        <location filename="../artisanlib/roast_properties.py" line="4000" />
+        <location filename="../artisanlib/roast_properties.py" line="2910" />
         <location filename="../artisanlib/background.py" line="1133" />
         <location filename="../artisanlib/background.py" line="572" />
         <source>Data table copied to clipboard</source>
@@ -16345,7 +16523,8 @@ DİKKAT: Kaydedilen veriler onay alınmadan silinecektir.</translation>
         <translation>Arka plan profileri okumak...</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4759" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4759" />
+        <location filename="../artisanlib/roast_properties.py" line="4991" />
         <location filename="../artisanlib/background.py" line="1138" />
         <source>Event table copied to clipboard</source>
         <translation>Olay tablosu panoya kopyalandı</translation>
@@ -16367,49 +16546,60 @@ DİKKAT: Kaydedilen veriler onay alınmadan silinecektir.</translation>
         <translation>Hata: MQTT şifresi temizlenemedi.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1693" />
-        <source>artisan.plus needs to know the beans you are roasting</source>
-        <translation>artisan.plus'ın kavurduğunuz kahve çekirdeklerini bilmesi gerekiyor.</translation>
+        <location filename="../artisanlib/roast_properties_bak.py" line="1693" />
+        <location filename="../artisanlib/roast_properties.py" line="1811" />
+        <source>TotalLINK needs to know the beans you are roasting</source>
+        <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3936" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3936" />
+        <location filename="../artisanlib/roast_properties.py" line="4145" />
         <source>The 0% value must be less than the 100% value.</source>
         <translation>%0 değeri, %100 değerinden küçük olmalıdır.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4839" />
-        <location filename="../artisanlib/roast_properties.py" line="4835" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4839" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4835" />
+        <location filename="../artisanlib/roast_properties.py" line="5073" />
+        <location filename="../artisanlib/roast_properties.py" line="5068" />
         <source>Alarms from events #{0} created</source>
         <translation>Oluşturulan {0} numaralı etkinliklerden alarmlar</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4916" />
-        <location filename="../artisanlib/roast_properties.py" line="4842" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4916" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4842" />
+        <location filename="../artisanlib/roast_properties.py" line="5152" />
+        <location filename="../artisanlib/roast_properties.py" line="5077" />
         <source>No events found</source>
         <translation>Olaylar yok</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4882" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4882" />
+        <location filename="../artisanlib/roast_properties.py" line="5117" />
         <source>Event #{0} added</source>
         <translation>Olay #{0} eklendi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4885" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4885" />
+        <location filename="../artisanlib/roast_properties.py" line="5120" />
         <source>No profile found</source>
         <translation>Profil bulunmadı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4901" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4901" />
+        <location filename="../artisanlib/roast_properties.py" line="5136" />
         <source> Events #{0} deleted</source>
         <translation> {0} numaralı etkinlikler silindi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4904" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4904" />
+        <location filename="../artisanlib/roast_properties.py" line="5139" />
         <source> Event #{0} deleted</source>
         <translation> Olay #{0} silindi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="5769" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="5769" />
+        <location filename="../artisanlib/roast_properties.py" line="6032" />
         <source>Roast properties updated but profile not saved to disk</source>
         <translation>Kavurma tercihleri yenileşti ama profiler kaydetmek olmadı</translation>
     </message>
@@ -18249,78 +18439,82 @@ Profile missing [CHARGE] or [DROP]</source>
         <translation>Arka plan profili bulunmadı</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="1534" />
         <location filename="../TotalLINK/schedule.py" line="1527" />
+        <location filename="../plus/schedule.py" line="1534" />
         <source>Register the currently loaded roast profile&lt;br&gt;in the selected entry.&lt;br&gt;This will overwrite some roast properties.</source>
         <translation>Şu anda yüklenen kavurma profilini&lt;br&gt;seçili girişe kaydedin.&lt;br&gt;Bu, bazı kavurma özelliklerinin üzerine yazacaktır.</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="1548" />
-        <location filename="../plus/schedule.py" line="1539" />
         <location filename="../TotalLINK/schedule.py" line="1541" />
         <location filename="../TotalLINK/schedule.py" line="1532" />
+        <location filename="../plus/schedule.py" line="1548" />
+        <location filename="../plus/schedule.py" line="1539" />
         <source>Register Roast</source>
         <translation>Kayıt Kızartma</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2493" />
         <location filename="../TotalLINK/schedule.py" line="2485" />
+        <location filename="../plus/schedule.py" line="2493" />
         <source>Scheduler started</source>
         <translation>Planlayıcı başlatıldı</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2801" />
         <location filename="../TotalLINK/schedule.py" line="2796" />
+        <location filename="../plus/schedule.py" line="2801" />
         <source>Roasts will not adjust the schedule&lt;br&gt;while the schedule window is closed</source>
         <translation>Program penceresi kapalıyken kavurma programı ayarlanmaz</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2815" />
-        <location filename="../plus/schedule.py" line="2806" />
         <location filename="../TotalLINK/schedule.py" line="2810" />
         <location filename="../TotalLINK/schedule.py" line="2801" />
+        <location filename="../plus/schedule.py" line="2815" />
+        <location filename="../plus/schedule.py" line="2806" />
         <source>Close Scheduler</source>
         <translation>Planlayıcıyı Kapat</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2873" />
         <location filename="../TotalLINK/schedule.py" line="2868" />
+        <location filename="../plus/schedule.py" line="2873" />
         <source>Scheduler stopped</source>
         <translation>Zamanlayıcı durduruldu</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="3603" />
-        <location filename="../plus/schedule.py" line="3182" />
         <location filename="../TotalLINK/schedule.py" line="3583" />
         <location filename="../TotalLINK/schedule.py" line="3175" />
+        <location filename="../plus/schedule.py" line="3603" />
+        <location filename="../plus/schedule.py" line="3182" />
         <source>Updating completed roast properties failed</source>
         <translation>Tamamlanan kızartma özellikleri güncellenemedi</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="3775" />
-        <location filename="../plus/schedule.py" line="3301" />
         <location filename="../TotalLINK/schedule.py" line="3755" />
         <location filename="../TotalLINK/schedule.py" line="3294" />
+        <location filename="../plus/schedule.py" line="3775" />
+        <location filename="../plus/schedule.py" line="3301" />
         <source>1 batch</source>
         <translation>1 parti</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="3790" />
-        <location filename="../plus/schedule.py" line="3781" />
-        <location filename="../plus/schedule.py" line="3309" />
-        <location filename="../plus/schedule.py" line="3303" />
         <location filename="../TotalLINK/schedule.py" line="3770" />
         <location filename="../TotalLINK/schedule.py" line="3761" />
         <location filename="../TotalLINK/schedule.py" line="3302" />
         <location filename="../TotalLINK/schedule.py" line="3296" />
+        <location filename="../plus/schedule.py" line="3790" />
+        <location filename="../plus/schedule.py" line="3781" />
+        <location filename="../plus/schedule.py" line="3309" />
+        <location filename="../plus/schedule.py" line="3303" />
         <source>{} batches</source>
         <translation>{} partiler</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="3669" />
         <location filename="../TotalLINK/schedule.py" line="3649" />
+        <location filename="../plus/schedule.py" line="3669" />
         <source>Fetching completed roast properties failed</source>
         <translation>Tamamlanan kızartma özellikleri getirilemedi</translation>
+    </message>
+    <message>
+        <source>artisan.plus needs to know the beans you are roasting</source>
+        <translation type="vanished">artisan.plus'ın kavurduğunuz kahve çekirdeklerini bilmesi gerekiyor.</translation>
     </message>
     <message>
         <source>Import Cropster XLS</source>
@@ -18593,212 +18787,22 @@ Devam et?</translation>
         <translation>Aboneliğiniz tarihinde sona erdi</translation>
     </message>
     <message>
-        <location filename="../plus/queue.py" line="141" />
         <location filename="../TotalLINK/queue.py" line="141" />
+        <location filename="../plus/queue.py" line="141" />
         <source>Roast successfully uploaded to {}</source>
         <translation>Kızartma başarıyla {} konumuna yüklendi</translation>
     </message>
     <message>
-        <location filename="../plus/queue.py" line="453" />
         <location filename="../TotalLINK/queue.py" line="453" />
+        <location filename="../plus/queue.py" line="453" />
         <source>Queuing roast for upload to {}</source>
         <translation>{}'a yüklemek için kızartma kuyruğa alma</translation>
     </message>
     <message>
-        <location filename="../plus/sync.py" line="736" />
         <location filename="../TotalLINK/sync.py" line="729" />
+        <location filename="../plus/sync.py" line="736" />
         <source>Updated data received from artisan.plus</source>
         <translation>Artisan.plus'tan alınan güncellenmiş veriler</translation>
-    </message>
-    <message>
-        <location filename="../plus/stock.py" line="470" />
-        <location filename="../TotalLINK/stock.py" line="470" />
-        <source>bag</source>
-        <translation>sırt çantası</translation>
-    </message>
-    <message>
-        <location filename="../plus/stock.py" line="471" />
-        <location filename="../TotalLINK/stock.py" line="471" />
-        <source>box</source>
-        <translation>Kutu</translation>
-    </message>
-    <message>
-        <location filename="../plus/stock.py" line="472" />
-        <location filename="../TotalLINK/stock.py" line="472" />
-        <source>barrel</source>
-        <translation>varil</translation>
-    </message>
-    <message>
-        <location filename="../plus/stock.py" line="475" />
-        <location filename="../TotalLINK/stock.py" line="475" />
-        <source>bags</source>
-        <translation>çanta</translation>
-    </message>
-    <message>
-        <location filename="../plus/stock.py" line="476" />
-        <location filename="../TotalLINK/stock.py" line="476" />
-        <source>boxes</source>
-        <translation>kutuları</translation>
-    </message>
-    <message>
-        <location filename="../plus/stock.py" line="477" />
-        <location filename="../TotalLINK/stock.py" line="477" />
-        <source>barrels</source>
-        <translation>variller</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1350" />
-        <location filename="../TotalLINK/schedule.py" line="1343" />
-        <source>Yesterday</source>
-        <translation>Dün</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1970" />
-        <location filename="../plus/schedule.py" line="1425" />
-        <location filename="../TotalLINK/schedule.py" line="1963" />
-        <location filename="../TotalLINK/schedule.py" line="1418" />
-        <source>Today</source>
-        <translation>Bugün</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1427" />
-        <location filename="../TotalLINK/schedule.py" line="1420" />
-        <source>Tomorrow</source>
-        <translation>Yarın</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1439" />
-        <location filename="../TotalLINK/schedule.py" line="1432" />
-        <source>by anybody</source>
-        <translation>herhangi biri tarafından</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1441" />
-        <location filename="../plus/schedule.py" line="1440" />
-        <location filename="../TotalLINK/schedule.py" line="1434" />
-        <location filename="../TotalLINK/schedule.py" line="1433" />
-        <source>by</source>
-        <translation>ile</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1443" />
-        <location filename="../TotalLINK/schedule.py" line="1436" />
-        <source>on</source>
-        <translation>Açık</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1449" />
-        <location filename="../TotalLINK/schedule.py" line="1442" />
-        <source>prepared</source>
-        <translation>tedarikli</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1450" />
-        <location filename="../TotalLINK/schedule.py" line="1443" />
-        <source>({} of {} done{})</source>
-        <translation>({} / {} tamamlandı{})</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1966" />
-        <location filename="../TotalLINK/schedule.py" line="1959" />
-        <source>Visible</source>
-        <translation>Görünür</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1968" />
-        <location filename="../TotalLINK/schedule.py" line="1961" />
-        <source>List only visible items</source>
-        <translation>Yalnızca görünür öğeleri listele</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1973" />
-        <location filename="../TotalLINK/schedule.py" line="1966" />
-        <source>List only items scheduled for today</source>
-        <translation>Yalnızca bugün için planlanan öğeleri listeleyin</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="1986" />
-        <location filename="../TotalLINK/schedule.py" line="1979" />
-        <source>Filters</source>
-        <translation>Filtreler</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="2263" />
-        <location filename="../TotalLINK/schedule.py" line="2255" />
-        <source>No completed roasts</source>
-        <translation>Tamamlanmış kızartma yok</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="2306" />
-        <location filename="../TotalLINK/schedule.py" line="2298" />
-        <source>Schedule Updated!</source>
-        <translation>Program Güncellendi!</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="2401" />
-        <location filename="../TotalLINK/schedule.py" line="2393" />
-        <source>Login to {} to receive your roast schedule</source>
-        <translation>Kızartma programınızı almak için {} hesabında oturum açın</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="3361" />
-        <location filename="../TotalLINK/schedule.py" line="3354" />
-        <source>List only items scheduled for the current user {}</source>
-        <translation>Yalnızca geçerli kullanıcı için planlanan öğeleri listele {}</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="3369" />
-        <location filename="../TotalLINK/schedule.py" line="3362" />
-        <source>List only items scheduled for the current machine {}</source>
-        <translation>Yalnızca geçerli makine için planlanan öğeleri listele {}</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="4016" />
-        <location filename="../TotalLINK/schedule.py" line="3994" />
-        <source>Schedule empty!{}Plan your schedule on {}</source>
-        <translation>Plan boş!{}Programınızı {} tarihine göre planlayın</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="4024" />
-        <location filename="../TotalLINK/schedule.py" line="4002" />
-        <source>Nothing scheduled for you today!{}Deactivate filters to see all items.</source>
-        <translation>Bugün sizin için planlanmış bir şey yok!{}Tüm öğeleri görmek için filtreleri devre dışı bırakın.</translation>
-    </message>
-    <message>
-        <location filename="../plus/schedule.py" line="4076" />
-        <location filename="../TotalLINK/schedule.py" line="4054" />
-        <source>nothing to weight</source>
-        <translation>ağırlık yapacak bir şey yok</translation>
-    </message>
-    <message>
-        <location filename="../plus/login.py" line="59" />
-        <location filename="../TotalLINK/login.py" line="59" />
-        <source>Register</source>
-        <translation>Kaydetmek</translation>
-    </message>
-    <message>
-        <location filename="../plus/login.py" line="63" />
-        <location filename="../TotalLINK/login.py" line="63" />
-        <source>Reset Password</source>
-        <translation>Şifreyi yenile</translation>
-    </message>
-    <message>
-        <location filename="../plus/login.py" line="108" />
-        <location filename="../TotalLINK/login.py" line="113" />
-        <source>Password</source>
-        <translation>Parola</translation>
-    </message>
-    <message>
-        <location filename="../plus/login.py" line="113" />
-        <location filename="../TotalLINK/login.py" line="120" />
-        <source>Email</source>
-        <translation>E-posta adresi</translation>
-    </message>
-    <message>
-        <location filename="../plus/login.py" line="122" />
-        <location filename="../TotalLINK/login.py" line="131" />
-        <source>Remember</source>
-        <translation>Hatırlamak</translation>
     </message>
     <message>
         <location filename="../plus/controller.py" line="214" />
@@ -18856,6 +18860,196 @@ Devam et?</translation>
         <location filename="../plus/controller.py" line="415" />
         <source>artisan.plus reconnected</source>
         <translation>zanaatkar.plus yeniden bağlantı kurdu</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/stock.py" line="470" />
+        <location filename="../plus/stock.py" line="470" />
+        <source>bag</source>
+        <translation>sırt çantası</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/stock.py" line="471" />
+        <location filename="../plus/stock.py" line="471" />
+        <source>box</source>
+        <translation>Kutu</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/stock.py" line="472" />
+        <location filename="../plus/stock.py" line="472" />
+        <source>barrel</source>
+        <translation>varil</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/stock.py" line="475" />
+        <location filename="../plus/stock.py" line="475" />
+        <source>bags</source>
+        <translation>çanta</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/stock.py" line="476" />
+        <location filename="../plus/stock.py" line="476" />
+        <source>boxes</source>
+        <translation>kutuları</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/stock.py" line="477" />
+        <location filename="../plus/stock.py" line="477" />
+        <source>barrels</source>
+        <translation>variller</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1343" />
+        <location filename="../plus/schedule.py" line="1350" />
+        <source>Yesterday</source>
+        <translation>Dün</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1963" />
+        <location filename="../TotalLINK/schedule.py" line="1418" />
+        <location filename="../plus/schedule.py" line="1970" />
+        <location filename="../plus/schedule.py" line="1425" />
+        <source>Today</source>
+        <translation>Bugün</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1420" />
+        <location filename="../plus/schedule.py" line="1427" />
+        <source>Tomorrow</source>
+        <translation>Yarın</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1432" />
+        <location filename="../plus/schedule.py" line="1439" />
+        <source>by anybody</source>
+        <translation>herhangi biri tarafından</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1434" />
+        <location filename="../TotalLINK/schedule.py" line="1433" />
+        <location filename="../plus/schedule.py" line="1441" />
+        <location filename="../plus/schedule.py" line="1440" />
+        <source>by</source>
+        <translation>ile</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1436" />
+        <location filename="../plus/schedule.py" line="1443" />
+        <source>on</source>
+        <translation>Açık</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1442" />
+        <location filename="../plus/schedule.py" line="1449" />
+        <source>prepared</source>
+        <translation>tedarikli</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1443" />
+        <location filename="../plus/schedule.py" line="1450" />
+        <source>({} of {} done{})</source>
+        <translation>({} / {} tamamlandı{})</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1959" />
+        <location filename="../plus/schedule.py" line="1966" />
+        <source>Visible</source>
+        <translation>Görünür</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1961" />
+        <location filename="../plus/schedule.py" line="1968" />
+        <source>List only visible items</source>
+        <translation>Yalnızca görünür öğeleri listele</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1966" />
+        <location filename="../plus/schedule.py" line="1973" />
+        <source>List only items scheduled for today</source>
+        <translation>Yalnızca bugün için planlanan öğeleri listeleyin</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="1979" />
+        <location filename="../plus/schedule.py" line="1986" />
+        <source>Filters</source>
+        <translation>Filtreler</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="2255" />
+        <location filename="../plus/schedule.py" line="2263" />
+        <source>No completed roasts</source>
+        <translation>Tamamlanmış kızartma yok</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="2298" />
+        <location filename="../plus/schedule.py" line="2306" />
+        <source>Schedule Updated!</source>
+        <translation>Program Güncellendi!</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="2393" />
+        <location filename="../plus/schedule.py" line="2401" />
+        <source>Login to {} to receive your roast schedule</source>
+        <translation>Kızartma programınızı almak için {} hesabında oturum açın</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="3354" />
+        <location filename="../plus/schedule.py" line="3361" />
+        <source>List only items scheduled for the current user {}</source>
+        <translation>Yalnızca geçerli kullanıcı için planlanan öğeleri listele {}</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="3362" />
+        <location filename="../plus/schedule.py" line="3369" />
+        <source>List only items scheduled for the current machine {}</source>
+        <translation>Yalnızca geçerli makine için planlanan öğeleri listele {}</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="3994" />
+        <location filename="../plus/schedule.py" line="4016" />
+        <source>Schedule empty!{}Plan your schedule on {}</source>
+        <translation>Plan boş!{}Programınızı {} tarihine göre planlayın</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="4002" />
+        <location filename="../plus/schedule.py" line="4024" />
+        <source>Nothing scheduled for you today!{}Deactivate filters to see all items.</source>
+        <translation>Bugün sizin için planlanmış bir şey yok!{}Tüm öğeleri görmek için filtreleri devre dışı bırakın.</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/schedule.py" line="4054" />
+        <location filename="../plus/schedule.py" line="4076" />
+        <source>nothing to weight</source>
+        <translation>ağırlık yapacak bir şey yok</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/login.py" line="59" />
+        <location filename="../plus/login.py" line="59" />
+        <source>Register</source>
+        <translation>Kaydetmek</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/login.py" line="63" />
+        <location filename="../plus/login.py" line="63" />
+        <source>Reset Password</source>
+        <translation>Şifreyi yenile</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/login.py" line="113" />
+        <location filename="../plus/login.py" line="108" />
+        <source>Password</source>
+        <translation>Parola</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/login.py" line="120" />
+        <location filename="../plus/login.py" line="113" />
+        <source>Email</source>
+        <translation>E-posta adresi</translation>
+    </message>
+    <message>
+        <location filename="../TotalLINK/login.py" line="131" />
+        <location filename="../plus/login.py" line="122" />
+        <source>Remember</source>
+        <translation>Hatırlamak</translation>
     </message>
 </context><context>
     <name>Radio Button</name>
@@ -18944,17 +19138,21 @@ Devam et?</translation>
 </context><context>
     <name>Scope Title</name>
     <message>
-        <location filename="../plus/schedule.py" line="2982" />
         <location filename="../TotalLINK/schedule.py" line="2977" />
+        <location filename="../plus/schedule.py" line="2982" />
         <location filename="../artisanlib/canvas.py" line="9158" />
         <location filename="../artisanlib/canvas.py" line="8064" />
         <location filename="../artisanlib/canvas.py" line="1366" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2586" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2556" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2211" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2198" />
         <location filename="../artisanlib/main.py" line="15974" />
         <location filename="../artisanlib/main.py" line="13093" />
-        <location filename="../artisanlib/roast_properties.py" line="2586" />
-        <location filename="../artisanlib/roast_properties.py" line="2556" />
-        <location filename="../artisanlib/roast_properties.py" line="2211" />
-        <location filename="../artisanlib/roast_properties.py" line="2198" />
+        <location filename="../artisanlib/roast_properties.py" line="2729" />
+        <location filename="../artisanlib/roast_properties.py" line="2699" />
+        <location filename="../artisanlib/roast_properties.py" line="2346" />
+        <location filename="../artisanlib/roast_properties.py" line="2333" />
         <location filename="../artisanlib/orbiter.py" line="564" />
         <source>Roaster Scope</source>
         <translation>Kavurmacının Tuvali</translation>
@@ -19415,49 +19613,58 @@ Devam et?</translation>
         <translation>ET/ BT</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1670" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1670" />
+        <location filename="../artisanlib/roast_properties.py" line="1788" />
         <location filename="../artisanlib/background.py" line="512" />
         <source>Events</source>
         <translation>Olaylar</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1674" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1674" />
+        <location filename="../artisanlib/roast_properties.py" line="1792" />
         <location filename="../artisanlib/background.py" line="516" />
         <source>Data</source>
         <translation>Variler</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1663" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1663" />
+        <location filename="../artisanlib/roast_properties.py" line="1781" />
         <source>Roast</source>
         <translation>Kavur</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1666" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1666" />
+        <location filename="../artisanlib/roast_properties.py" line="1784" />
         <source>Notes</source>
         <translation>Notlar</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1677" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1677" />
+        <location filename="../artisanlib/roast_properties.py" line="1795" />
         <source>Energy</source>
         <translation>Enerji</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1680" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1680" />
+        <location filename="../artisanlib/roast_properties.py" line="1798" />
         <source>Setup</source>
         <translation>Kurulum</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2950" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2950" />
+        <location filename="../artisanlib/roast_properties.py" line="3093" />
         <source>Details</source>
         <translation>Detaylar</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2951" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2951" />
+        <location filename="../artisanlib/roast_properties.py" line="3094" />
         <source>Loads</source>
         <translation>Yükler</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2952" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2952" />
+        <location filename="../artisanlib/roast_properties.py" line="3095" />
         <source>Protocol</source>
         <translation>Protokol</translation>
     </message>
@@ -19554,14 +19761,14 @@ Devam et?</translation>
         <translation>LCD's</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2340" />
         <location filename="../TotalLINK/schedule.py" line="2332" />
+        <location filename="../plus/schedule.py" line="2340" />
         <source>To-Do</source>
         <translation>Yapılacaklar</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2341" />
         <location filename="../TotalLINK/schedule.py" line="2333" />
+        <location filename="../plus/schedule.py" line="2341" />
         <source>Completed</source>
         <translation>Tamamlanmış</translation>
     </message>
@@ -19685,8 +19892,9 @@ Devam et?</translation>
         <translation>Korna</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="4581" />
         <location filename="../artisanlib/alarms.py" line="1009" />
-        <location filename="../artisanlib/roast_properties.py" line="4581" />
+        <location filename="../artisanlib/roast_properties.py" line="4811" />
         <location filename="../artisanlib/background.py" line="905" />
         <location filename="../artisanlib/events.py" line="3973" />
         <location filename="../artisanlib/events.py" line="2779" />
@@ -19706,7 +19914,8 @@ Devam et?</translation>
         <translation>Yumuşatmak HH:MM</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4582" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4582" />
+        <location filename="../artisanlib/roast_properties.py" line="4812" />
         <location filename="../artisanlib/background.py" line="906" />
         <location filename="../artisanlib/events.py" line="3975" />
         <location filename="../artisanlib/events.py" line="2780" />
@@ -19715,8 +19924,9 @@ Devam et?</translation>
     </message>
     <message>
         <location filename="../artisanlib/cup_profile.py" line="221" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4583" />
         <location filename="../artisanlib/alarms.py" line="1006" />
-        <location filename="../artisanlib/roast_properties.py" line="4583" />
+        <location filename="../artisanlib/roast_properties.py" line="4813" />
         <location filename="../artisanlib/background.py" line="907" />
         <location filename="../artisanlib/events.py" line="3981" />
         <location filename="../artisanlib/events.py" line="2781" />
@@ -19776,49 +19986,58 @@ Devam et?</translation>
     </message>
     <message>
         <location filename="../artisanlib/transposer.py" line="189" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4578" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4421" />
         <location filename="../artisanlib/alarms.py" line="1003" />
         <location filename="../artisanlib/curves.py" line="128" />
-        <location filename="../artisanlib/roast_properties.py" line="4578" />
-        <location filename="../artisanlib/roast_properties.py" line="4421" />
+        <location filename="../artisanlib/roast_properties.py" line="4808" />
+        <location filename="../artisanlib/roast_properties.py" line="4642" />
         <location filename="../artisanlib/background.py" line="990" />
         <location filename="../artisanlib/background.py" line="902" />
         <source>Time</source>
         <translation>Saat</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4483" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4483" />
+        <location filename="../artisanlib/roast_properties.py" line="4713" />
         <location filename="../artisanlib/background.py" line="1085" />
         <source>#{0} {1}{2}</source>
         <translation># {0} {1} {2}</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2961" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2961" />
+        <location filename="../artisanlib/roast_properties.py" line="3105" />
         <source>Power</source>
         <translation>Güç</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2964" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2964" />
+        <location filename="../artisanlib/roast_properties.py" line="3108" />
         <source>Duration</source>
         <translation>Süresi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2970" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2970" />
+        <location filename="../artisanlib/roast_properties.py" line="3114" />
         <source>CO2</source>
         <translation />
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2973" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2973" />
+        <location filename="../artisanlib/roast_properties.py" line="3117" />
         <source>Load</source>
         <translation>yüklemek</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="2976" />
         <location filename="../artisanlib/alarms.py" line="1004" />
-        <location filename="../artisanlib/roast_properties.py" line="2976" />
+        <location filename="../artisanlib/roast_properties.py" line="3120" />
         <source>Source</source>
         <translation>Kaynak</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2979" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2979" />
+        <location filename="../artisanlib/roast_properties.py" line="3123" />
         <source>Kind</source>
         <translation>Tür</translation>
     </message>
@@ -20824,14 +21043,17 @@ PID tarafından başlatılan</translation>
         <translation>Düğme araç ipucu olarak özel etkinlik düğmesi belirtimini göster</translation>
     </message>
     <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="2958" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="825" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="815" />
         <location filename="../artisanlib/devices.py" line="268" />
         <location filename="../artisanlib/alarms.py" line="96" />
         <location filename="../artisanlib/statistics.py" line="301" />
         <location filename="../artisanlib/statistics.py" line="281" />
         <location filename="../artisanlib/curves.py" line="74" />
-        <location filename="../artisanlib/roast_properties.py" line="2958" />
-        <location filename="../artisanlib/roast_properties.py" line="825" />
-        <location filename="../artisanlib/roast_properties.py" line="815" />
+        <location filename="../artisanlib/roast_properties.py" line="3102" />
+        <location filename="../artisanlib/roast_properties.py" line="879" />
+        <location filename="../artisanlib/roast_properties.py" line="868" />
         <location filename="../artisanlib/background.py" line="190" />
         <location filename="../artisanlib/background.py" line="180" />
         <location filename="../artisanlib/events.py" line="664" />
@@ -21116,297 +21338,365 @@ specified by the lookahead</source>
         <translation>Güncelleme makineleri</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="773" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="773" />
+        <location filename="../artisanlib/roast_properties.py" line="824" />
         <source>Open roast properties dialog on CHARGE</source>
         <translation>CHARGE üzerinde kavurma özellikleri iletişim kutusunu açın.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="777" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="777" />
+        <location filename="../artisanlib/roast_properties.py" line="829" />
         <source>Open roast properties dialog on DROP</source>
         <translation>DROP işleminde kavurma özellikleri iletişim kutusunu açın.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="864" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="864" />
+        <location filename="../artisanlib/roast_properties.py" line="918" />
         <source>Display the roast title while roasting</source>
         <translation>Pişirme işlemi sırasında pişirme başlığını görüntüleyin.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="895" />
-        <location filename="../artisanlib/roast_properties.py" line="873" />
+        <location filename="../artisanlib/roast_properties.py" line="939" />
+        <source>Scan APS Number</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../artisanlib/roast_properties_bak.py" line="895" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="873" />
+        <location filename="../artisanlib/roast_properties.py" line="976" />
+        <location filename="../artisanlib/roast_properties.py" line="953" />
         <source>Right-click to edit</source>
         <translation>Düzenlemek için sağ tıklayın</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="913" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="913" />
+        <location filename="../artisanlib/roast_properties.py" line="994" />
         <source>batch size</source>
         <translation>toplu boyut</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="923" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="923" />
+        <location filename="../artisanlib/roast_properties.py" line="1005" />
         <source>weight of roasted coffee</source>
         <translation>kavrulmuş kahvenin ağırlığı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="930" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="930" />
+        <location filename="../artisanlib/roast_properties.py" line="1013" />
         <source>weight loss caused by roasting</source>
         <translation>kavurma sonucu oluşan kilo kaybı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="938" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="938" />
+        <location filename="../artisanlib/roast_properties.py" line="1021" />
         <source>weight unit</source>
         <translation>ağırlık birimi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="951" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="951" />
+        <location filename="../artisanlib/roast_properties.py" line="1035" />
         <source>weight of defects sorted from roasted coffee or weight of roasted coffee after defects have been removed</source>
         <translation>kavrulmuş kahveden ayıklanan kusurların ağırlığı veya kusurlar giderildikten sonra kavrulmuş kahvenin ağırlığı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="960" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="960" />
+        <location filename="../artisanlib/roast_properties.py" line="1046" />
         <source>weight unit of defects</source>
         <translation>kusurların ağırlık birimi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="962" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="962" />
+        <location filename="../artisanlib/roast_properties.py" line="1048" />
         <source>weight loss caused by defects</source>
         <translation>kusurlardan kaynaklanan kilo kaybı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="964" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="964" />
+        <location filename="../artisanlib/roast_properties.py" line="1050" />
         <source>toggle defects input mode</source>
         <translation>geçiş kusurları giriş modu</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="976" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="976" />
+        <location filename="../artisanlib/roast_properties.py" line="1062" />
         <source>batch volume</source>
         <translation>toplu hacim</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="982" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="982" />
+        <location filename="../artisanlib/roast_properties.py" line="1069" />
         <source>volume of roasted coffee</source>
         <translation>kavrulmuş kahve hacmi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="988" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="988" />
+        <location filename="../artisanlib/roast_properties.py" line="1076" />
         <source>volume increase caused by roasting</source>
         <translation>kavurma nedeniyle oluşan hacim artışı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="995" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="995" />
+        <location filename="../artisanlib/roast_properties.py" line="1083" />
         <source>volume unit</source>
         <translation>hacim birimi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1005" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1005" />
+        <location filename="../artisanlib/roast_properties.py" line="1093" />
         <source>density unit</source>
         <translation>yoğunluk birimi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1007" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1007" />
+        <location filename="../artisanlib/roast_properties.py" line="1095" />
         <source>batch density</source>
         <translation>parti yoğunluğu</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1013" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1013" />
+        <location filename="../artisanlib/roast_properties.py" line="1102" />
         <source>density of roasted coffee</source>
         <translation>kavrulmuş kahvenin yoğunluğu</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1021" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1021" />
+        <location filename="../artisanlib/roast_properties.py" line="1111" />
         <source>density loss caused by roasting</source>
         <translation>kavurma nedeniyle oluşan yoğunluk kaybı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1027" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1027" />
+        <location filename="../artisanlib/roast_properties.py" line="1118" />
         <source>loss of organic matters caused by roasting</source>
         <translation>Kavurma nedeniyle oluşan organik madde kaybı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1034" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1034" />
+        <location filename="../artisanlib/roast_properties.py" line="1125" />
         <source>Volume calculator to determine coffee volume from sample weight measured in container of known volume</source>
         <translation>fBilinen hacimli kapta ölçülen numune ağırlığından kahve hacmini belirlemek için hacim hesaplayıcısı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1045" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1045" />
+        <location filename="../artisanlib/roast_properties.py" line="1138" />
         <source>Add roast properties to list of recent roasts</source>
         <translation>Kavurma özelliklerini son kavurma listesine ekleyin</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1051" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1051" />
+        <location filename="../artisanlib/roast_properties.py" line="1145" />
         <source>Remove roast properties from list of recent roasts</source>
         <translation>Son kavurmaların listesinden kavurma özelliklerini kaldır</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1058" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1058" />
+        <location filename="../artisanlib/roast_properties.py" line="1152" />
         <source>smallest screen size</source>
         <translation>en küçük ekran boyutu</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1066" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1066" />
+        <location filename="../artisanlib/roast_properties.py" line="1160" />
         <source>largest screen size</source>
         <translation>en büyük ekran boyutu</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1077" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1077" />
+        <location filename="../artisanlib/roast_properties.py" line="1171" />
         <source>color measurement of whole roasted beans</source>
         <translation>tam kavrulmuş çekirdeklerin renk ölçümü</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1084" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1084" />
+        <location filename="../artisanlib/roast_properties.py" line="1179" />
         <source>color measurement of ground roasted beans</source>
         <translation>öğütülmüş kavrulmuş çekirdeklerin renk ölçümü</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1092" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1092" />
+        <location filename="../artisanlib/roast_properties.py" line="1187" />
         <source>color scale</source>
         <translation>renk skalası</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1102" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1102" />
+        <location filename="../artisanlib/roast_properties.py" line="1197" />
         <source>temperature of the green coffee</source>
         <translation>yeşil kahvenin sıcaklığı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1113" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1113" />
+        <location filename="../artisanlib/roast_properties.py" line="1209" />
         <source>moisture unit</source>
         <translation>nem ünitesi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1121" />
-        <location filename="../artisanlib/roast_properties.py" line="1115" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1121" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1115" />
+        <location filename="../artisanlib/roast_properties.py" line="1218" />
+        <location filename="../artisanlib/roast_properties.py" line="1211" />
         <source>batch moisture</source>
         <translation>toplu nem</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1123" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1123" />
+        <location filename="../artisanlib/roast_properties.py" line="1220" />
         <source>moisture of roasted coffee</source>
         <translation>kavrulmuş kahvenin nemi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1129" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1129" />
+        <location filename="../artisanlib/roast_properties.py" line="1227" />
         <source>moisture loss caused by roasting</source>
         <translation>kavurma sonucu oluşan nem kaybı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1141" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1141" />
+        <location filename="../artisanlib/roast_properties.py" line="1239" />
         <source>ambient humidity</source>
         <translation>ortam nemi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1149" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1149" />
+        <location filename="../artisanlib/roast_properties.py" line="1248" />
         <source>ambient air temperature</source>
         <translation>ortam hava sıcaklığı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1158" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1158" />
+        <location filename="../artisanlib/roast_properties.py" line="1258" />
         <source>ambient air pressure</source>
         <translation>ortam hava basıncı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1180" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1180" />
+        <location filename="../artisanlib/roast_properties.py" line="1280" />
         <source>weight measured by connected scale</source>
         <translation>bağlı terazi ile ölçülen ağırlık</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1182" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1182" />
+        <location filename="../artisanlib/roast_properties.py" line="1283" />
         <source>accumulated weight received from connected scale</source>
         <translation>bağlı teraziden alınan toplam ağırlık</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1227" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1227" />
+        <location filename="../artisanlib/roast_properties.py" line="1328" />
         <source>container selector</source>
         <translation>konteyner seçici</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1239" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1239" />
+        <location filename="../artisanlib/roast_properties.py" line="1340" />
         <source>set scale weight as batch size</source>
         <translation>ölçek ağırlığını parti boyutu olarak ayarla</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1250" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1250" />
+        <location filename="../artisanlib/roast_properties.py" line="1351" />
         <source>set scale weight as weight of roasted coffee</source>
         <translation>kavrulmuş kahvenin ağırlığını ölçek ağırlığı olarak ayarlayın</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1262" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1262" />
+        <location filename="../artisanlib/roast_properties.py" line="1364" />
         <source>set scale weight as weight of defects or yield</source>
         <translation>kusur veya verim ağırlığı olarak ölçek ağırlığını ayarlayın</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1276" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1276" />
+        <location filename="../artisanlib/roast_properties.py" line="1380" />
         <source>retreive ambient data from connected devices or calculate from selected profile curve</source>
         <translation>Bağlı cihazlardan ortam verilerini alın veya seçili profil eğrisinden hesaplayın</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1379" />
-        <location filename="../artisanlib/roast_properties.py" line="1371" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1379" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1371" />
+        <location filename="../artisanlib/roast_properties.py" line="1489" />
+        <location filename="../artisanlib/roast_properties.py" line="1481" />
         <source>Select beans from your inventory</source>
         <translation>Envanterinizden fasulye seçin.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1377" />
-        <location filename="../artisanlib/roast_properties.py" line="1373" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1377" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1373" />
+        <location filename="../artisanlib/roast_properties.py" line="1487" />
+        <location filename="../artisanlib/roast_properties.py" line="1483" />
         <source>Select a storage location</source>
         <translation>Bir depolama yeri seçin</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1381" />
-        <location filename="../artisanlib/roast_properties.py" line="1375" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1381" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1375" />
+        <location filename="../artisanlib/roast_properties.py" line="1491" />
+        <location filename="../artisanlib/roast_properties.py" line="1485" />
         <source>Select a blend from your inventory</source>
         <translation>Stokunuzdan bir karışım seçin.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1386" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1386" />
+        <location filename="../artisanlib/roast_properties.py" line="1496" />
         <source>Define a custom blend</source>
         <translation>Özel bir karışım tanımlayın</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="1427" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="1427" />
+        <location filename="../artisanlib/roast_properties.py" line="1538" />
         <source>Beans are listed as 'origin, name' if ticked, otherwise as 'name, origin'</source>
         <translation>İşaretliyse fasulyeler 'köken, isim' şeklinde, aksi takdirde 'isim, köken' şeklinde listelenir.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2994" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2994" />
+        <location filename="../artisanlib/roast_properties.py" line="3139" />
         <source>Load label for reference. If left blank the row label, 'A', 'B', 'C' or 'D' will be used in its place.</source>
         <translation>Referans için etiket yükleyin. Boş bırakılırsa, yerine 'A', 'B', 'C' veya 'D' satır etiketi kullanılacaktır.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2996" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2996" />
+        <location filename="../artisanlib/roast_properties.py" line="3142" />
         <source>Power rating of the load</source>
         <translation>Yükün güç değeri</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="2998" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="2998" />
+        <location filename="../artisanlib/roast_properties.py" line="3145" />
         <source>Unit of the load matching the power rating</source>
         <translation>Yükün güç değerine karşılık gelen birimi</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3000" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3000" />
+        <location filename="../artisanlib/roast_properties.py" line="3147" />
         <source>Energy source of the load</source>
         <translation>Yükün enerji kaynağı</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3002" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3002" />
+        <location filename="../artisanlib/roast_properties.py" line="3149" />
         <source>Data source for the load. Either a recorded event type or the internal PID duty signal.</source>
         <translation>Yük için veri kaynağı. Kaydedilmiş bir olay türü veya dahili PID görev sinyali olabilir.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3004" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3004" />
+        <location filename="../artisanlib/roast_properties.py" line="3152" />
         <source>Ticked if readings are taken from a pressure gauge. Unticked for electric roasters and regular burner power output.</source>
         <translation>Basınç göstergesinden ölçüm alınıyorsa işaretlenir. Elektrikli kavurma makineleri ve normal brülör güç çıkışı için işaretlenmez.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3006" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3006" />
+        <location filename="../artisanlib/roast_properties.py" line="3155" />
         <source>Electric Energy Mix approximates the percentage of electricity that comes from renewable sources</source>
         <translation>Elektrik Enerjisi Karışımı, yenilenebilir kaynaklardan gelen elektriğin yüzdesini yaklaşık olarak ifade eder.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="3008" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="3008" />
+        <location filename="../artisanlib/roast_properties.py" line="3158" />
         <source>Gas Energy Mix approximates the percentage of gas that comes from renewable sources</source>
         <translation>Gaz Enerji Karışımı, yenilenebilir kaynaklardan gelen gazın yüzdesini yaklaşık olarak gösterir.</translation>
     </message>
     <message>
-        <location filename="../artisanlib/roast_properties.py" line="4200" />
+        <location filename="../artisanlib/roast_properties_bak.py" line="4200" />
+        <location filename="../artisanlib/roast_properties.py" line="4412" />
         <source>The maximum nominal batch size of the machine in kg</source>
         <translation>Makinenin kg cinsinden maksimum nominal parti boyutu</translation>
     </message>
@@ -22157,8 +22447,8 @@ daha fazla parti eklemeyi mümkün kılın.</translation>
         <translation>Düğme renklerini gri tonlamaya ve LCD renklerini siyah beyaza ayarlar</translation>
     </message>
     <message>
-        <location filename="../plus/schedule.py" line="2274" />
         <location filename="../TotalLINK/schedule.py" line="2266" />
+        <location filename="../plus/schedule.py" line="2274" />
         <source>Update schedule</source>
         <translation>Güncelleme programı</translation>
     </message>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="white"/>
+  <rect x="4" y="4" width="20" height="20" fill="black"/>
+  <rect x="8" y="8" width="12" height="12" fill="white"/>
+  <rect x="12" y="12" width="4" height="4" fill="black"/>
+
+  <rect x="40" y="4" width="20" height="20" fill="black"/>
+  <rect x="44" y="8" width="12" height="12" fill="white"/>
+  <rect x="48" y="12" width="4" height="4" fill="black"/>
+
+  <rect x="4" y="40" width="20" height="20" fill="black"/>
+  <rect x="8" y="44" width="12" height="12" fill="white"/>
+  <rect x="12" y="48" width="4" height="4" fill="black"/>
+
+  <rect x="30" y="28" width="4" height="4" fill="black"/>
+  <rect x="36" y="28" width="4" height="4" fill="black"/>
+  <rect x="28" y="34" width="4" height="4" fill="black"/>
+  <rect x="34" y="34" width="4" height="4" fill="black"/>
+  <rect x="40" y="34" width="4" height="4" fill="black"/>
+  <rect x="28" y="40" width="4" height="4" fill="black"/>
+  <rect x="36" y="40" width="4" height="4" fill="black"/>
+  <rect x="44" y="40" width="4" height="4" fill="black"/>
+  <rect x="32" y="46" width="4" height="4" fill="black"/>
+  <rect x="40" y="46" width="4" height="4" fill="black"/>
+</svg>

@@ -25,20 +25,21 @@
 from typing import Final, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
+    from artisanlib.main import ApplicationWindow  # pylint: disable=unused-import
 
 # Constants
 app_name: Final[str] = 'artisan.plus'
 profile_ext: Final[str] = 'alog'
-uuid_tag: Final[str] = 'roastUUID' # as used in .alog profiles, send as 'roast_id' as part of the sync record to the server
-schedule_uuid_tag: Final[str] = 'scheduleID' # send as 's_item_id' as part of the sync record to the server
-schedule_date_tag: Final[str] = 'scheduleDate' # send as 's_item_date' as part of the sync record to the server
+uuid_tag: Final[
+    str] = 'roastUUID'  # as used in .alog profiles, send as 'roast_id' as part of the sync record to the server
+schedule_uuid_tag: Final[str] = 'scheduleID'  # send as 's_item_id' as part of the sync record to the server
+schedule_date_tag: Final[str] = 'scheduleDate'  # send as 's_item_date' as part of the sync record to the server
 
 # Service URLs
 
 # # LOCAL SETUP
-#api_base_url         = 'https://localhost:62602/api/v1'
-#web_base_url         = 'https://localhost:8088'
+# api_base_url         = 'https://localhost:62602/api/v1'
+# web_base_url         = 'https://localhost:8088'
 
 # # CLOUD SETUP
 api_base_url: Final[str] = 'http://124.71.144.80:8081/api'
@@ -55,10 +56,11 @@ stock_url: Final[str] = api_base_url + '/acoffees'
 roast_url: Final[str] = api_base_url + '/aroast'
 lock_schedule_url: Final[str] = api_base_url + '/aschedule/lock'
 notifications_url: Final[str] = api_base_url + '/notifications'
+loginID: str = ""  # 可修改的字符串
 
 # Connection configurations
 
-#verify_ssl: Final[bool] = False
+# verify_ssl: Final[bool] = False
 verify_ssl: Final[bool] = False
 connect_timeout: Final[int] = 6  # in seconds
 read_timeout: Final[int] = 12  # in seconds
@@ -79,20 +81,20 @@ expired_subscription_max_days: Final[int] = 90
 # Cache and queue parameters
 
 # Note: stock_cache_expiration should be larger than schedule_cache_expiration
-stock_cache_expiration: Final[int] = 35   # expiration period in seconds for full stock updates (expensive)
-schedule_cache_expiration: Final[int] = 5 # expiration period in seconds for full stock updates only in case the schedule on the server has changed
+stock_cache_expiration: Final[int] = 35  # expiration period in seconds for full stock updates (expensive)
+schedule_cache_expiration: Final[
+    int] = 5  # expiration period in seconds for full stock updates only in case the schedule on the server has changed
 
 queue_start_delay: Final[int] = 5  # startup time of queue in seconds
 # delay between tasks in seconds (cycling interval of the queue)
 queue_task_delay: Final[float] = 2.0
 queue_retries: Final[int] = 2  # number of retries (should be >=0)
 queue_retry_delay: Final[int] = 30  # time between retries in seconds
-queue_discard_after: Final[int] = 3*24*60*60 # period in seconds after 'modified_at'..
+queue_discard_after: Final[int] = 3 * 24 * 60 * 60  # period in seconds after 'modified_at'..
 # .. until a queued item is removed from the queue; if queue_discard_after is 0 items are never discarded
 # queque_put_timeout indicates the number of seconds to wait on putting
 # a new item into the queue (unused for now)
 queue_put_timeout: Final[float] = 0.5
-
 
 # AppData
 
@@ -120,7 +122,7 @@ uuid_cache: Final[str] = 'uuids'
 account_cache: Final[str] = 'account'
 
 # the account nr locally associated to the current account, or None
-account_nr: int|None = None
+account_nr: int | None = None
 
 # the sync register that associates UUIDs with last known modification dates
 # modified_at for profiles uploaded/synced automatically
@@ -133,7 +135,6 @@ sync_cache: Final[str] = 'sync'
 # ArtisanViewer app, NOT protected by an extra filelock
 outbox_cache: Final[str] = 'outbox'
 
-
 # Runtime variables
 
 app_window: 'ApplicationWindow|None' = None  # handle to the main Artisan application window
@@ -142,6 +143,6 @@ app_window: 'ApplicationWindow|None' = None  # handle to the main Artisan applic
 #   plus service connection indicator icon
 connected: bool = False  # connection status
 # the session token
-token: str|None = None
+token: str | None = None
 # login nickname assigned on login with session token
-nickname: str|None = None
+nickname: str | None = None
