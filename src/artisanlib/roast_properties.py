@@ -22,6 +22,8 @@ import logging
 from collections.abc import Callable
 from typing import override, Final, cast, Any, TYPE_CHECKING
 from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import Qt, QAbstractTableModel, QModelIndex
+from PyQt6.QtWidgets import QApplication, QMainWindow, QTableView
 import os
 import functools
 
@@ -87,9 +89,11 @@ BODY_COLUMNS = [
     ("CPNQTYSTU", "计划数量"),
     ("REMARK", "物料备注"),
     ("CPNSTU", "单位"),
-    ("LOC", "库存"),
+    ("LOC", "库位"),
     ("MWEIQTY", "物料称重"),
     ("OKFLG", "确认标识"),
+    ("HBUSR", "烘焙师"),
+    ("CRETIM", "创建时间")
 ]
 
 
@@ -616,6 +620,58 @@ class RoastsComboBox(QComboBox):
 
 ########################################################################################
 #####################  Roast Properties Dialog  ########################################
+class BodyTableModel(QAbstractTableModel):
+
+    def __init__(self, rows=None):
+
+        super().__init__()
+
+        self.rows = rows or []
+
+    def rowCount(self, parent=QModelIndex()):
+
+        return len(self.rows)
+
+    def columnCount(self, parent=QModelIndex()):
+
+        return len(BODY_COLUMNS)
+
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+
+        if not index.isValid():
+            return None
+
+        if role != Qt.ItemDataRole.DisplayRole:
+            return None
+
+        row = self.rows[index.row()]
+
+        key = BODY_COLUMNS[index.column()][0]
+
+        value = row.get(key, "")
+
+        if key == "CPNQTYSTU" and value not in (None, ""):
+            return f"{float(value):.2f}"
+
+        return "" if value is None else str(value)
+
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+
+        if role != Qt.ItemDataRole.DisplayRole:
+            return None
+
+        if orientation == Qt.Orientation.Horizontal:
+            return BODY_COLUMNS[section][1]
+
+        return str(section + 1)
+
+    def setRows(self, rows):
+
+        self.beginResetModel()
+
+        self.rows = rows
+
+        self.endResetModel()
 
 
 class editGraphDlg(ArtisanResizeablDialog):
@@ -628,6 +684,11 @@ class editGraphDlg(ArtisanResizeablDialog):
     def __init__(self, parent: QWidget, aw: 'ApplicationWindow', activeTab: int = 0,
                  start_recording_on_exit: bool = False) -> None:
         super().__init__(parent, aw)
+
+        self.row_idx = -1
+        self.row = []
+        self.body_data: dict | None = None
+        self.body_rows = []
 
         self.start_recording_on_exit = start_recording_on_exit
 
@@ -1035,24 +1096,56 @@ class editGraphDlg(ArtisanResizeablDialog):
 
         aps_root.addWidget(aps_header_group)
 
+        # # 表身配方表格
+        # aps_body_group = QGroupBox("配方明细（表身）")
+        # aps_body_layout = QVBoxLayout(aps_body_group)
+        # aps_body_layout.setContentsMargins(16, 20, 16, 16)
+        #
+        # self._body_table = QTableWidget()
+        # self._body_table.setColumnCount(len(BODY_COLUMNS))
+        # self._body_table.setHorizontalHeaderLabels(
+        #     [label for _, label in BODY_COLUMNS]
+        # )
+        # self._body_table.setEditTriggers(
+        #     QTableWidget.EditTrigger.NoEditTriggers
+        # )
+        # self._body_table.setSelectionBehavior(
+        #     QTableWidget.SelectionBehavior.SelectRows
+        # )
+        # self._body_table.setAlternatingRowColors(True)
+        # self._body_table.verticalHeader().setVisible(False)
+
         # 表身配方表格
         aps_body_group = QGroupBox("配方明细（表身）")
+
         aps_body_layout = QVBoxLayout(aps_body_group)
+
         aps_body_layout.setContentsMargins(16, 20, 16, 16)
 
-        self._body_table = QTableWidget()
-        self._body_table.setColumnCount(len(BODY_COLUMNS))
-        self._body_table.setHorizontalHeaderLabels(
-            [label for _, label in BODY_COLUMNS]
-        )
-        self._body_table.setEditTriggers(
-            QTableWidget.EditTrigger.NoEditTriggers
-        )
+        self._body_table = QTableView()
+
         self._body_table.setSelectionBehavior(
-            QTableWidget.SelectionBehavior.SelectRows
+
+            QTableView.SelectionBehavior.SelectRows
+
         )
+
         self._body_table.setAlternatingRowColors(True)
-        self._body_table.verticalHeader().setVisible(False)
+
+        self._body_table.horizontalHeader().setStretchLastSection(True)
+
+        self.model = BodyTableModel()
+
+        self._body_table.setModel(self.model)
+
+        aps_body_layout.addWidget(self._body_table)
+
+        aps_root.addWidget(aps_body_group)
+
+        # ── 2. 连接选中信号 ──
+        self._body_table.selectionModel().currentRowChanged.connect(
+            self._on_body_row_selected
+        )
 
         header = self._body_table.horizontalHeader()
         header.setStretchLastSection(True)
@@ -1667,8 +1760,8 @@ class editGraphDlg(ArtisanResizeablDialog):
         textLayout.addWidget(self.apsResultWidget, 1, 0, 1, 2)  # 跨两列
         textLayout.addWidget(titlelabel, 3, 0)
         textLayout.addLayout(titleLine, 3, 1)
-        # textLayout.addWidget(beanslabel, 4 + textLayoutPlusOffset, 0)
-        # textLayout.addWidget(self.beansedit, 4 + textLayoutPlusOffset, 1)
+        textLayout.addWidget(beanslabel, 4 + textLayoutPlusOffset, 0)
+        textLayout.addWidget(self.beansedit, 4 + textLayoutPlusOffset, 1)
 
         beanSizeLayout = QHBoxLayout()
         beanSizeLayout.setSpacing(2)
@@ -2212,7 +2305,8 @@ class editGraphDlg(ArtisanResizeablDialog):
                 dark_mode_link_color = ''
             line = ''
             if self.plus_coffee_selected is not None and self.plus_coffee_selected_label:
-                line = f'<a href="{totallink.util.coffeeLink(self.plus_coffee_selected)}"{dark_mode_link_color}>{self.plus_coffee_selected_label}</a>'
+                self.body_rows[self.row_idx]["LOC"] = self.plus_coffees_combo.currentText()
+                # line = f'<a href="{totallink.util.coffeeLink(self.plus_coffee_selected)}"{dark_mode_link_color}>{self.plus_coffee_selected_label}</a>'
             elif self.plus_blend_selected_spec and self.plus_blend_selected_spec_labels:
                 # limit to max 3 component links
                 line = f'{self.plus_blend_selected_label}: '
@@ -2335,29 +2429,29 @@ class editGraphDlg(ArtisanResizeablDialog):
                 self.plus_coffees_combo.blockSignals(True)
                 self.plus_coffees_combo.clear()
                 self.plus_coffees_combo.resetInverted()
-                coffee_items = totallink.stock.getCoffeesLabels(self.plus_coffees)
-                self.plus_coffees_combo.addItems([''] + coffee_items)
+                # coffee_items = totallink.stock.getCoffeesLabels(self.plus_coffees)
+                # self.plus_coffees_combo.addItems([''] + coffee_items)
 
-                p = None
-                if self.plus_coffee_selected is not None and self.plus_store_selected is not None:
-                    p = totallink.stock.getCoffeeStockPosition(self.plus_coffee_selected, self.plus_store_selected,
-                                                               self.plus_coffees)
-                if p is None:
-                    # not in the current stock
-                    self.plus_coffees_combo.setCurrentIndex(0)
-                    # self.plus_coffee_selected = None # we don't "deselect" a coffee just because it is not in the popup!
-                    self.plus_coffees_combo.blockSignals(False)
-                else:
-                    # if roast is complete (charge and drop are set)
-                    if self.aw.qmc.timeindex[0] > -1 and self.aw.qmc.timeindex[6] > 0:
-                        # we first change the index and then unblock signals to avoid properties being overwritten from the selected coffee
-                        self.plus_coffees_combo.setCurrentIndex(p + 1)
-                        self.plus_coffees_combo.blockSignals(False)
-                    else:
-                        # if roast is not yet complete we unblock the signals before changing the index to get the coffee data be filled in
-                        self.plus_coffees_combo.blockSignals(False)
-                        self.plus_coffees_combo.setCurrentIndex(p + 1)
-                    mark_coffee_fields = True
+                # p = None
+                # if self.plus_coffee_selected is not None and self.plus_store_selected is not None:
+                #     p = totallink.stock.getCoffeeStockPosition(self.plus_coffee_selected, self.plus_store_selected,
+                #                                                self.plus_coffees)
+                # if p is None:
+                #     # not in the current stock
+                #     self.plus_coffees_combo.setCurrentIndex(0)
+                #     # self.plus_coffee_selected = None # we don't "deselect" a coffee just because it is not in the popup!
+                #     self.plus_coffees_combo.blockSignals(False)
+                # else:
+                #     # if roast is complete (charge and drop are set)
+                #     if self.aw.qmc.timeindex[0] > -1 and self.aw.qmc.timeindex[6] > 0:
+                #         # we first change the index and then unblock signals to avoid properties being overwritten from the selected coffee
+                #         self.plus_coffees_combo.setCurrentIndex(p + 1)
+                #         self.plus_coffees_combo.blockSignals(False)
+                #     else:
+                #         # if roast is not yet complete we unblock the signals before changing the index to get the coffee data be filled in
+                #         self.plus_coffees_combo.blockSignals(False)
+                #         self.plus_coffees_combo.setCurrentIndex(p + 1)
+                #     mark_coffee_fields = True
 
                 # ---- Blends
 
@@ -2510,7 +2604,7 @@ class editGraphDlg(ArtisanResizeablDialog):
             self.bean_size_min_edit.setText(screen_size_min)
             self.bean_size_max_edit.setText(screen_size_max)
             # check if title should be changed (if still default, or equal to the previous selection:
-            self.updateTitle(prev_coffee_label, prev_blend_label)
+            # self.updateTitle(prev_coffee_label, prev_blend_label)
             self.markPlusCoffeeFields(True)
             self.density_in_editing_finished()
             self.moistureEdited()
@@ -2554,7 +2648,7 @@ class editGraphDlg(ArtisanResizeablDialog):
                 pass
             self.bean_size_min_edit.setText(screen_size_min)
             self.bean_size_max_edit.setText(screen_size_max)
-            self.updateTitle(prev_coffee_label, prev_blend_label)
+            # self.updateTitle(prev_coffee_label, prev_blend_label)
             self.markPlusCoffeeFields(True)
             self.density_in_editing_finished()
             self.moistureEdited()
@@ -2580,44 +2674,49 @@ class editGraphDlg(ArtisanResizeablDialog):
             prev_coffee_label = self.plus_coffee_selected_label
             prev_blend_label = self.plus_blend_selected_label
             self.populatePlusCoffeeBlendCombos(n)
-            self.updateTitle(prev_coffee_label, prev_blend_label)
+            # self.updateTitle(prev_coffee_label, prev_blend_label)
 
     @pyqtSlot(int)
     def coffeeSelectionChanged(self, n: int) -> None:
+        if n < 0:
+            return
+
+        loc, qty = self.plus_coffees_combo.itemData(n)
+        self.body_rows[self.row_idx]["LOC"] = loc
         # check for previously selected blend label
-        prev_coffee_label = self.plus_coffee_selected_label
-        prev_blend_label = self.plus_blend_selected_label
-        self.user_updated_coffee_or_blend = True  # on leaving the dialog with OK the new selection will be persisted
-        if n < 1 or self.plus_coffees is None:
-            self.defaultCoffeeData()
-            self.plus_store_selected = None
-            self.plus_store_selected_label = None
-            self.plus_coffee_selected = None
-            self.plus_coffee_selected_label = None
-            self.plus_amount_selected = None
-            self.plus_amount_replace_selected = None
-            self.updateTitle(prev_coffee_label, prev_blend_label)
-        else:
-            # reset blend and set new coffee
-            self.plus_blends_combo.setCurrentIndex(0)
-            selected_coffee = self.plus_coffees[n - 1]
-            sd = totallink.stock.getCoffeeStockDict(selected_coffee)
-            self.plus_store_selected = sd['location_hr_id']
-            self.plus_store_selected_label = sd['location_label']
-            cd = totallink.stock.getCoffeeCoffeeDict(selected_coffee)
-            self.plus_coffee_selected = cd.get('hr_id', '')
-            self.plus_coffee_selected_label = totallink.stock.coffeeLabel(cd)
-            self.plus_blend_selected_label = None
-            self.plus_blend_selected_spec = None
-            self.plus_blend_selected_spec_labels = None
-            if 'amount' in totallink.stock.getCoffeeStockDict(selected_coffee):
-                self.plus_amount_selected = totallink.stock.getCoffeeStockDict(selected_coffee)['amount']
-            else:
-                self.pus_amount_selected = None
-            self.plus_amount_replace_selected = None
-            self.fillCoffeeData(selected_coffee, prev_coffee_label, prev_blend_label)
-        self.checkWeightIn()
-        self.updatePlusSelectedLine()
+        # prev_coffee_label = self.plus_coffee_selected_label
+        # prev_blend_label = self.plus_blend_selected_label
+        # self.user_updated_coffee_or_blend = True  # on leaving the dialog with OK the new selection will be persisted
+        # if n < 1 or self.plus_coffees is None:
+        #     self.defaultCoffeeData()
+        #     self.plus_store_selected = None
+        #     self.plus_store_selected_label = None
+        #     self.plus_coffee_selected = None
+        #     self.plus_coffee_selected_label = None
+        #     self.plus_amount_selected = None
+        #     self.plus_amount_replace_selected = None
+        #     # self.updateTitle(prev_coffee_label, prev_blend_label)
+        # else:
+        #     # reset blend and set new coffee
+        #     self.plus_blends_combo.setCurrentIndex(0)
+        #     selected_coffee = self.plus_coffees[n - 1]
+        #     sd = totallink.stock.getCoffeeStockDict(selected_coffee)
+        #     self.plus_store_selected = sd['location_hr_id']
+        #     self.plus_store_selected_label = sd['location_label']
+        #     cd = totallink.stock.getCoffeeCoffeeDict(selected_coffee)
+        #     self.plus_coffee_selected = cd.get('hr_id', '')
+        #     self.plus_coffee_selected_label = totallink.stock.coffeeLabel(cd)
+        #     self.plus_blend_selected_label = None
+        #     self.plus_blend_selected_spec = None
+        #     self.plus_blend_selected_spec_labels = None
+        #     if 'amount' in totallink.stock.getCoffeeStockDict(selected_coffee):
+        #         self.plus_amount_selected = totallink.stock.getCoffeeStockDict(selected_coffee)['amount']
+        #     else:
+        #         self.pus_amount_selected = None
+        #     self.plus_amount_replace_selected = None
+        #     self.fillCoffeeData(selected_coffee, prev_coffee_label, prev_blend_label)
+        # self.checkWeightIn()
+        # self.updatePlusSelectedLine()
 
     def getBlendDictCurrentWeight(self, blend: tuple[str, tuple[
         totallink.stock.Blend, totallink.stock.StockItem, float, dict[str, str], float, list[
@@ -2644,10 +2743,10 @@ class editGraphDlg(ArtisanResizeablDialog):
             self.plus_blend_selected_spec = None
             self.plus_blend_selected_spec_labels = None
             self.pus_amount_selected = None
-            self.updateTitle(prev_coffee_label, prev_blend_label)
+            # self.updateTitle(prev_coffee_label, prev_blend_label)
         else:
             # reset coffee and set new blend
-            self.plus_coffees_combo.setCurrentIndex(0)
+            # self.plus_coffees_combo.setCurrentIndex(0)
             selected_blend = self.plus_blends[n - 1]
             bsd: totallink.stock.StockItem = totallink.stock.getBlendStockDict(selected_blend)
             self.plus_store_selected = bsd['location_hr_id']
@@ -2678,7 +2777,7 @@ class editGraphDlg(ArtisanResizeablDialog):
             self.fillBlendData(selected_blend, prev_coffee_label, prev_blend_label)
 
         self.checkWeightIn()
-        self.updatePlusSelectedLine()
+        # self.updatePlusSelectedLine()
 
     # keeps the weightoutdefectsedit placeholder text set along the weightoutedit text
     def weightouteditSetText(self, txt: str) -> None:
@@ -2798,10 +2897,12 @@ class editGraphDlg(ArtisanResizeablDialog):
                                                  'location_hr_id'] == self.plus_store_selected)
                         self.blendSelectionChanged(pos_in_blends + 1)
                     except Exception:  # pylint: disable=broad-except
-                        self.updatePlusSelectedLine()
+                        pass
+                        # self.updatePlusSelectedLine()
                 else:
+                    pass
                     # blend replacements not applied
-                    self.updatePlusSelectedLine()
+                    # self.updatePlusSelectedLine()
 
             self.aw.sendmessage(
                 QApplication.translate('Message', f"Recent roast properties '{self.aw.recentRoastLabel(rr)}' set"))
@@ -5453,11 +5554,11 @@ class editGraphDlg(ArtisanResizeablDialog):
         self.recentRoastEnabled()
         if self.aw.plus_account is not None:
             blend_idx = self.plus_blends_combo.currentIndex()
-            if blend_idx > 0:
-                self.blendSelectionChanged(blend_idx)
-            coffee_idx = self.plus_coffees_combo.currentIndex()
-            if coffee_idx > 0:
-                self.coffeeSelectionChanged(coffee_idx)
+            # if blend_idx > 0:
+            #     self.blendSelectionChanged(blend_idx)
+            # coffee_idx = self.plus_coffees_combo.currentIndex()
+            # if coffee_idx > 0:
+            #     self.coffeeSelectionChanged(coffee_idx)
         self.weightinedit.setText(
             weight_in)  # need to set it here again as blendSelectionChanged/coffeeSelectionChanged do update a 0
         self.checkWeightOut()
@@ -6275,7 +6376,7 @@ class editGraphDlg(ArtisanResizeablDialog):
 
         # 兼容两种数据格式：已解包 {"Table":[...]} 或完整响应 {"isSuccess":"true","data":{"Table":[...]}}
         head_data = head.get("data", head) if isinstance(head, dict) else {}
-        body_data = body.get("data", body) if isinstance(body, dict) else {}
+        self.body_data = body.get("data", body) if isinstance(body, dict) else {}
 
         # ── 表头 ──
         head_rows = head_data.get("Table") or []
@@ -6289,22 +6390,36 @@ class editGraphDlg(ArtisanResizeablDialog):
             edit.setText(str(val) if val else "")
 
         # ── 表身 ──
-        body_rows = body_data.get("Table") or []
-        self._body_table.setRowCount(len(body_rows))
-        for row_idx, row in enumerate(body_rows):
-            for col_idx, (key, _) in enumerate(BODY_COLUMNS):
-                try:
-                    val = row.get(key, "")
-                    if key in ("HQTYSTU", "LQTYSTU", "CPNQTYSTU") and val not in (None, ""):
-                        val = f"{float(val):.2f}"
-                    item = QTableWidgetItem("" if val is None else str(val))
-                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                    self._body_table.setItem(row_idx, col_idx, item)
-                except Exception as e:
-                    print(
-                        f"row={row_idx}, col={col_idx}, key={key}, "
-                        f"value={row.get(key, None)}, error={e}"
-                    )
+        self.body_rows = self.body_data.get("Table") or []
+
+        # 用 setRows 替代手动 emit
+        self.model.setRows(self.body_rows)  # beginResetModel/endResetModel 已内置
+        # 不需要再手动 self.model.layoutChanged.emit()
+        # self._body_table.setRowCount(len(body_rows))
+        # for row_idx, row in enumerate(body_rows):
+        #     for col_idx, (key, _) in enumerate(BODY_COLUMNS):
+        #         try:
+        #             val = row.get(key, "")
+        #             if key in ("HQTYSTU", "LQTYSTU", "CPNQTYSTU") and val not in (None, ""):
+        #                 val = f"{float(val):.2f}"
+        #             elif key == "OKFLAG":
+        #                 if val is True:
+        #                     val = "✓"
+        #                 elif val is False:
+        #                     val = "✗"
+        #                 else:
+        #                     val = ""
+        #
+        #             item = QTableWidgetItem("" if val is None else str(val))
+        #
+        #             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        #
+        #             self._body_table.setItem(row_idx, col_idx, item)
+        #         except Exception as e:
+        #             print(
+        #                 f"row={row_idx}, col={col_idx}, key={key}, "
+        #                 f"value={row.get(key, None)}, error={e}"
+        #             )
 
         # 同步填充到 beans / batch / weight
         if first.get("ITMNAM"):
@@ -6314,6 +6429,89 @@ class editGraphDlg(ArtisanResizeablDialog):
                 self.batchedit.setText(first["APSNUM"])
         if first.get("HQTYSTU") is not None:
             self.weightinedit.setText(f"{float(first['HQTYSTU']):g}")
+
+    def get_row_data(self, row_idx):
+        """获取指定行的所有单元格文本"""
+        return [
+            self._body_table.item(row_idx, col).text()
+            if self._body_table.item(row_idx, col) else ""
+            for col in range(self._body_table.columnCount())
+        ]
+
+    def get_row_dict_from_table(self, row_idx):
+        """从 QTableWidget 取一行，返回 key→value 字典"""
+        return {
+            key: (self._body_table.item(row_idx, col).text()
+                  if self._body_table.item(row_idx, col) else "")
+            for col, (key, _) in enumerate(BODY_COLUMNS)
+        }
+
+    # ── 3. 选中行处理：赋值 + 查询 ──
+    def _on_body_row_selected(self, current, previous):
+        """选中表身行 → 豆子文本框赋值并查询"""
+        if not current.isValid():
+            return
+
+        self.row_idx = current.row()
+
+        # 获取这一行原始字典
+
+        row_data = self.model.rows[self.row_idx]
+        bean_name = row_data.get("ITMNAM", "").strip()
+        if not bean_name:
+            return
+
+        # ── 赋值给界面上豆子文本框 ──
+        self.beansedit.setText(bean_name)  # ← 替换成你实际的豆子文本框控件名
+
+        # ── 触发查询 ──
+        try:
+            r = sendData(
+                url=f"{config.api_base_url}/DataModel/linkDMDatasetResult",
+                data={
+                    "loginID": config.loginID,
+                    "par": {
+                        "dmCode": config.chargeAttachModelLOC,  # ← 替换为实际配方数据集编码
+                        "dmNum": 10,
+                        "para": []
+                    },
+                    "rowData": row_data
+                },
+                verb="POST",
+                authorized=False
+            )
+
+            # 解析结果
+            body = r.json() if r.status_code == 200 else None
+
+            if isinstance(body, dict):
+                # ✅ 改为：生成元组列表
+                loc_list = [
+                    (str(row.get('LOC', '')), str(row.get('QTYSTU', '')))
+                    for row in body.get("data", {}).get("Table") or []
+                ]
+                # [('A01', '82698.23'), ('S01', '131.3')]
+
+                self.plus_stores = loc_list  # 类型匹配 list[tuple[str, str]]
+                # 清空下拉框并填充
+                self.plus_coffees_combo.clear()
+                if not self.plus_stores:
+                    return
+
+                for loc, qty in self.plus_stores:
+                    self.plus_coffees_combo.addItem(f"{loc}({qty})", (loc, qty))
+
+                # self.body_rows[self.row_idx]['LOC'].setText(self.plus_coffees_combo.currentText())
+                self.batchScanEdit.setStyleSheet("")
+            else:
+                _log.warning("Stock query failed: %s", body)
+                self.aw.sendmessage(
+                    QApplication.translate('Message', 'Stock query failed')
+                )
+
+        except Exception as e:
+            _log.exception(e)
+            self.batchScanEdit.setStyleSheet("border: 1px solid red;")
 
     @pyqtSlot()
     def onScanTriggered(self) -> None:

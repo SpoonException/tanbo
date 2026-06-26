@@ -60,6 +60,7 @@ loginID: str = ""  # 可修改的字符串
 
 chargeModel = "TMESEXC15"
 chargeAttachModel = "TMESEXC1510X"
+chargeAttachModelLOC = "TMESEXC1510X700X.LOC"
 
 # Connection configurations
 
