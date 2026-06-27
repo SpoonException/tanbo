@@ -19,6 +19,7 @@ import sys
 import math
 import platform
 import logging
+import requests
 from collections.abc import Callable
 from typing import override, Final, cast, Any, TYPE_CHECKING
 from PyQt6.QtGui import QIcon
@@ -673,6 +674,25 @@ class BodyTableModel(QAbstractTableModel):
 
         self.endResetModel()
 
+    def setValue(self, row, key, value):
+
+        if not (0 <= row < len(self.rows)):
+            return
+
+        self.rows[row][key] = value
+
+        col = next(
+
+            i for i, (k, _) in enumerate(BODY_COLUMNS)
+
+            if k == key
+
+        )
+
+        idx = self.index(row, col)
+
+        self.dataChanged.emit(idx, idx)
+
 
 class editGraphDlg(ArtisanResizeablDialog):
     scaleWeightUpdated = pyqtSignal(float)
@@ -687,7 +707,9 @@ class editGraphDlg(ArtisanResizeablDialog):
 
         self.row_idx = -1
         self.row = []
+        self.head_data: dict | None = None
         self.body_data: dict | None = None
+        self.head_rows = []
         self.body_rows = []
 
         self.start_recording_on_exit = start_recording_on_exit
@@ -1197,6 +1219,9 @@ class editGraphDlg(ArtisanResizeablDialog):
         self.weightinedit.setMinimumWidth(70)
         self.weightinedit.setMaximumWidth(70)
         self.weightinedit.setAlignment(Qt.AlignmentFlag.AlignRight)
+
+        self.weightinedit.returnPressed.connect(self.onWeightFinished)
+
         self.weightoutedit = QLineEdit()
         if self.aw.qmc.end_weight_est == 1:
             self.weightoutedit.setPlaceholderText(outw)
@@ -1208,6 +1233,30 @@ class editGraphDlg(ArtisanResizeablDialog):
         self.weightoutedit.setMinimumWidth(70)
         self.weightoutedit.setMaximumWidth(70)
         self.weightoutedit.setAlignment(Qt.AlignmentFlag.AlignRight)
+
+        self.getWeightBtn = QPushButton("取重")
+
+        self.getWeightBtn.setToolTip("从电子秤读取重量")
+
+        self.getWeightBtn.setMinimumWidth(55)
+
+        self.getWeightBtn.setMaximumWidth(55)
+
+        self.getWeightBtn.clicked.connect(self.getWeight)
+
+        self.submitButton = QPushButton("提交")
+
+        self.submitButton.clicked.connect(self.submit)
+
+        inwlayout = QHBoxLayout()
+
+        inwlayout.setContentsMargins(0, 0, 0, 0)
+
+        inwlayout.setSpacing(4)
+
+        inwlayout.addWidget(self.weightinedit)
+
+        inwlayout.addWidget(self.getWeightBtn)
 
         self.weightpercentlabel = QLabel('')
         self.weightpercentlabel.setToolTip(QApplication.translate('Tooltip', 'weight loss caused by roasting'))
@@ -1787,6 +1836,8 @@ class editGraphDlg(ArtisanResizeablDialog):
         propGrid.addWidget(self.weightoutedit, 1, 2, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         propGrid.addWidget(self.unitsComboBox, 1, 3)
         propGrid.addWidget(self.weightpercentlabel, 1, 4, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        propGrid.addWidget(self.getWeightBtn, 1, 5, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        propGrid.addWidget(self.submitButton, 1, 6, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
         propGrid.setRowMinimumHeight(2, self.volumeUnitsComboBox.minimumSizeHint().height())
         propGrid.addWidget(self.defectslabel, 2, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -2069,6 +2120,171 @@ class editGraphDlg(ArtisanResizeablDialog):
     # otherwise weightoutedit.placeholderText()
     def weightoutedit_text(self) -> str:
         return self.weightoutedit.text() or self.weightoutedit.placeholderText()
+
+    @pyqtSlot()
+    def getWeight(self):
+
+        # TODO: 从电子秤读取重量
+
+        # self.weightinedit.setText(weight)
+
+        # 如果需要立即更新当前行
+
+        self.onWeightFinished()
+
+    def submit(self):
+
+        """扫描 APS 编号，调用 linkDMDatasetResult 接口获取批次信息"""
+        aps_num = self.batchScanEdit.text().strip()
+        if not aps_num:
+            return
+
+        if not config.loginID:
+            from PyQt6.QtWidgets import QMessageBox
+            QMessageBox.warning(
+                self,
+                QApplication.translate('Label', 'Not Logged In'),
+                QApplication.translate('Label', 'Please log in first to use the scan feature.')
+            )
+            return
+
+        try:
+            r = requests.post(
+                url=f"{config.api_base_url}/DataModel/linkDMGridDataSubmit",
+                json={
+                    "loginID": config.loginID,
+                    "par": {
+                        "dm": {
+                            "dmCode": config.chargeAttachModel,
+                            "dmNum": 700,
+                            "Para": [self.head_rows[0]["APSNUM"], self.head_rows[0]["APSLIN"]]
+                        },
+                        "scriptType": 2,
+                        "GDs": None,
+                        "RDs": None,
+                        "rowData": None,
+                        "tableData": self.body_rows
+                    }
+
+                },
+                headers={
+                    "Content-Type": "application/json"
+                }
+            )
+
+            # 解析结果
+            body = r.json() if r.status_code == 200 else None
+
+        except Exception as e:
+            _log.exception(e)
+            self.batchScanEdit.setStyleSheet("border: 1px solid red;")
+
+        try:
+            # 1) 查表头 —— 批次主信息
+            r1 = sendData(
+                url=f"{config.api_base_url}/DataModel/linkDMDatasetResult",
+                data={
+                    "loginID": config.loginID,
+                    "par": {
+                        "dmCode": config.chargeModel,
+                        "dmNum": 10,
+                        "para": [aps_num]
+                    },
+                    "rowData": None
+                },
+                verb="POST",
+                authorized=False
+            )
+
+            head = r1.json() if r1.status_code == 200 else None
+
+            apslin = head["data"]["Table"][0]["APSLIN"]
+
+            # 2) 查表身 —— 配方成分（假设 dmCode 是 TMESEXC16，按实际调整）
+            r2 = sendData(
+                url=f"{config.api_base_url}/DataModel/linkDMDatasetResult",
+                data={
+                    "loginID": config.loginID,
+                    "par": {
+                        "dmCode": config.chargeAttachModelSubmit,  # ← 替换为实际配方数据集编码
+                        "dmNum": 501,
+                        "para": [aps_num, aps_lin]
+                    },
+                    "scriptType": 4,
+
+                    "rowData": None,
+                },
+                verb="POST",
+                authorized=False
+            )
+
+            # 解析结果
+            body = r2.json() if r2.status_code == 200 else None
+
+            if (isinstance(head, dict) and isinstance(body, dict)
+                    and str(head.get("isSuccess", "")).lower() == "true"):
+                self._showApsResult(head, body)
+                self.batchScanEdit.setStyleSheet("")
+            else:
+                _log.warning("Scan head failed: %s", head)
+                self.batchScanEdit.setStyleSheet("border: 1px solid red;")
+                self.aw.sendmessage(
+                    QApplication.translate('Message', 'APS number not found')
+                )
+
+            self._showApsResult(head, body)
+
+        except Exception as e:
+            _log.exception(e)
+            self.batchScanEdit.setStyleSheet("border: 1px solid red;")
+
+        try:
+            r = requests.post(
+                url=f"{config.api_base_url}/DataModel/linkDMGridRowSubmit",
+                json={
+                    "loginID": config.loginID,
+                    "par": {
+                        "dm": {
+                            "dmCode": config.chargeAttachModelSubmit,
+                            "dmNum": 501,
+                            "Para": [self.head_rows[0]["APSNUM"], self.head_rows[0]["APSLIN"]]
+                        },
+                        "scriptType": 4,
+                        "GDs": None,
+                        "RDs": None,
+                        "rowData": self.head_rows[0]
+                    }
+
+                },
+                headers={
+                    "Content-Type": "application/json"
+                }
+            )
+
+            # 解析结果
+            body = r.json() if r.status_code == 200 else None
+
+        except Exception as e:
+            _log.exception(e)
+            self.batchScanEdit.setStyleSheet("border: 1px solid red;")
+
+    @pyqtSlot()
+    def onWeightFinished(self):
+        if self.row_idx < 0:
+            return
+
+        if self.sender() is not self.weightinedit:
+            return
+
+        self.model.setValue(
+
+            self.row_idx,
+
+            "MWEIQTY",
+
+            self.weightinedit.text()
+
+        )
 
     @pyqtSlot(bool)
     def tareScale1(self, _: bool = False) -> None:
@@ -2682,7 +2898,12 @@ class editGraphDlg(ArtisanResizeablDialog):
             return
 
         loc, qty = self.plus_coffees_combo.itemData(n)
-        self.body_rows[self.row_idx]["LOC"] = loc
+        # self.body_rows[self.row_idx]["LOC"] = loc
+        self.model.setValue(
+            self.row_idx,
+            "LOC",
+            loc
+        )
         # check for previously selected blend label
         # prev_coffee_label = self.plus_coffee_selected_label
         # prev_blend_label = self.plus_blend_selected_label
@@ -6369,18 +6590,18 @@ class editGraphDlg(ArtisanResizeablDialog):
         dialog.setFixedHeight(dialog.sizeHint().height())
         return dialog.exec()
 
-    def _showApsResult(self, head: dict, body: dict) -> None:
+    def _showApsResult(self, head: dict | None, body: dict | None) -> None:
         """将 API 返回数据填入对话框内嵌的 APS 展示区。"""
         if not head:
             return
 
         # 兼容两种数据格式：已解包 {"Table":[...]} 或完整响应 {"isSuccess":"true","data":{"Table":[...]}}
-        head_data = head.get("data", head) if isinstance(head, dict) else {}
+        self.head_data = head.get("data", head) if isinstance(head, dict) else {}
         self.body_data = body.get("data", body) if isinstance(body, dict) else {}
 
         # ── 表头 ──
-        head_rows = head_data.get("Table") or []
-        first = head_rows[0] if head_rows else {}
+        self.head_rows = self.head_data.get("Table") or []
+        first = self.head_rows[0] if self.head_rows else {}
         for key, edit in self._aps_header_widgets.items():
             val = first.get(key, "")
             if key == "DOCDAT":
@@ -6427,8 +6648,8 @@ class editGraphDlg(ArtisanResizeablDialog):
         if first.get("MFGNUM"):
             if hasattr(self, "batchedit"):
                 self.batchedit.setText(first["APSNUM"])
-        if first.get("HQTYSTU") is not None:
-            self.weightinedit.setText(f"{float(first['HQTYSTU']):g}")
+        # if first.get("HQTYSTU") is not None:
+        #     self.weightinedit.setText(f"{float(first['HQTYSTU']):g}")
 
     def get_row_data(self, row_idx):
         """获取指定行的所有单元格文本"""
