@@ -25,7 +25,6 @@ from PyQt6.QtCore import QSize, pyqtSlot
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QStyle
 
-
 from artisanlib.util import decodeLocal, getResourcePath, float2float
 from pathlib import Path
 from totallink import config
@@ -37,8 +36,8 @@ import numpy
 from typing import Final, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from artisanlib.atypes import ProfileData, ComputedProfileInformation # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QMessageBox # pylint: disable=unused-import
+    from artisanlib.atypes import ProfileData, ComputedProfileInformation  # pylint: disable=unused-import
+    from PyQt6.QtWidgets import QMessageBox  # pylint: disable=unused-import
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ _log: Final[logging.Logger] = logging.getLogger(__name__)
 
 # returns the last modification date as EPOCH (float incl. milliseconds) of
 # the given file if it exists, or None
-def getModificationDate(path:str) -> float|None:
+def getModificationDate(path: str) -> float | None:
     #    return Path(path).stat().st_mtime
     try:
         return os.path.getmtime(Path(path))
@@ -60,29 +59,31 @@ def getModificationDate(path:str) -> float|None:
 # Timestamps
 
 # given a datetime object returns e.g. '2018-10-12T12:55:12.999Z'
-def datetime2ISO8601(dt:datetime.datetime) -> str:
+def datetime2ISO8601(dt: datetime.datetime) -> str:
     (dtstr, micro) = dt.strftime('%Y-%m-%dT%H:%M:%S.%f').split('.')
     return f'{dtstr}.{(int(micro) / 1000):03.0f}Z'
+
+
 #    return '%s.%03dZ' % (dtstr, int(micro) / 1000)
 
-def ISO86012datetime(ts:str) -> datetime.datetime:
+def ISO86012datetime(ts: str) -> datetime.datetime:
     return dateutil.parser.parse(ts)
 
 
-def datetime2epoch(dt:datetime.datetime) -> float:
+def datetime2epoch(dt: datetime.datetime) -> float:
     return dt.timestamp()
 
 
-def epoch2datetime(epoch:float) -> datetime.datetime:
+def epoch2datetime(epoch: float) -> datetime.datetime:
     return datetime.datetime.fromtimestamp(epoch, tz=datetime.UTC)
 
 
 # given a epoch returns e.g. '2018-10-12T12:55:12.999Z'
-def epoch2ISO8601(epoch:float) -> str:
+def epoch2ISO8601(epoch: float) -> str:
     return datetime2ISO8601(epoch2datetime(epoch))
 
 
-def ISO86012epoch(ts:str) -> float:
+def ISO86012epoch(ts: str) -> float:
     return datetime2epoch(ISO86012datetime(ts))
 
 
@@ -92,61 +93,63 @@ def getGMToffset() -> int:
             datetime.UTC).astimezone().utcoffset()
         if offset is not None:
             return offset // datetime.timedelta(seconds=1)
-    except Exception: # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         pass
     return 0
 
 
 # extra simple information from a dict
 # res is assumed to be a dict and the projection result to be a non-empty string or a number
-def extractInfo(res:dict[str,Any], attr: str, default:None|str|int|float|list[str]) -> Any:
-    if attr in res and ((isinstance(res[attr], str) and res[attr] != '') or (isinstance(res[attr],(int, float)))):
+def extractInfo(res: dict[str, Any], attr: str, default: None | str | int | float | list[str]) -> Any:
+    if attr in res and ((isinstance(res[attr], str) and res[attr] != '') or (isinstance(res[attr], (int, float)))):
         return res[attr]
     return default
+
 
 # Prepare Temperatures for sending
 
 
-def fromFtoC(Ffloat: float|None) -> float|None:
+def fromFtoC(Ffloat: float | None) -> float | None:
     if Ffloat is None or Ffloat == -1 or numpy.isnan(Ffloat):
         return Ffloat
     assert Ffloat is not None
     return (Ffloat - 32.0) * (5.0 / 9.0)
 
 
-def temp2C(temp: float|None,mode:str|None = None) -> float|None:
+def temp2C(temp: float | None, mode: str | None = None) -> float | None:
     aw = config.app_window
     if (
-        temp is not None and (mode == 'F' or (mode is None and aw is not None and
-            aw.qmc.mode == 'F'))
+            temp is not None and (mode == 'F' or (mode is None and aw is not None and
+                                                  aw.qmc.mode == 'F'))
     ):  # @UndefinedVariable
         return fromFtoC(temp)  # @UndefinedVariable
     return temp
 
-def tempDiff2C(temp: float|None) -> float|None:
+
+def tempDiff2C(temp: float | None) -> float | None:
     aw = config.app_window
     if (
-        temp is not None and aw is not None and
+            temp is not None and aw is not None and
             aw.qmc.mode == 'F'
     ):  # @UndefinedVariable
         if temp in [-1, None] or numpy.isnan(temp):
             return temp
-        return temp * 5.0/9.0  # @UndefinedVariable
+        return temp * 5.0 / 9.0  # @UndefinedVariable
     return temp
 
 
-def RoRfromFtoC(Ffloat: float|None) -> float|None:
+def RoRfromFtoC(Ffloat: float | None) -> float | None:
     if Ffloat is None or Ffloat == -1 or numpy.isnan(Ffloat):
         return Ffloat
     assert Ffloat is not None
     return Ffloat * (5.0 / 9.0)
 
 
-def RoRtemp2C(temp: float|None, mode:str|None = None) -> float|None:
+def RoRtemp2C(temp: float | None, mode: str | None = None) -> float | None:
     aw = config.app_window
     if (
-        aw is not None and
-        temp is not None and (mode == 'F' or (mode is None and aw.qmc.mode == 'F'
+            aw is not None and
+            temp is not None and (mode == 'F' or (mode is None and aw.qmc.mode == 'F'
     ))):  # @UndefinedVariable
         return RoRfromFtoC(temp)  # @UndefinedVariable
     return temp
@@ -156,12 +159,12 @@ def RoRtemp2C(temp: float|None, mode:str|None = None) -> float|None:
 
 # in addition to float2float restricting to n decimals this one returns
 # integers if possible
-def float2floatMin(fs: float|None, n: int = 1) -> None|float|int:
+def float2floatMin(fs: float | None, n: int = 1) -> None | float | int:
     if fs is None:
         return None
     assert config.app_window is not None
-    f:float = float2float(float(fs), n)  # @UndefinedVariable
-    i:int = int(f)
+    f: float = float2float(float(fs), n)  # @UndefinedVariable
+    i: int = int(f)
     if f == i:
         return i
     return f
@@ -170,12 +173,12 @@ def float2floatMin(fs: float|None, n: int = 1) -> None|float|int:
 # Prepare numbers for sending
 # for numbers out of range None is returned
 def limitnum(
-    minn: float|None, maxn: float|None, n: float|None
-) -> float|None:
+        minn: float | None, maxn: float | None, n: float | None
+) -> float | None:
     if (
-        n is None
-        or (maxn is not None and n > maxn)
-        or (minn is not None and n < minn)
+            n is None
+            or (maxn is not None and n > maxn)
+            or (minn is not None and n < minn)
     ):
         return None
     return n
@@ -183,7 +186,7 @@ def limitnum(
 
 # Prepare temperature in C to the interval [-50,1000] for sending
 # for numbers out of range None is returned
-def limittemp(temp: float|None) -> float|None:
+def limittemp(temp: float | None) -> float | None:
     if temp is None or numpy.isnan(temp) or temp > 1000 or temp < -50:
         return None
     return temp
@@ -191,15 +194,15 @@ def limittemp(temp: float|None) -> float|None:
 
 # Prepare time in s to the interval [0,3600] for sending
 # for numbers out of range None is returned
-def limittime(tx: float|None) -> float|None:
-    if tx is None or numpy.isnan(tx) or  tx > 3600 or tx < 0:
+def limittime(tx: float | None) -> float | None:
+    if tx is None or numpy.isnan(tx) or tx > 3600 or tx < 0:
         return None
     return tx
 
 
 # Prepare text for sending
 # text longer than maxlen gets truncated and an eclipse added
-def limittext(maxlen: int, s: str|None) -> str|None:
+def limittext(maxlen: int, s: str | None) -> str | None:
     if s is not None:
         if len(s) > maxlen:
             return f'{s[:maxlen]}..'
@@ -210,9 +213,12 @@ def limittext(maxlen: int, s: str|None) -> str|None:
 # Dicts
 
 
-def addString2dict(dict_source:'ProfileData', key_source:str, dict_target:dict[str, Any], key_target:str, maxlen:int) -> None:
-    if key_source in dict_source and dict_source[key_source]: # type:ignore[literal-required, misc, invalid-key, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of (
-        txt = limittext(maxlen, decodeLocal(dict_source[key_source])) # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
+def addString2dict(dict_source: 'ProfileData', key_source: str, dict_target: dict[str, Any], key_target: str,
+                   maxlen: int) -> None:
+    if key_source in dict_source and dict_source[
+        key_source]:  # type:ignore[literal-required, misc, invalid-key, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of (
+        txt = limittext(maxlen, decodeLocal(dict_source[
+                                                key_source]))  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
         if txt is not None:
             dict_target[key_target] = txt
 
@@ -222,17 +228,19 @@ def addString2dict(dict_source:'ProfileData', key_source:str, dict_target:dict[s
 # numbers beyond the given limit are replaced by None
 # Note: None and 0 values are just dropped and no entry is added
 def addNum2dict(
-    dict_source:'ProfileData|ComputedProfileInformation',
-    key_source:str,
-    dict_target:dict[str, Any],
-    key_target:str,
-    minn:float|None,
-    maxn:float|None,
-    digits:int,
-    factor:float=1.,
+        dict_source: 'ProfileData|ComputedProfileInformation',
+        key_source: str,
+        dict_target: dict[str, Any],
+        key_target: str,
+        minn: float | None,
+        maxn: float | None,
+        digits: int,
+        factor: float = 1.,
 ) -> None:
-    if key_source in dict_source and dict_source[key_source]: # type: ignore[literal-required, misc, unused-ignore] # TypedDict key must be a string literal; expected one of
-        n = dict_source[key_source]  # type:ignore[literal-required, misc, unused-ignore] # TypedDict key must be a string literal; expected one of
+    if key_source in dict_source and dict_source[
+        key_source]:  # type: ignore[literal-required, misc, unused-ignore] # TypedDict key must be a string literal; expected one of
+        n = dict_source[
+            key_source]  # type:ignore[literal-required, misc, unused-ignore] # TypedDict key must be a string literal; expected one of
         if n is not None and isinstance(n, (float, int)):
             n = n * factor
         n = limitnum(minn, maxn, n)  # may return None # pyright:ignore[reportUnknownArgumentType]
@@ -247,17 +255,17 @@ def addNum2dict(
 # if min or max is None, the corresponding limit is not enforced, otherwise
 # numbers beyond the given limit are replaced by None
 def addAllNum2dict(
-    dict_source:'ProfileData|ComputedProfileInformation',
-    dict_target:dict[str, Any],
-    key_source_target_pairs:list[str|tuple[str,str]],
-    minn:float|None,
-    maxn:float|None,
-    digits:int,
-    factor:float=1.,
+        dict_source: 'ProfileData|ComputedProfileInformation',
+        dict_target: dict[str, Any],
+        key_source_target_pairs: list[str | tuple[str, str]],
+        minn: float | None,
+        maxn: float | None,
+        digits: int,
+        factor: float = 1.,
 ) -> None:
     for p in key_source_target_pairs:
-        key_source:str
-        key_target:str
+        key_source: str
+        key_target: str
         if isinstance(p, tuple):
             (key_source, key_target) = p
         else:
@@ -274,19 +282,23 @@ def addAllNum2dict(
         )
 
 
-def addTime2dict(dict_source:'ProfileData|ComputedProfileInformation', key_source:str, dict_target:dict[str, Any], key_target:str) -> None:
-    if key_source in dict_source and dict_source[key_source]:  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
-        tx = limittime(dict_source[key_source])  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
+def addTime2dict(dict_source: 'ProfileData|ComputedProfileInformation', key_source: str, dict_target: dict[str, Any],
+                 key_target: str) -> None:
+    if key_source in dict_source and dict_source[
+        key_source]:  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
+        tx = limittime(dict_source[
+                           key_source])  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
         if tx is not None:
             dict_target[key_target] = float2floatMin(tx)
 
 
 # consumes a list of source-target pairs, or just strings used as both source
 # and target key, to be processed with add2dict
-def addAllTime2dict(dict_source:'ProfileData|ComputedProfileInformation', dict_target:dict[str, Any], key_source_target_pairs:list[str|tuple[str,str]]) -> None:
+def addAllTime2dict(dict_source: 'ProfileData|ComputedProfileInformation', dict_target: dict[str, Any],
+                    key_source_target_pairs: list[str | tuple[str, str]]) -> None:
     for p in key_source_target_pairs:
-        key_source:str
-        key_target:str
+        key_source: str
+        key_target: str
         if isinstance(p, tuple):
             (key_source, key_target) = p
         else:
@@ -295,24 +307,33 @@ def addAllTime2dict(dict_source:'ProfileData|ComputedProfileInformation', dict_t
 
 
 # mode indicates the temperature unit, "C" or "F", of the data if not None
-def addTemp2dict(dict_source:'ProfileData|ComputedProfileInformation', key_source:str, dict_target:dict[str, Any], key_target:str, mode:str|None=None) -> None:
-    if key_source in dict_source and dict_source[key_source]:  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
-        temp = limittemp(temp2C(dict_source[key_source],mode))  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
+def addTemp2dict(dict_source: 'ProfileData|ComputedProfileInformation', key_source: str, dict_target: dict[str, Any],
+                 key_target: str, mode: str | None = None) -> None:
+    if key_source in dict_source and dict_source[
+        key_source]:  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
+        temp = limittemp(temp2C(dict_source[key_source],
+                                mode))  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
         if temp is not None and temp != -1 and not numpy.isnan(temp):
             dict_target[key_target] = float2floatMin(temp)
 
-def addTempDiff2dict(dict_source:'ProfileData|ComputedProfileInformation', key_source:str, dict_target:dict[str, Any], key_target:str) -> None:
-    if key_source in dict_source and dict_source[key_source]:  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
-        temp = limittemp(tempDiff2C(dict_source[key_source]))  # type:ignore[literal-required,misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
+
+def addTempDiff2dict(dict_source: 'ProfileData|ComputedProfileInformation', key_source: str,
+                     dict_target: dict[str, Any], key_target: str) -> None:
+    if key_source in dict_source and dict_source[
+        key_source]:  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
+        temp = limittemp(tempDiff2C(dict_source[
+                                        key_source]))  # type:ignore[literal-required,misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
         if temp is not None and temp != -1 and not numpy.isnan(temp):
             dict_target[key_target] = float2floatMin(temp)
+
 
 # consumes a list of source-target pairs, or just strings used as both source
 # and target key, to be processed with add2dict
-def addAllTemp2dict(dict_source:'ProfileData|ComputedProfileInformation', dict_target:dict[str, Any], key_source_target_pairs:list[str|tuple[str,str]]) -> None:
+def addAllTemp2dict(dict_source: 'ProfileData|ComputedProfileInformation', dict_target: dict[str, Any],
+                    key_source_target_pairs: list[str | tuple[str, str]]) -> None:
     for p in key_source_target_pairs:
-        key_source:str
-        key_target:str
+        key_source: str
+        key_target: str
         if isinstance(p, tuple):
             (key_source, key_target) = p
         else:
@@ -321,30 +342,36 @@ def addAllTemp2dict(dict_source:'ProfileData|ComputedProfileInformation', dict_t
 
 
 # mode indicates the temperature unit, "C" or "F", of the data if not None
-def addRoRTemp2dict(dict_source:'ProfileData|ComputedProfileInformation', key_source:str, dict_target:dict[str, Any], key_target:str, mode:str|None=None) -> None:
-    if key_source in dict_source and dict_source[key_source]:  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
-        temp = limittemp(RoRtemp2C(dict_source[key_source],mode))  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
+def addRoRTemp2dict(dict_source: 'ProfileData|ComputedProfileInformation', key_source: str, dict_target: dict[str, Any],
+                    key_target: str, mode: str | None = None) -> None:
+    if key_source in dict_source and dict_source[
+        key_source]:  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
+        temp = limittemp(RoRtemp2C(dict_source[key_source],
+                                   mode))  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
         if temp is not None:
             dict_target[key_target] = float2floatMin(temp)
 
 
 # returns extends dict_target by item with key_target holding the
 # dict_source[key_source] value if key_source in dict_source and not empty
-def add2dict(dict_source:'ProfileData', key_source:str, dict_target:dict[str, Any], key_target:str, if_non_empty:bool = True) -> None:
-    if key_source in dict_source and (not if_non_empty or dict_source[key_source]):  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
-        dict_target[key_target] = dict_source[key_source]  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
+def add2dict(dict_source: 'ProfileData', key_source: str, dict_target: dict[str, Any], key_target: str,
+             if_non_empty: bool = True) -> None:
+    if key_source in dict_source and (not if_non_empty or dict_source[
+        key_source]):  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
+        dict_target[key_target] = dict_source[
+            key_source]  # type:ignore[literal-required, misc, unused-ignore] # pyrefly: ignore # TypedDict key must be a string literal; expected one of
 
 
 def getLanguage() -> str:
     try:
         aw = config.app_window
         if (
-            aw is not None
-            and aw.plus_account is not None
+                aw is not None
+                and aw.plus_account is not None
         ):
             assert isinstance(aw.plus_language, str)
             return aw.plus_language
-    except Exception: # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         # config.app_window might be still unbound
         pass
     return 'en'
@@ -353,11 +380,12 @@ def getLanguage() -> str:
 # processing responses
 
 # if rlimit = -1 or rused = -1 or pu = "", no update information is available and the state is not updated
-@pyqtSlot(float,float,str,int,list)
-def updateLimits(rlimit:float, rused:float, pu:str, notifications:int, machines: list[str]) -> None:
+@pyqtSlot(float, float, str, int, list)
+def updateLimits(rlimit: float, rused: float, pu: str, notifications: int, machines: list[str]) -> None:
     aw = config.app_window
     if aw is not None:
         aw.updateLimits(rlimit, rused, pu, notifications, machines)
+
 
 @pyqtSlot()
 def updateSchedule() -> None:
@@ -365,14 +393,15 @@ def updateSchedule() -> None:
     if aw is not None:
         aw.updateSchedule()
 
+
 # takes the JSON response dict and returns the account state as tuple
 # rlimit:float, rused:float, pu:str, notifications:int
-def extractAccountState(response: dict[str,Any]) -> tuple[float, float, str, int, list[str]]:
-    rlimit:float = -1.
-    rused:float = -1.
-    pu:str = ''
-    notifications:int = 0 # unqualified notifications
-    machines:list[str] = [] # list of machine names with matching notifications
+def extractAccountState(response: dict[str, Any]) -> tuple[float, float, str, int, list[str]]:
+    rlimit: float = -1.
+    rused: float = -1.
+    pu: str = ''
+    notifications: int = 0  # unqualified notifications
+    machines: list[str] = []  # list of machine names with matching notifications
     try:
         if response:
             if 'ol' in response:
@@ -393,53 +422,60 @@ def extractAccountState(response: dict[str,Any]) -> tuple[float, float, str, int
         _log.exception(e)
     return rlimit, rused, pu, notifications, machines
 
+
 @pyqtSlot(dict)
-def updateLimitsFromResponse(response: dict[str,Any]) -> None:
-    rlimit,rused,pu,notifications,machines = extractAccountState(response)
-    updateLimits(rlimit,rused,pu,notifications,machines)
+def updateLimitsFromResponse(response: dict[str, Any]) -> None:
+    rlimit, rused, pu, notifications, machines = extractAccountState(response)
+    updateLimits(rlimit, rused, pu, notifications, machines)
 
 
 # Open Web Links
 
 
 def plusLink() -> str:
-#    return f'{config.web_base_url}/{getLanguage()}/'
+    #    return f'{config.web_base_url}/{getLanguage()}/'
     return f'{config.web_base_url}/'
 
-def storeLink(plus_store:str) -> str:
-#    return f'{config.web_base_url}/{getLanguage()}/stores;id={plus_store}'
+
+def storeLink(plus_store: str) -> str:
+    #    return f'{config.web_base_url}/{getLanguage()}/stores;id={plus_store}'
     return f'{config.web_base_url}/stores;id={plus_store}'
 
-def coffeeLink(plus_coffee:str) -> str:
-#    return f'{config.web_base_url}/{getLanguage()}/coffees;id={plus_coffee}'
+
+def coffeeLink(plus_coffee: str) -> str:
+    #    return f'{config.web_base_url}/{getLanguage()}/coffees;id={plus_coffee}'
     return f'{config.web_base_url}/coffees;id={plus_coffee}'
 
-def blendLink(plus_blend:str) -> str:
-#    return f'{config.web_base_url}/{getLanguage()}/blends;id={plus_blend}'
+
+def blendLink(plus_blend: str) -> str:
+    #    return f'{config.web_base_url}/{getLanguage()}/blends;id={plus_blend}'
     return f'{config.web_base_url}/blends;id={plus_blend}'
 
-def roastLink(plus_roast:str) -> str:
-#    return f'{config.web_base_url}/{getLanguage()}/roasts;id={plus_roast}'
+
+def roastLink(plus_roast: str) -> str:
+    #    return f'{config.web_base_url}/{getLanguage()}/roasts;id={plus_roast}'
     return f'{config.web_base_url}/roasts;id={plus_roast}'
 
+
 def remindersLink() -> str:
-#    return f'{config.web_base_url}/{getLanguage()}/reminders'
+    #    return f'{config.web_base_url}/{getLanguage()}/reminders'
     return f'{config.web_base_url}/reminders'
 
+
 def schedulerLink() -> str:
-#    return f'{config.web_base_url}/{getLanguage()}/schedule'
+    #    return f'{config.web_base_url}/{getLanguage()}/schedule'
     return f'{config.web_base_url}/schedule'
 
 
 # HiRes plus QMessageBox icon
 
-def setPlusIcon(mbox:'QMessageBox') -> None:
-    basedir = os.path.join(getResourcePath(),'Icons')
-    p = os.path.join(basedir, 'plus-notification.svg')
-    app_style:QStyle|None = QApplication.style()
+def setPlusIcon(mbox: 'QMessageBox') -> None:
+    basedir = os.path.join(getResourcePath(), 'Icons')
+    p = os.path.join(basedir, 'totallink-notification.svg')
+    app_style: QStyle | None = QApplication.style()
     if app_style is not None:
         icon_size = app_style.pixelMetric(QStyle.PixelMetric.PM_MessageBoxIconSize)
     else:
         icon_size = 64
-    pixmap = QIcon(p).pixmap(QSize(icon_size, icon_size),mbox.devicePixelRatio())
+    pixmap = QIcon(p).pixmap(QSize(icon_size, icon_size), mbox.devicePixelRatio())
     mbox.setIconPixmap(pixmap)

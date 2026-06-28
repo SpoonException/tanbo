@@ -23,21 +23,21 @@ import requests
 from collections.abc import Callable
 from typing import override, Final, cast, Any, TYPE_CHECKING
 from PyQt6.QtGui import QIcon
-from PyQt6.QtCore import Qt, QAbstractTableModel, QModelIndex
-from PyQt6.QtWidgets import QApplication, QMainWindow, QTableView
+from PyQt6.QtCore import QAbstractTableModel, QModelIndex
+from PyQt6.QtWidgets import QTableView
 import os
 import functools
 
 import totallink
 from totallink.connection import sendData
-from totallink import config, account, util
+from totallink import config, util
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow  # noqa: F401 # pylint: disable=unused-import
     from artisanlib.dialogs import HelpDlg  # noqa: F401 # pylint: disable=unused-import
     from artisanlib.atypes import RecentRoast, BTU
     from totallink.stock import Blend  # noqa: F401  # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QLayout, QFormLayout, QFrame, QAbstractItemView, \
+    from PyQt6.QtWidgets import QLayout, QFrame, QAbstractItemView, \
         QCompleter  # pylint: disable=unused-import
     from PyQt6.QtGui import QClipboard, QCloseEvent, QKeyEvent, QMouseEvent  # pylint: disable=unused-import
     from PyQt6.QtCore import QObject, QMetaObject  # pylint: disable=unused-import
@@ -45,16 +45,10 @@ if TYPE_CHECKING:
 from artisanlib.main import UI_MODE
 
 # import artisan.plus modules
-import plus.config  # @UnusedImport
-import plus.util
-import plus.stock
-import plus.controller
-import plus.queue
-import plus.blend
 
 # from artisanlib.suppress_errors import suppress_stdout_stderr
-from artisanlib.util import (deltaLabelUTF8, stringfromseconds, stringtoseconds, toInt, toFloat, abbrevString,
-                             scaleFloat2String, comma2dot, weight_units, render_weight, weight_units_lower,
+from artisanlib.util import (deltaLabelUTF8, stringfromseconds, stringtoseconds, toInt, toFloat, scaleFloat2String,
+                             comma2dot, weight_units, render_weight, weight_units_lower,
                              volume_units, float2floatWeightVolume, float2float,
                              convertWeight, convertVolume, float2str)
 from artisanlib.dialogs import ArtisanDialog, ArtisanResizeablDialog, tareDlg
@@ -84,17 +78,25 @@ HEADER_FIELDS = [
 
 # ── 表身表格列定义 ────────────────────────────────────────────
 BODY_COLUMNS = [
-    ("CPNITMNO", "物料编号"),
-    ("ITMNAM", "物料名称"),
-    ("MATRAT", "配比 (%)"),
-    ("CPNQTYSTU", "计划数量"),
-    ("REMARK", "物料备注"),
-    ("CPNSTU", "单位"),
-    ("LOC", "库位"),
-    ("MWEIQTY", "物料称重"),
+    ("ITMNO", "产品编码"),
+    ("ITMNAM", "产品名称"),
+    ("QTYSTU", "投料数量"),
+    ("STU", "单位"),
+    ("REMARK", "计划备注"),
+    ("DOCDAT", "计划生产日期"),
+    ("WEINO", "称号"),
+    ("LOT", "批次"),
+    ("PWEIQTY", "称重重量"),
+    ("PREMARK", "生产备注"),
     ("OKFLG", "确认标识"),
+    ("CURVEID", "曲线编号"),
+    ("FLAVOR1", "风味等级1"),
+    ("FLAVOR2", "风味等级2"),
+    ("FLAVOR3", "风味等级3"),
+    ("FLAVOR4", "风味等级4"),
+    ("FLAVOR5", "风味等级5"),
     ("HBUSR", "烘焙师"),
-    ("CRETIM", "创建时间")
+    ("CRETIM", "烘焙时间")
 ]
 
 
@@ -711,6 +713,8 @@ class editGraphDlg(ArtisanResizeablDialog):
         self.body_data: dict | None = None
         self.head_rows = []
         self.body_rows = []
+        self.aps_num = str | None
+        self.aps_lin = str | None
 
         self.start_recording_on_exit = start_recording_on_exit
 
@@ -2140,6 +2144,8 @@ class editGraphDlg(ArtisanResizeablDialog):
         if not aps_num:
             return
 
+        self.aps_num = aps_num
+
         if not config.loginID:
             from PyQt6.QtWidgets import QMessageBox
             QMessageBox.warning(
@@ -2157,8 +2163,8 @@ class editGraphDlg(ArtisanResizeablDialog):
                     "par": {
                         "dm": {
                             "dmCode": config.chargeAttachModel,
-                            "dmNum": 700,
-                            "Para": [self.head_rows[0]["APSNUM"], self.head_rows[0]["APSLIN"]]
+                            "dmNum": 701,
+                            "Para": [self.aps_num, self.aps_lin]
                         },
                         "scriptType": 2,
                         "GDs": None,
@@ -2189,7 +2195,7 @@ class editGraphDlg(ArtisanResizeablDialog):
                     "par": {
                         "dmCode": config.chargeModel,
                         "dmNum": 10,
-                        "para": [aps_num]
+                        "para": [self.aps_num]
                     },
                     "rowData": None
                 },
@@ -2199,7 +2205,7 @@ class editGraphDlg(ArtisanResizeablDialog):
 
             head = r1.json() if r1.status_code == 200 else None
 
-            apslin = head["data"]["Table"][0]["APSLIN"]
+            self.aps_lin = head["data"]["Table"][0]["APSLIN"]
 
             # 2) 查表身 —— 配方成分（假设 dmCode 是 TMESEXC16，按实际调整）
             r2 = sendData(
@@ -2207,9 +2213,9 @@ class editGraphDlg(ArtisanResizeablDialog):
                 data={
                     "loginID": config.loginID,
                     "par": {
-                        "dmCode": config.chargeAttachModelSubmit,  # ← 替换为实际配方数据集编码
-                        "dmNum": 501,
-                        "para": [aps_num, aps_lin]
+                        "dmCode": config.chargeAttachModel,  # ← 替换为实际配方数据集编码
+                        "dmNum": 701,
+                        "para": [self.aps_num, aps_lin]
                     },
                     "scriptType": 4,
 
@@ -2241,19 +2247,17 @@ class editGraphDlg(ArtisanResizeablDialog):
 
         try:
             r = requests.post(
-                url=f"{config.api_base_url}/DataModel/linkDMGridRowSubmit",
+                url=f"{config.api_base_url}/DataModel/linkDMContextFunBack",
                 json={
                     "loginID": config.loginID,
                     "par": {
                         "dm": {
-                            "dmCode": config.chargeAttachModelSubmit,
-                            "dmNum": 501,
-                            "Para": [self.head_rows[0]["APSNUM"], self.head_rows[0]["APSLIN"]]
+                            "dmCode": config.chargeAttachModel,
+                            "dmNum": 701,
+                            "Para": [self.aps_num, self.aps_lin]
                         },
-                        "scriptType": 4,
-                        "GDs": None,
-                        "RDs": None,
-                        "rowData": self.head_rows[0]
+                        "contextMenuNo": 501,
+                        "rowData": self.body_rows[0]
                     }
 
                 },
@@ -2265,9 +2269,51 @@ class editGraphDlg(ArtisanResizeablDialog):
             # 解析结果
             body = r.json() if r.status_code == 200 else None
 
+            pdf_url = None
+
+            if body:
+
+                ret_data = body.get("data", {}).get("retData", [])
+
+                if ret_data:
+                    pdf_url = ret_data[0].get("FILEURL")
+
+            if pdf_url:
+                from PyQt6.QtCore import QUrl
+                from PyQt6.QtGui import QDesktopServices
+
+                QDesktopServices.openUrl(QUrl(pdf_url))
+
         except Exception as e:
             _log.exception(e)
             self.batchScanEdit.setStyleSheet("border: 1px solid red;")
+
+        from pathlib import Path
+        from artisanlib.upload_artisan_file import upload_dm_file
+
+        # 当前 Python 文件所在目录
+
+        current_dir = Path(__file__).resolve().parent
+
+        file_path = current_dir / "test1.txt"
+
+        # 生成测试文件
+
+        file_path.write_text(
+
+            "Hello TotalLINK!\nThis is a test file uploaded from Artisan.",
+
+            encoding="utf-8"
+
+        )
+        resp = upload_dm_file(
+            code="LINKFLOW",
+            num="25",
+            type_="1",
+            RDs={"DOCNUM": "APS0000000295", "LINKUPLOADGROUP": "Artisan"},
+            file_path=file_path,
+            para=["APS0000000295", "2"],
+        )
 
     @pyqtSlot()
     def onWeightFinished(self):
@@ -2281,7 +2327,7 @@ class editGraphDlg(ArtisanResizeablDialog):
 
             self.row_idx,
 
-            "MWEIQTY",
+            "PWEIQTY",
 
             self.weightinedit.text()
 
@@ -6742,6 +6788,8 @@ class editGraphDlg(ArtisanResizeablDialog):
         if not aps_num:
             return
 
+        self.aps_num = aps_num
+
         if not config.loginID:
             from PyQt6.QtWidgets import QMessageBox
             QMessageBox.warning(
@@ -6760,7 +6808,7 @@ class editGraphDlg(ArtisanResizeablDialog):
                     "par": {
                         "dmCode": config.chargeModel,
                         "dmNum": 10,
-                        "para": [aps_num]
+                        "para": [self.aps_num]
                     },
                     "rowData": None
                 },
@@ -6770,7 +6818,7 @@ class editGraphDlg(ArtisanResizeablDialog):
 
             head = r1.json() if r1.status_code == 200 else None
 
-            apslin = head["data"]["Table"][0]["APSLIN"]
+            self.aps_lin = head["data"]["Table"][0]["APSLIN"]
 
             # 2) 查表身 —— 配方成分（假设 dmCode 是 TMESEXC16，按实际调整）
             r2 = sendData(
@@ -6779,8 +6827,8 @@ class editGraphDlg(ArtisanResizeablDialog):
                     "loginID": config.loginID,
                     "par": {
                         "dmCode": config.chargeAttachModel,  # ← 替换为实际配方数据集编码
-                        "dmNum": 700,
-                        "para": [aps_num, apslin]
+                        "dmNum": 701,
+                        "para": [self.aps_num, self.aps_lin]
                     },
                     "rowData": None
                 },

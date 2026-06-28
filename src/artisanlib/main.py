@@ -170,7 +170,7 @@ if TYPE_CHECKING:
     from types import TracebackType
     from artisanlib.atypes import ExtraDeviceSettings, Palette  # pylint: disable=unused-import
     from artisanlib.scale import ScaleSpec
-    from artisanlib.roast_properties import editGraphDlg  # pylint: disable=unused-import
+    from artisanlib.roast_drop_properties import editGraphDlg  # pylint: disable=unused-import
     from artisanlib.comparator import roastCompareDlg  # pylint: disable=unused-import
     from artisanlib.wheels import WheelDlg  # pylint: disable=unused-import
     from artisanlib.hottop import Hottop  # pylint: disable=unused-import
@@ -5653,7 +5653,7 @@ class ApplicationWindow(QMainWindow):
                         subscription_icon = 'plus-home'
                         if self.plus_paidUntil is not None:
                             remaining_days = (
-                                        self.plus_paidUntil.date() - datetime.datetime.now(datetime.UTC).date()).days
+                                    self.plus_paidUntil.date() - datetime.datetime.now(datetime.UTC).date()).days
                             if remaining_days <= 0:
                                 subscription_icon = 'plus-home-off'
                             elif remaining_days < 31:
@@ -5668,7 +5668,7 @@ class ApplicationWindow(QMainWindow):
                         subscription_icon = 'plus-pro'
                         if self.plus_paidUntil is not None:
                             remaining_days = (
-                                        self.plus_paidUntil.date() - datetime.datetime.now(datetime.UTC).date()).days
+                                    self.plus_paidUntil.date() - datetime.datetime.now(datetime.UTC).date()).days
                             if remaining_days <= 0:
                                 subscription_icon = 'plus-pro-off'
                             elif remaining_days < 31:
@@ -6332,8 +6332,8 @@ class ApplicationWindow(QMainWindow):
                                                    self.modbus.comport if org_modbus_comport == self.modbus.default_comport else org_modbus_comport) if self.qmc.device == 29 else (
                             self.ser.comport if org_comport == self.ser.default_comport else org_comport))
                         select_modbus_serial_port: bool = self.qmc.device == 29 or (
-                                    29 in self.qmc.extradevices and self.qmc.device not in {0, 9, 19, 53, 101, 115, 126,
-                                                                                            134, 138})
+                                29 in self.qmc.extradevices and self.qmc.device not in {0, 9, 19, 53, 101, 115, 126,
+                                                                                        134, 138})
                         serial_port_dialog_title: str = QApplication.translate('Message', 'Port Configuration')
                         if select_modbus_serial_port:
                             serial_port_dialog_title = f'{serial_port_dialog_title} (MODBUS)'
@@ -7385,7 +7385,7 @@ class ApplicationWindow(QMainWindow):
                                     indexes_to_be_removed.append(j)
                                     if last_index_not_removed is not None:
                                         self.qmc.specialeventsvalue[last_index_not_removed] = \
-                                        self.qmc.specialeventsvalue[j]
+                                            self.qmc.specialeventsvalue[j]
                                 else:
                                     last_index_not_removed = j
                         if self.qmc.specialeventstype[j] == tp:
@@ -7857,7 +7857,7 @@ class ApplicationWindow(QMainWindow):
                 # fit RoR in C/min/min
                 if exp == 2:
                     fitRoR = 60 * (np_dbtb[-1] - np_dbtb[0]) / (
-                                self.qmc.timex[timeindexs_all[-1]] - self.qmc.timex[timeindexs_all[0]])
+                            self.qmc.timex[timeindexs_all[-1]] - self.qmc.timex[timeindexs_all[0]])
                     fitRoR = f'{fitRoR:.2f}'
             else:
                 # there is no background
@@ -8636,7 +8636,7 @@ class ApplicationWindow(QMainWindow):
                             # display expected time to reach DRY as defined in the background profile or the phases dialog
                             if drytarget > self.qmc.temp2[-1]:
                                 dryexpectedtime = (drytarget - self.qmc.temp2[-1]) / (
-                                            self.qmc.delta2[-1] / 60.)  # pyrefly: ignore[unsupported-operation]
+                                        self.qmc.delta2[-1] / 60.)  # pyrefly: ignore[unsupported-operation]
                                 if self.qmc.phasesLCDmode == 2:
                                     tstring = stringfromseconds(dryexpectedtime, leadingzero=False)
                                 else:
@@ -8715,7 +8715,7 @@ class ApplicationWindow(QMainWindow):
                             FCslabel = '&darr;' + QApplication.translate('Label', 'FCs')
                         if self.qmc.timeindex[0] > -1 and (
                                 self.qmc.timeindex[1] or (drytarget <= self.qmc.temp2[-1])) and len(
-                                self.qmc.delta2) > 0 and self.qmc.delta2[-1] is not None and self.qmc.delta2[
+                            self.qmc.delta2) > 0 and self.qmc.delta2[-1] is not None and self.qmc.delta2[
                             -1] > 0:  # pyrefly: ignore[unsupported-operation]
                             ## after DRY:
                             # display expected time to reach FCs as defined in the background profile or the phases dialog
@@ -8725,7 +8725,7 @@ class ApplicationWindow(QMainWindow):
                                 fcstarget = self.qmc.phases[2]  # FCs min phases definition
                             if fcstarget > self.qmc.temp2[-1]:
                                 fcsexpectedtime = (fcstarget - self.qmc.temp2[-1]) / (
-                                            self.qmc.delta2[-1] / 60.)  # pyrefly:ignore[unsupported-operation]
+                                        self.qmc.delta2[-1] / 60.)  # pyrefly:ignore[unsupported-operation]
                                 if self.qmc.phasesLCDmode == 2:
                                     tstring = stringfromseconds(fcsexpectedtime, leadingzero=False)
                                 else:
@@ -12527,7 +12527,7 @@ class ApplicationWindow(QMainWindow):
 
     def slidersVisible(self) -> bool:
         return not self.app.artisanviewerMode and (
-                    any(v != 0 for v in self.eventslidervisibilities) or bool(self.pidcontrol.svSlider))
+                any(v != 0 for v in self.eventslidervisibilities) or bool(self.pidcontrol.svSlider))
 
     def showSliders(self, changeDefault: bool = True) -> None:
         if self.slidersVisible():
@@ -13113,9 +13113,9 @@ class ApplicationWindow(QMainWindow):
                 shift_modifier = modifiers == Qt.KeyboardModifier.ShiftModifier  # SHIFT
                 keypad_modifier = modifiers == Qt.KeyboardModifier.KeypadModifier  # keypad
                 control_alt_modifier = modifiers == (
-                            Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier)
+                        Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier)
                 control_shift_modifier = modifiers == (
-                            Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier)
+                        Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier)
                 no_modifier = modifiers == Qt.KeyboardModifier.NoModifier
                 # meta_modifier = modifiers == Qt.KeyboardModifier.MetaModifier # Control on macOS, Meta on Windows
                 # uncomment next line to find the integer value of a k
@@ -14731,32 +14731,32 @@ class ApplicationWindow(QMainWindow):
             self.pidcontrol.svValues = [int(x) for x in profile['svValues']]
             self.pidcontrol.svValues = self.pidcontrol.svValues[:self.pidcontrol.svLen]
             self.pidcontrol.svValues = self.pidcontrol.svValues + [0.0] * (
-                        self.pidcontrol.svLen - len(self.pidcontrol.svValues))
+                    self.pidcontrol.svLen - len(self.pidcontrol.svValues))
         if 'svRamps' in profile:
             self.pidcontrol.svRamps = [int(x) for x in profile['svRamps']]
             self.pidcontrol.svRamps = self.pidcontrol.svRamps[:self.pidcontrol.svLen]
             self.pidcontrol.svRamps = self.pidcontrol.svRamps + [0] * (
-                        self.pidcontrol.svLen - len(self.pidcontrol.svRamps))
+                    self.pidcontrol.svLen - len(self.pidcontrol.svRamps))
         if 'svSoaks' in profile:
             self.pidcontrol.svSoaks = [int(x) for x in profile['svSoaks']]
             self.pidcontrol.svSoaks = self.pidcontrol.svSoaks[:self.pidcontrol.svLen]
             self.pidcontrol.svSoaks = self.pidcontrol.svSoaks + [0] * (
-                        self.pidcontrol.svLen - len(self.pidcontrol.svSoaks))
+                    self.pidcontrol.svLen - len(self.pidcontrol.svSoaks))
         if 'svActions' in profile:
             self.pidcontrol.svActions = [int(x) for x in profile['svActions']]
             self.pidcontrol.svActions = self.pidcontrol.svActions[:self.pidcontrol.svLen]
             self.pidcontrol.svActions = self.pidcontrol.svActions + [-1] * (
-                        self.pidcontrol.svLen - len(self.pidcontrol.svActions))
+                    self.pidcontrol.svLen - len(self.pidcontrol.svActions))
         if 'svBeeps' in profile:
             self.pidcontrol.svBeeps = [bool(x) for x in profile['svBeeps']]
             self.pidcontrol.svBeeps = self.pidcontrol.svBeeps[:self.pidcontrol.svLen]
             self.pidcontrol.svBeeps = self.pidcontrol.svBeeps + [False] * (
-                        self.pidcontrol.svLen - len(self.pidcontrol.svBeeps))
+                    self.pidcontrol.svLen - len(self.pidcontrol.svBeeps))
         if 'svDescriptions' in profile:
             self.pidcontrol.svDescriptions = [str(x) for x in profile['svDescriptions']]
             self.pidcontrol.svDescriptions = self.pidcontrol.svDescriptions[:self.pidcontrol.svLen]
             self.pidcontrol.svDescriptions = self.pidcontrol.svDescriptions + [''] * (
-                        self.pidcontrol.svLen - len(self.pidcontrol.svDescriptions))
+                    self.pidcontrol.svLen - len(self.pidcontrol.svDescriptions))
 
     def loadEnergyFromProfile(self, profile: 'ProfileData') -> None:
         if 'loadlabels' in profile and len(profile['loadlabels']) == 4:
@@ -17278,7 +17278,7 @@ class ApplicationWindow(QMainWindow):
                 self.qmc.profile_sampling_interval = profile['samplinginterval']
             elif len(self.qmc.timex) > 2:
                 self.qmc.profile_sampling_interval = max(0.1, (self.qmc.timex[-1] - self.qmc.timex[0]) / (
-                            len(self.qmc.timex) - 1))
+                        len(self.qmc.timex) - 1))
             self.qmc.updateDeltaSamples()
 
             # Ramp/Soak Profiles
@@ -17521,9 +17521,9 @@ class ApplicationWindow(QMainWindow):
                         bbp_bottom_to_charge_time = stringfromseconds(
                             self.qmc.timex[self.qmc.timeindex[0]] - self.qmc.timex[bbp_tpidx])
                         bbp_begin_to_bottom_ror = 60 * (bbp_bottom_temp - self.qmc.temp2[0]) / (
-                                    self.qmc.timex[bbp_tpidx] - self.qmc.timex[0])
+                                self.qmc.timex[bbp_tpidx] - self.qmc.timex[0])
                         bbp_bottom_to_charge_ror = 60 * (self.qmc.temp2[self.qmc.timeindex[0]] - bbp_bottom_temp) / (
-                                    self.qmc.timex[self.qmc.timeindex[0]] - self.qmc.timex[bbp_tpidx])
+                                self.qmc.timex[self.qmc.timeindex[0]] - self.qmc.timex[bbp_tpidx])
                         # Bottom temp@170 - 3min 58sec from drop to bottom temp
                         # Charge temp: 190°C - 25sec from bottom temp to charge
                         output += (
@@ -17615,11 +17615,11 @@ class ApplicationWindow(QMainWindow):
                         0] + self.bbp_time_added_from_prev
                     self.bbp_bottom_to_charge_time = self.qmc.timex[self.qmc.timeindex[0]] - self.qmc.timex[bbp_tpidx]
                     self.bbp_begin_to_bottom_ror = 60 * (self.bbp_bottom_temp - self.qmc.temp2[0]) / (
-                                self.qmc.timex[bbp_tpidx] - self.qmc.timex[0] + self.bbp_time_added_from_prev)
+                            self.qmc.timex[bbp_tpidx] - self.qmc.timex[0] + self.bbp_time_added_from_prev)
                     self.bbp_bottom_to_charge_ror = 60 * (
-                                self.qmc.temp2[self.qmc.timeindex[0]] - self.bbp_bottom_temp) / (
-                                                                self.qmc.timex[self.qmc.timeindex[0]] - self.qmc.timex[
-                                                            bbp_tpidx])
+                            self.qmc.temp2[self.qmc.timeindex[0]] - self.bbp_bottom_temp) / (
+                                                            self.qmc.timex[self.qmc.timeindex[0]] - self.qmc.timex[
+                                                        bbp_tpidx])
             # TODO now deal with the special events from the previous roast  # pylint: disable=fixme
 
         except Exception as e:  # pylint: disable=broad-except
@@ -25797,7 +25797,7 @@ class ApplicationWindow(QMainWindow):
                 size='--' if (self.qmc.beansize_max == 0 and self.qmc.beansize_min == 0) else (str(round(
                     int(self.qmc.beansize_min))) if self.qmc.beansize_min != 0 else ''
                                                                                                ) + ('/' if (
-                            self.qmc.beansize_max != 0 and self.qmc.beansize_min != 0) else '') + (str(round(
+                        self.qmc.beansize_max != 0 and self.qmc.beansize_min != 0) else '') + (str(round(
                     int(self.qmc.beansize_max))) if (self.qmc.beansize_max != 0) else ''),
                 density_label=QApplication.translate('HTML Report Template', 'Density:'),
                 density=density,
@@ -26319,7 +26319,7 @@ class ApplicationWindow(QMainWindow):
     # if background=True, use the background time and temperature values
     # returns AUC(ET-BT), AUC(ET), AUC(BT), AUCbegin_idx
     def ts(self, start: int | None = None, end: int | None = None, tp: int | None = None, background: bool = False) -> \
-    tuple[int, int, int, int]:
+            tuple[int, int, int, int]:
         if background:
             timeindex = self.qmc.timeindexB[:]
             timex = self.qmc.timeB[:]
@@ -27583,7 +27583,7 @@ class ApplicationWindow(QMainWindow):
 
     def open_roast_properties_dialog(self, start_recording_on_exit: bool = False) -> None:
         if self.editgraphdialog is not False and self.editgraphdialog is None:  # Roast Properties dialog is not blocked!
-            from artisanlib.roast_properties import editGraphDlg
+            from artisanlib.roast_drop_properties import editGraphDlg
             self.editgraphdialog = editGraphDlg(self, self, self.editGraphDlg_activeTab, start_recording_on_exit)
             self.editgraphdialog.show()
 
@@ -28767,12 +28767,12 @@ class ApplicationWindow(QMainWindow):
         for i, eet in enumerate(self.extraeventstypes):
             # next button in this group is hidden
             next_hidden = ((
-                                       i - first_visible_idx) % self.buttonlistmaxlen < self.buttonlistmaxlen - 1 and  # at least one more places in the group
+                                   i - first_visible_idx) % self.buttonlistmaxlen < self.buttonlistmaxlen - 1 and  # at least one more places in the group
                            i + 1 < len(self.extraeventstypes) and  # there is one more button
                            not self.extraeventsvisibility[i + 1])  # and the next one is hidden
             # previous button in this group is hidden
             prev_hidden = ((
-                                       i - first_visible_idx) % self.buttonlistmaxlen > 0 and  # at least one previous place in this group
+                                   i - first_visible_idx) % self.buttonlistmaxlen > 0 and  # at least one previous place in this group
                            i > 0 and  # there is more than one button in total
                            not self.extraeventsvisibility[i - 1])  # and the previous one is hidden
 

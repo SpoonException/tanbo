@@ -44,9 +44,9 @@ schedule_date_tag: Final[str] = 'scheduleDate'  # send as 's_item_date' as part 
 # # CLOUD SETUP
 api_base_url: Final[str] = 'http://124.71.144.80:8081/api'
 # api_base_url: Final[str] = 'https://artisan.plus/api/v1'
-web_base_url: Final[str] = 'https://artisan.plus'
+web_base_url: Final[str] = 'http://124.71.144.80:8081/formbuilder'
 
-shop_base_url: Final[str] = 'https://buy.artisan.plus/'
+shop_base_url: Final[str] = 'http://124.71.144.80:8081/'
 
 register_url: Final[str] = web_base_url + '/register'
 reset_passwd_url: Final[str] = web_base_url + '/resetPassword'
@@ -62,6 +62,7 @@ chargeModel = "TMESEXC15"
 chargeAttachModel = "TMESEXC1510X"
 chargeAttachModelLOC = "TMESEXC1510X700X.LOC"
 chargeAttachModelSubmit = "TMESEXC1510X700X"
+chargeAttachModelDropSubmit = "TMESEXC1510X701X"
 
 # Connection configurations
 
