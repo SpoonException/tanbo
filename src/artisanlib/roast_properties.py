@@ -1192,7 +1192,8 @@ class editGraphDlg(ArtisanResizeablDialog):
             if self.aw.qmc.roastbatchnr == 0:
                 batch = ''
             else:
-                batch = self.aw.qmc.roastbatchprefix + str(self.aw.qmc.roastbatchnr) + roastpos
+                # batch = self.aw.qmc.roastbatchprefix + str(self.aw.qmc.roastbatchnr) + roastpos
+                batch = config.apsNum + self.aw.qmc.roastbatchprefix + str(config.apsLin)
             self.batchedit = ClickableQLabel(batch)
             self.batchedit.right_clicked.connect(self.enableBatchEdit)
             self.batchedit.setToolTip(QApplication.translate('Tooltip', 'Right-click to edit'))
@@ -6649,6 +6650,15 @@ class editGraphDlg(ArtisanResizeablDialog):
         if first.get("MFGNUM"):
             if hasattr(self, "batchedit"):
                 self.batchedit.setText(first["APSNUM"])
+
+        if body:
+            # 把各行的物料名称合并起来，以逗号分隔，填入豆子文本框
+            bean_names = [row.get("ITMNAM", "").strip() for row in self.body_rows if row.get("ITMNAM")]
+            self.beansedit.setText(
+                f"{self.titleedit.currentText()} [{', '.join(bean_names)}]"
+            )
+            ok_button = self.dialogbuttons.button(QDialogButtonBox.StandardButton.Ok)
+            ok_button.setEnabled(True)
         # if first.get("HQTYSTU") is not None:
         #     self.weightinedit.setText(f"{float(first['HQTYSTU']):g}")
 
@@ -6682,9 +6692,6 @@ class editGraphDlg(ArtisanResizeablDialog):
         bean_name = row_data.get("ITMNAM", "").strip()
         if not bean_name:
             return
-
-        # ── 赋值给界面上豆子文本框 ──
-        self.beansedit.setText(bean_name)  # ← 替换成你实际的豆子文本框控件名
 
         # ── 触发查询 ──
         try:
@@ -6794,6 +6801,8 @@ class editGraphDlg(ArtisanResizeablDialog):
             if (isinstance(head, dict) and isinstance(body, dict)
                     and str(head.get("isSuccess", "")).lower() == "true"):
                 self._showApsResult(head, body)
+                config.apsNum = aps_num
+                config.apsLin = apslin
                 self.batchScanEdit.setStyleSheet("")
             else:
                 _log.warning("Scan head failed: %s", head)
@@ -6817,8 +6826,6 @@ class editGraphDlg(ArtisanResizeablDialog):
         # 根据实际返回字段映射，这里需要按 TMESEXC15 数据集的实际字段名调整
         if batch := row.get("batchNo") or row.get("BATCH_NO"):
             self.batchedit.setText(str(batch))
-        if beans := row.get("beans") or row.get("BEANS"):
-            self.beansedit.setNewPlainText(str(beans))
         if weight := row.get("weight") or row.get("WEIGHT"):
             self.weightinedit.setText(str(weight))
 

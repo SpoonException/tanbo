@@ -48,6 +48,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
 from cryptography.exceptions import InvalidSignature
+from totallink import config
 
 # links CTR-C signals to the system default (ignore)
 import signal
@@ -170,7 +171,8 @@ if TYPE_CHECKING:
     from types import TracebackType
     from artisanlib.atypes import ExtraDeviceSettings, Palette  # pylint: disable=unused-import
     from artisanlib.scale import ScaleSpec
-    from artisanlib.roast_drop_properties import editGraphDlg  # pylint: disable=unused-import
+    from artisanlib.roast_properties import editGraphDlg  # pylint: disable=unused-import
+    from artisanlib.roast_drop_properties import editGraphDlg as editDropGraphDlg  # pylint: disable=unused-import
     from artisanlib.comparator import roastCompareDlg  # pylint: disable=unused-import
     from artisanlib.wheels import WheelDlg  # pylint: disable=unused-import
     from artisanlib.hottop import Hottop  # pylint: disable=unused-import
@@ -1513,6 +1515,7 @@ class ApplicationWindow(QMainWindow):
                                 bool)  # can be called from another thread or a QTimer to set the profile title in the main GUI thread
     sendmessageSignal = pyqtSignal(str, bool, str)
     openPropertiesSignal = pyqtSignal()
+    openDropPropertiesSignal = pyqtSignal()
     soundpopSignal = pyqtSignal()
     setCanvasColorSignal = pyqtSignal(str)
     resetCanvasColorSignal = pyqtSignal()
@@ -2663,6 +2666,7 @@ class ApplicationWindow(QMainWindow):
         self.editGraphAction: QAction = QAction(QApplication.translate('Menu', 'Properties...'), self)
         self.editGraphAction.setMenuRole(QAction.MenuRole.NoRole)  # without this, this item is not shown in he
         self.editGraphAction.triggered.connect(self.editgraph)
+
         self.editGraphAction.setShortcut('Ctrl+T')
 
         self.backgroundAction: QAction = QAction(QApplication.translate('Menu', 'Background...'), self)
@@ -4524,6 +4528,7 @@ class ApplicationWindow(QMainWindow):
         self.setTitleSignal.connect(self.qmc.setProfileTitle)
         self.sendmessageSignal.connect(self.sendmessage)
         self.openPropertiesSignal.connect(self.editgraph)
+        self.openDropPropertiesSignal.connect(self.editdropgraph)
         self.soundpopSignal.connect(self.soundpop)
         self.setCanvasColorSignal.connect(self.setCanvasColor)
         self.resetCanvasColorSignal.connect(self.resetCanvasColor)
@@ -14060,6 +14065,7 @@ class ApplicationWindow(QMainWindow):
                     prefix += self.qmc.batchprefix + str(self.qmc.roastbatchnr)
                 elif self.qmc.batchprefix != '':
                     prefix += self.qmc.batchprefix
+                prefix = config.apsNum + self.qmc.batchprefix + str(config.apsLin)
                 filename = self.generateFilename(prefix=prefix)
                 filename_path = os.path.join(self.qmc.autosavepath, filename)
                 oldDir = str(QDir.current())
@@ -14084,6 +14090,19 @@ class ApplicationWindow(QMainWindow):
                         QApplication.translate('Message', 'Autosave path does not exist. Autosave failed.'))
                 # restore dirs
                 QDir.setCurrent(oldDir)
+
+                from pathlib import Path
+                from artisanlib.upload_artisan_file import upload_dm_file
+
+                resp = upload_dm_file(
+                    code="LINKFLOW",
+                    num="25",
+                    type_="1",
+                    RDs={"DOCNUM": config.apsNum, "LINKUPLOADGROUP": "Artisan"},
+                    file_path=filename_path,
+                    para=[config.apsNum, str(config.apsLin)],
+                )
+
                 # file might be autosaved but not uploaded to plus yet (no DROP registered). This needs to be indicated by a red plus icon
                 try:
                     self.updatePlusStatus()
@@ -27581,7 +27600,18 @@ class ApplicationWindow(QMainWindow):
     def editgraph(self, _: bool = False) -> None:
         self.open_roast_properties_dialog()
 
+    @pyqtSlot()
+    @pyqtSlot(bool)
+    def editdropgraph(self, _: bool = False) -> None:
+        self.open_roast_drop_properties_dialog()
+
     def open_roast_properties_dialog(self, start_recording_on_exit: bool = False) -> None:
+        if self.editgraphdialog is not False and self.editgraphdialog is None:  # Roast Properties dialog is not blocked!
+            from artisanlib.roast_properties import editGraphDlg
+            self.editgraphdialog = editGraphDlg(self, self, self.editGraphDlg_activeTab, start_recording_on_exit)
+            self.editgraphdialog.show()
+
+    def open_roast_drop_properties_dialog(self, start_recording_on_exit: bool = False) -> None:
         if self.editgraphdialog is not False and self.editgraphdialog is None:  # Roast Properties dialog is not blocked!
             from artisanlib.roast_drop_properties import editGraphDlg
             self.editgraphdialog = editGraphDlg(self, self, self.editGraphDlg_activeTab, start_recording_on_exit)

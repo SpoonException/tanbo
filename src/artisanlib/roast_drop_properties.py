@@ -1196,7 +1196,8 @@ class editGraphDlg(ArtisanResizeablDialog):
             if self.aw.qmc.roastbatchnr == 0:
                 batch = ''
             else:
-                batch = self.aw.qmc.roastbatchprefix + str(self.aw.qmc.roastbatchnr) + roastpos
+                # batch = self.aw.qmc.roastbatchprefix + str(self.aw.qmc.roastbatchnr) + roastpos
+                batch = config.apsNum + self.aw.qmc.roastbatchprefix + str(config.apsLin)
             self.batchedit = ClickableQLabel(batch)
             self.batchedit.right_clicked.connect(self.enableBatchEdit)
             self.batchedit.setToolTip(QApplication.translate('Tooltip', 'Right-click to edit'))

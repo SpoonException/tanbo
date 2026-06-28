@@ -64,6 +64,9 @@ chargeAttachModelLOC = "TMESEXC1510X700X.LOC"
 chargeAttachModelSubmit = "TMESEXC1510X700X"
 chargeAttachModelDropSubmit = "TMESEXC1510X701X"
 
+apsNum = ""
+apsLin = 0
+
 # Connection configurations
 
 # verify_ssl: Final[bool] = False

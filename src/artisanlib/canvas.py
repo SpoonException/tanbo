@@ -15552,7 +15552,7 @@ class tgraphcanvas(QObject):
                             except Exception as e: # pylint: disable=broad-except
                                 _log.exception(e)
                         if self.roastpropertiesAutoOpenDropFlag:
-                            self.aw.openPropertiesSignal.emit()
+                            self.aw.openDropPropertiesSignal.emit()
                     self.aw.onMarkMoveToNext(self.aw.buttonDROP)
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
