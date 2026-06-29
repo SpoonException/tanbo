@@ -23,9 +23,90 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Final, TYPE_CHECKING
+import os
+import sys
+import json
+import logging
+from pathlib import Path
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow  # pylint: disable=unused-import
+
+
+# ──────────────────────────────────────────────
+# 外部配置文件（仅 Modbus 相关参数可配置）
+# ──────────────────────────────────────────────
+
+def _get_config_dir() -> Path:
+    if sys.platform == "win32":
+        base = os.environ.get("APPDATA", str(Path.home()))
+        return Path(base) / "artisan"
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "artisan"
+    xdg = os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
+    return Path(xdg) / "artisan"
+
+
+CONFIG_DIR: Final[Path] = _get_config_dir()
+CONFIG_FILE: Final[Path] = CONFIG_DIR / "TotalLINK_config.json"
+
+# 只有这 10 个字段可以被外部配置覆盖
+_CONFIGURABLE_DEFAULTS: dict = {
+    "modbusIPCharge": "127.0.0.1",
+    "modbusPortCharge": 5020,
+    "modbusByteOrderCharge": "little",
+    "modbusWordOrderCharge": "little",
+    "registerAddressCharge": 10,
+    "modbusIPDrop": "127.0.0.1",
+    "modbusPortDrop": 5020,
+    "modbusByteOrderDrop": "little",
+    "modbusWordOrderDrop": "little",
+    "registerAddressDrop": 10,
+}
+
+
+def _ensure_config_file() -> None:
+    """配置文件不存在时自动创建，写入可配置字段的默认值。"""
+    if CONFIG_FILE.exists():
+        return
+    try:
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        template = {
+            "_comment": "TotalLINK 配置文件。修改对应字段后重启程序生效。不需要的字段可以删除，将使用源码默认值。",
+        }
+        template.update(_CONFIGURABLE_DEFAULTS)
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(template, f, indent=4, ensure_ascii=False)
+        logging.info("config: 已自动生成配置文件 %s", CONFIG_FILE)
+    except Exception as e:  # noqa: BLE001
+        logging.warning("config: 自动生成配置文件失败，将使用源码默认值: %s", e)
+
+
+def _load_user_overrides() -> dict:
+    _ensure_config_file()
+    try:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, dict):
+                # 只取可配置字段，其余一律忽略
+                return {k: v for k, v in data.items() if k in _CONFIGURABLE_DEFAULTS}
+            logging.warning("config: %s 顶层不是 JSON 对象，已忽略", CONFIG_FILE)
+    except Exception as e:  # noqa: BLE001
+        logging.warning("config: 读取 %s 失败，将使用默认值: %s", CONFIG_FILE, e)
+    return {}
+
+
+_user: dict = _load_user_overrides()
+
+
+def _cfg(key: str, default):
+    """从外部配置取值，取不到就用默认值。"""
+    return _user.get(key, default)
+
+
+# ──────────────────────────────────────────────
+# 以下为原始配置，仅 Modbus 部分改为可配置
+# ──────────────────────────────────────────────
 
 # Constants
 app_name: Final[str] = 'artisan.plus'
@@ -67,17 +148,19 @@ chargeAttachModelDropSubmit = "TMESEXC1510X701X"
 apsNum = ""
 apsLin = 0
 
-modbusIPCharge = "127.0.0.1"
-modbusPortCharge = 5020
-modbusByteOrderCharge: str = "little"
-modbusWordOrderCharge: str = "little"
-registerAddressCharge: int = 0x000A
+# ── Modbus 充填秤（可配置）──
+modbusIPCharge: str = _cfg("modbusIPCharge", _CONFIGURABLE_DEFAULTS["modbusIPCharge"])
+modbusPortCharge: int = _cfg("modbusPortCharge", _CONFIGURABLE_DEFAULTS["modbusPortCharge"])
+modbusByteOrderCharge: str = _cfg("modbusByteOrderCharge", _CONFIGURABLE_DEFAULTS["modbusByteOrderCharge"])
+modbusWordOrderCharge: str = _cfg("modbusWordOrderCharge", _CONFIGURABLE_DEFAULTS["modbusWordOrderCharge"])
+registerAddressCharge: int = _cfg("registerAddressCharge", _CONFIGURABLE_DEFAULTS["registerAddressCharge"])
 
-modbusIPDrop = "127.0.0.1"
-modbusPortDrop = 5020
-modbusByteOrderDrop: str = "little"
-modbusWordOrderDrop: str = "little"
-registerAddressDrop: int = 0x000A
+# ── Modbus 跌落秤（可配置）──
+modbusIPDrop: str = _cfg("modbusIPDrop", _CONFIGURABLE_DEFAULTS["modbusIPDrop"])
+modbusPortDrop: int = _cfg("modbusPortDrop", _CONFIGURABLE_DEFAULTS["modbusPortDrop"])
+modbusByteOrderDrop: str = _cfg("modbusByteOrderDrop", _CONFIGURABLE_DEFAULTS["modbusByteOrderDrop"])
+modbusWordOrderDrop: str = _cfg("modbusWordOrderDrop", _CONFIGURABLE_DEFAULTS["modbusWordOrderDrop"])
+registerAddressDrop: int = _cfg("registerAddressDrop", _CONFIGURABLE_DEFAULTS["registerAddressDrop"])
 
 # Connection configurations
 
@@ -129,7 +212,7 @@ completed_roasts_cache: Final[str] = 'completed'
 # the prepared items cache reflects the prepared scheduled items
 prepared_items_cache: Final[str] = 'prepared'
 
-# the hidden items cache reflects the hidden scheduled items
+# the hidden items cache reflects the hidden items
 hidden_items_cache: Final[str] = 'hidden'
 
 # the uuid register that associates UUIDs with local filepaths where to
