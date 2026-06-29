@@ -1,0 +1,30 @@
+{
+    "_comment": "Artisan.plus 外部配置文件，改完重启程序生效。只写你要覆盖的字段，没写的自动用源码默认值。",
+
+    "api_base_url": "http://124.71.144.80:8081/api",
+    "web_base_url": "http://124.71.144.80:8081/formbuilder",
+    "shop_base_url": "http://124.71.144.80:8081/",
+    "auth_url": "http://124.71.144.80:8081/api/LINK/linkUserLoginAPI",
+
+    "chargeModel": "TMESEXC15",
+    "chargeAttachModel": "TMESEXC1510X",
+    "chargeAttachModelLOC": "TMESEXC1510X700X.LOC",
+    "chargeAttachModelSubmit": "TMESEXC1510X700X",
+    "chargeAttachModelDropSubmit": "TMESEXC1510X701X",
+
+    "modbusIPCharge": "127.0.0.1",
+    "modbusPortCharge": 5020,
+    "modbusByteOrderCharge": "little",
+    "modbusWordOrderCharge": "little",
+    "registerAddressCharge": 10,
+
+    "modbusIPDrop": "127.0.0.1",
+    "modbusPortDrop": 5020,
+    "modbusByteOrderDrop": "little",
+    "modbusWordOrderDrop": "little",
+    "registerAddressDrop": 10,
+
+    "verify_ssl": false,
+    "connect_timeout": 6,
+    "read_timeout": 12
+}
