@@ -14097,7 +14097,7 @@ class ApplicationWindow(QMainWindow):
                     code="LINKFLOW",
                     num="25",
                     type_="1",
-                    RDs={"DOCNUM": config.apsNum, "LINKUPLOADGROUP": "Artisan"},
+                    RDs={"DOCNUM": config.apsNum, "DOCLIN": config.apsLin, "LINKUPLOADGROUP": "Artisan"},
                     file_path=filename_path,
                     para=[config.apsNum, str(config.apsLin)],
                 )

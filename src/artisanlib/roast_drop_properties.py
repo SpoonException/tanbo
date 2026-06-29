@@ -2306,29 +2306,29 @@ class editGraphDlg(ArtisanResizeablDialog):
         from pathlib import Path
         from artisanlib.upload_artisan_file import upload_dm_file
 
-        # 当前 Python 文件所在目录
-
-        current_dir = Path(__file__).resolve().parent
-
-        file_path = current_dir / "test1.txt"
-
-        # 生成测试文件
-
-        file_path.write_text(
-
-            "Hello TotalLINK!\nThis is a test file uploaded from Artisan.",
-
-            encoding="utf-8"
-
-        )
-        resp = upload_dm_file(
-            code="LINKFLOW",
-            num="25",
-            type_="1",
-            RDs={"DOCNUM": "APS0000000295", "LINKUPLOADGROUP": "Artisan"},
-            file_path=file_path,
-            para=["APS0000000295", "2"],
-        )
+        # # 当前 Python 文件所在目录
+        #
+        # current_dir = Path(__file__).resolve().parent
+        #
+        # file_path = current_dir / "test1.txt"
+        #
+        # # 生成测试文件
+        #
+        # file_path.write_text(
+        #
+        #     "Hello TotalLINK!\nThis is a test file uploaded from Artisan.",
+        #
+        #     encoding="utf-8"
+        #
+        # )
+        # resp = upload_dm_file(
+        #     code="LINKFLOW",
+        #     num="25",
+        #     type_="1",
+        #     RDs={"DOCNUM": "APS0000000295", "LINKUPLOADGROUP": "Artisan"},
+        #     file_path=file_path,
+        #     para=["APS0000000295", "2"],
+        # )
 
     @pyqtSlot()
     def onWeightFinished(self):
