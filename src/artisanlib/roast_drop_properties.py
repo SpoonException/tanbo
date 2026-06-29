@@ -1257,15 +1257,26 @@ class editGraphDlg(ArtisanResizeablDialog):
 
         self.getWeightBtn.setToolTip("从电子秤读取重量")
 
-        self.getWeightBtn.setMinimumWidth(55)
+        self.getWeightBtn.setMinimumWidth(80)
 
-        self.getWeightBtn.setMaximumWidth(55)
+        self.getWeightBtn.setMaximumWidth(60)
 
         self.getWeightBtn.clicked.connect(self.getWeight)
+        self.getWeightBtn.setDefault(False)
+
+        self.getWeightBtn.setAutoDefault(False)
 
         self.submitButton = QPushButton("提交")
 
+        self.submitButton.setMinimumWidth(80)
+
+        self.submitButton.setMaximumWidth(60)
+
         self.submitButton.clicked.connect(self.submit)
+
+        self.submitButton.setDefault(False)
+
+        self.submitButton.setAutoDefault(False)
 
         inwlayout = QHBoxLayout()
 
@@ -2144,11 +2155,67 @@ class editGraphDlg(ArtisanResizeablDialog):
     @pyqtSlot()
     def getWeight(self):
 
-        # TODO: 从电子秤读取重量
+        from pymodbus.client import ModbusTcpClient
+        import struct
 
-        # self.weightinedit.setText(weight)
+        weight = self.weightinedit.text().strip()
 
-        # 如果需要立即更新当前行
+        client = ModbusTcpClient(
+
+            host=config.modbusIPCharge,
+
+            port=config.modbusPortCharge,
+
+            timeout=3
+
+        )
+
+        try:
+            if client.connect():
+                # float 需要读取两个寄存器
+                result = client.read_holding_registers(address=10, count=2)
+
+                if not result.isError():
+
+                    regs = result.registers
+
+                    byte_order = config.modbusByteOrderCharge.lower()  # little / big
+
+                    word_order = config.modbusWordOrderCharge.lower()  # little / big
+
+                    # 寄存器顺序
+
+                    if word_order == "little":
+
+                        regs = [regs[0], regs[1]]
+
+                    else:
+
+                        regs = [regs[1], regs[0]]
+
+                    # 字节序
+
+                    endian = "<" if byte_order == "little" else ">"
+
+                    data = struct.pack(f"{endian}HH", regs[0], regs[1])
+
+                    weight = struct.unpack(f"{endian}f", data)[0]
+
+                    print(weight)
+                else:
+                    print(f"读取寄存器错误：{result}")  # 添加错误日志
+            else:
+                print("Modbus连接失败")  # 连接失败日志
+
+        except Exception as e:
+
+            print(f"读取电子秤失败：{e}")
+
+        finally:
+
+            client.close()
+
+        self.weightinedit.setText(f"{float(weight):.2f}")
 
         self.onWeightFinished()
 
@@ -2201,64 +2268,62 @@ class editGraphDlg(ArtisanResizeablDialog):
             _log.exception(e)
             self.batchScanEdit.setStyleSheet("border: 1px solid red;")
 
-        try:
-            # 1) 查表头 —— 批次主信息
-            r1 = sendData(
-                url=f"{config.api_base_url}/DataModel/linkDMDatasetResult",
-                data={
-                    "loginID": config.loginID,
-                    "par": {
-                        "dmCode": config.chargeModel,
-                        "dmNum": 10,
-                        "para": [self.aps_num]
-                    },
-                    "rowData": None
-                },
-                verb="POST",
-                authorized=False
-            )
-
-            head = r1.json() if r1.status_code == 200 else None
-
-            self.aps_lin = head["data"]["Table"][0]["APSLIN"]
-
-            # 2) 查表身 —— 配方成分（假设 dmCode 是 TMESEXC16，按实际调整）
-            r2 = sendData(
-                url=f"{config.api_base_url}/DataModel/linkDMDatasetResult",
-                data={
-                    "loginID": config.loginID,
-                    "par": {
-                        "dmCode": config.chargeAttachModel,  # ← 替换为实际配方数据集编码
-                        "dmNum": 701,
-                        "para": [self.aps_num, aps_lin]
-                    },
-                    "scriptType": 4,
-
-                    "rowData": None,
-                },
-                verb="POST",
-                authorized=False
-            )
-
-            # 解析结果
-            body = r2.json() if r2.status_code == 200 else None
-
-            if (isinstance(head, dict) and isinstance(body, dict)
-                    and str(head.get("isSuccess", "")).lower() == "true"):
-                self._showApsResult(head, body)
-                self.batchScanEdit.setStyleSheet("")
-            else:
-                _log.warning("Scan head failed: %s", head)
-                self.batchScanEdit.setStyleSheet("border: 1px solid red;")
-                self.aw.sendmessage(
-                    QApplication.translate('Message', 'APS number not found')
-                )
-
-            self._showApsResult(head, body)
-
-        except Exception as e:
-            _log.exception(e)
-            self.batchScanEdit.setStyleSheet("border: 1px solid red;")
+        # try:
+        #     # 1) 查表头 —— 批次主信息
+        #     r1 = sendData(
+        #         url=f"{config.api_base_url}/DataModel/linkDMDatasetResult",
+        #         data={
+        #             "loginID": config.loginID,
+        #             "par": {
+        #                 "dmCode": config.chargeModel,
+        #                 "dmNum": 10,
+        #                 "para": [self.aps_num]
+        #             },
+        #             "rowData": None
+        #         },
+        #         verb="POST",
+        #         authorized=False
+        #     )
+        #
+        #     head = r1.json() if r1.status_code == 200 else None
+        #
+        #     self.aps_lin = head["data"]["Table"][0]["APSLIN"]
+        #
+        #     # 2) 查表身 —— 配方成分（假设 dmCode 是 TMESEXC16，按实际调整）
+        #     r2 = sendData(
+        #         url=f"{config.api_base_url}/DataModel/linkDMDatasetResult",
+        #         data={
+        #             "loginID": config.loginID,
+        #             "par": {
+        #                 "dmCode": config.chargeAttachModel,  # ← 替换为实际配方数据集编码
+        #                 "dmNum": 701,
+        #                 "para": [self.aps_num, self.aps_lin]
+        #             },
+        #             "scriptType": 4,
+        #
+        #             "rowData": None,
+        #         },
+        #         verb="POST",
+        #         authorized=False
+        #     )
+        #
+        #     # 解析结果
+        #     body = r2.json() if r2.status_code == 200 else None
+        #
+        #     if (isinstance(head, dict) and isinstance(body, dict)
+        #             and str(head.get("isSuccess", "")).lower() == "true"):
+        #         self._showApsResult(head, body)
+        #         self.batchScanEdit.setStyleSheet("")
+        #     else:
+        #         _log.warning("Scan head failed: %s", head)
+        #         self.batchScanEdit.setStyleSheet("border: 1px solid red;")
+        #         self.aw.sendmessage(
+        #             QApplication.translate('Message', 'APS number not found')
+        #         )
+        #
+        # except Exception as e:
+        #     _log.exception(e)
+        #     self.batchScanEdit.setStyleSheet("border: 1px solid red;")
 
         try:
             r = requests.post(
@@ -2303,6 +2368,8 @@ class editGraphDlg(ArtisanResizeablDialog):
             _log.exception(e)
             self.batchScanEdit.setStyleSheet("border: 1px solid red;")
 
+        self.onScanTriggered()
+
         from pathlib import Path
         from artisanlib.upload_artisan_file import upload_dm_file
 
@@ -2335,8 +2402,8 @@ class editGraphDlg(ArtisanResizeablDialog):
         if self.row_idx < 0:
             return
 
-        if self.sender() is not self.weightinedit:
-            return
+        # if self.sender() is not self.weightinedit:
+        #     return
 
         self.model.setValue(
 

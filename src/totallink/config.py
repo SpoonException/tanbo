@@ -67,6 +67,16 @@ chargeAttachModelDropSubmit = "TMESEXC1510X701X"
 apsNum = ""
 apsLin = 0
 
+modbusIPCharge = "127.0.0.1"
+modbusPortCharge = 5020
+modbusByteOrderCharge: str = "little"
+modbusWordOrderCharge: str = "little"
+
+modbusIPDrop = "127.0.0.1"
+modbusPortDrop = 5020
+modbusByteOrderDrop: str = "little"
+modbusWordOrderDrop: str = "little"
+
 # Connection configurations
 
 # verify_ssl: Final[bool] = False
