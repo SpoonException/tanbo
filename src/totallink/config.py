@@ -71,11 +71,13 @@ modbusIPCharge = "127.0.0.1"
 modbusPortCharge = 5020
 modbusByteOrderCharge: str = "little"
 modbusWordOrderCharge: str = "little"
+registerAddressCharge: int = 0x000A
 
 modbusIPDrop = "127.0.0.1"
 modbusPortDrop = 5020
 modbusByteOrderDrop: str = "little"
 modbusWordOrderDrop: str = "little"
+registerAddressDrop: int = 0x000A
 
 # Connection configurations
 

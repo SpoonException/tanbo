@@ -2169,7 +2169,7 @@ class editGraphDlg(ArtisanResizeablDialog):
         try:
             if client.connect():
                 # float 需要读取两个寄存器
-                result = client.read_holding_registers(address=10, count=2)
+                result = client.read_holding_registers(address=config.registerAddressCharge, count=2)
 
                 if not result.isError():
 
