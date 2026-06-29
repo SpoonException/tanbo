@@ -1356,8 +1356,8 @@ class tgraphcanvas(QObject):
         self.beepedBackgroundEvents:set[int] = set()   # set of BackgroundEvent indices that have already been beeped for (cleared in ClearMeasurements)
 
         self.roastpropertiesflag:int = 1  #resets roast properties if not zero
-        self.roastpropertiesAutoOpenFlag:int = 0  #open roast properties dialog on CHARGE if not zero
-        self.roastpropertiesAutoOpenDropFlag:int = 0  #open roast properties dialog on DROP if not zero
+        self.roastpropertiesAutoOpenFlag:int = 1  #open roast properties dialog on CHARGE if not zero
+        self.roastpropertiesAutoOpenDropFlag:int = 1  #open roast properties dialog on DROP if not zero
 
         # if True and plus is connected reminds user to set beans and open Roast Properties dialog if not yet set (once)
         # this flag is reset after the warning dialog popped up once and is set to True again on OFF and

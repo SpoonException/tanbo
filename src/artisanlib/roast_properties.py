@@ -1095,26 +1095,37 @@ class editGraphDlg(ArtisanResizeablDialog):
         aps_header_grid.setSpacing(4)
         aps_header_grid.setContentsMargins(12, 16, 12, 10)
 
+        COLUMN_COUNT = 4  # 每行显示4组（标签+输入框）
+
         self._aps_header_widgets = {}
+
         for i, (key, label_text) in enumerate(HEADER_FIELDS):
             lbl = QLabel(f'{label_text}:')
             edit = QLineEdit()
             edit.setReadOnly(True)
-            edit.setMinimumHeight(28)
-            edit.setStyleSheet(
-                'QLineEdit {'
-                '  background-color: #f5f5f5;'
-                '  border: 1px solid #dcdcdc;'
-                '  border-radius: 4px;'
-                '  padding: 4px 8px;'
-                '  color: #333333;'
-                '}'
-            )
+            edit.setFixedHeight(28)
+
+            edit.setStyleSheet('''
+                QLineEdit {
+                    background-color: #f5f5f5;
+                    border: 1px solid #dcdcdc;
+                    border-radius: 4px;
+                    padding: 4px 8px;
+                    color: #333333;
+                }
+            ''')
+
             self._aps_header_widgets[key] = edit
-            row = i // 2
-            col = i % 2 * 2
+
+            row = i // COLUMN_COUNT
+            col = (i % COLUMN_COUNT) * 2
+
             aps_header_grid.addWidget(lbl, row, col)
             aps_header_grid.addWidget(edit, row, col + 1)
+
+        # 让所有列平均分配宽度
+        for i in range(COLUMN_COUNT * 2):
+            aps_header_grid.setColumnStretch(i, 1)
 
         aps_root.addWidget(aps_header_group)
 
@@ -6690,6 +6701,8 @@ class editGraphDlg(ArtisanResizeablDialog):
 
         row_data = self.model.rows[self.row_idx]
         bean_name = row_data.get("ITMNAM", "").strip()
+        self.weightinedit.setText(str(row_data.get("CPNQTYSTU", "")))
+
         if not bean_name:
             return
 

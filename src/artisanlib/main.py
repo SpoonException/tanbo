@@ -23,6 +23,8 @@ import time as libtime
 startup_time = libtime.process_time()
 
 from artisanlib import __version__, __revision__, __build__, __signature__, __release_sponsor_name__
+from pathlib import Path
+from artisanlib.upload_artisan_file import upload_dm_file
 
 import os
 import sys  # @UnusedImport
@@ -14091,9 +14093,6 @@ class ApplicationWindow(QMainWindow):
                 # restore dirs
                 QDir.setCurrent(oldDir)
 
-                from pathlib import Path
-                from artisanlib.upload_artisan_file import upload_dm_file
-
                 resp = upload_dm_file(
                     code="LINKFLOW",
                     num="25",
@@ -27609,12 +27608,14 @@ class ApplicationWindow(QMainWindow):
         if self.editgraphdialog is not False and self.editgraphdialog is None:  # Roast Properties dialog is not blocked!
             from artisanlib.roast_properties import editGraphDlg
             self.editgraphdialog = editGraphDlg(self, self, self.editGraphDlg_activeTab, start_recording_on_exit)
+            self.editgraphdialog.showMaximized()
             self.editgraphdialog.show()
 
     def open_roast_drop_properties_dialog(self, start_recording_on_exit: bool = False) -> None:
         if self.editgraphdialog is not False and self.editgraphdialog is None:  # Roast Properties dialog is not blocked!
             from artisanlib.roast_drop_properties import editGraphDlg
             self.editgraphdialog = editGraphDlg(self, self, self.editGraphDlg_activeTab, start_recording_on_exit)
+            self.editgraphdialog.showMaximized()
             self.editgraphdialog.show()
 
     @pyqtSlot()
